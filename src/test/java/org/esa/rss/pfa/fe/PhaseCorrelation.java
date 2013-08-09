@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2013. Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.rss.pfa.fe;
 
 import javax.media.jai.BorderExtender;
@@ -21,9 +37,19 @@ public class PhaseCorrelation {
     public static void main(String[] args) {
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(1024 * MiB);
 
-        RenderedOp im1 = FileLoadDescriptor.create(args[0], null, null, null);
+        final String imagePath;
+        final String patternPath;
+        if (args.length == 0) {
+            imagePath = "src/test/images/Algal_bloom_20040615.jpg";
+            patternPath = "src/test/images/Algal_bloom_20040615-pattern.jpg";
+        } else {
+            imagePath = args[0];
+            patternPath = args[1];
+        }
+
+        RenderedOp im1 = FileLoadDescriptor.create(imagePath, null, null, null);
         printInfo("im1", im1);
-        RenderedOp im2 = FileLoadDescriptor.create(args[1], null, null, null);
+        RenderedOp im2 = FileLoadDescriptor.create(patternPath, null, null, null);
         printInfo("im2", im2);
 
         im2 = BorderDescriptor.create(im2, null, im1.getWidth() - im2.getWidth(), null, im1.getHeight() - im2.getHeight(), BorderExtender.createInstance(BorderExtender.BORDER_ZERO), null);
