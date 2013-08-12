@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.esa.rss</groupId>
-    <artifactId>esa-org.esa.fe.pfa</artifactId>
+    <artifactId>esa-pfa</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
