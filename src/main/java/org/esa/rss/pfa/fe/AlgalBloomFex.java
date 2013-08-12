@@ -33,8 +33,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AlgalBloomFex {
 
@@ -44,6 +42,10 @@ public class AlgalBloomFex {
     private static final int TILE_SIZE_Y = 200;
 
     private static final String FEX_EXTENSION = ".fex";
+
+    private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
+    private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
+    private static boolean skipProductOutput = Boolean.getBoolean("skipProduct");
 
     static {
         System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
@@ -60,6 +62,17 @@ public class AlgalBloomFex {
             System.exit(1);
         }
         final String path = args[0];
+
+        if (skipFeaturesOutput) {
+            System.out.println("Warning: Feature output skipped.");
+        }
+        if (skipProductOutput) {
+            System.out.println("Warning: Product output skipped.");
+        }
+        if (skipRgbImageOutput) {
+            System.out.println("Warning: RGB image output skipped.");
+        }
+
         final Product sourceProduct = ProductIO.readProduct(path);
         if (sourceProduct == null) {
             throw new IOException(MessageFormat.format("No reader found for product ''{0}''.", path));
@@ -92,10 +105,20 @@ public class AlgalBloomFex {
                     throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                 }
 
-                final Product subsetProduct = createSubset(correctedProduct, tileY, tileX);
+                final Product subsetProduct = createSubset(reflectanceProduct, tileY, tileX);
                 writeFeatures(subsetProduct, tileDir);
                 writeSubset(subsetProduct, tileDir);
                 writeRgb(subsetProduct, tileDir);
+
+                if (!skipFeaturesOutput) {
+                    writeFeatures(subsetProduct, tileDir);
+                }
+                if (!skipProductOutput) {
+                    writeProductSubset(subsetProduct, tileDir);
+                }
+                if (!skipRgbImageOutput) {
+                    writeRgbImages(subsetProduct, tileDir);
+                }
 
                 subsetProduct.dispose();
             }
@@ -148,6 +171,60 @@ public class AlgalBloomFex {
 
     private void writeRgb(Product subsetProduct, File tileDir) throws IOException {
         // TODO - ProductUtils.createRgbImage(new Band[], )
+    private void writeRgbImages(Product subsetProduct, File tileDir) throws IOException {
+        writeReflectanceRgbImage(subsetProduct, tileDir);
+        writeRadianceRgbImage(subsetProduct, tileDir);
+    }
+
+    private void writeReflectanceRgbImage(Product subsetProduct, File tileDir) throws IOException {
+        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("doSmile", false);
+        parameters.put("doCalibration", false);
+        parameters.put("doEqualization", false);
+        parameters.put("doRadToRefl", true);
+        final Product product = GPF.createProduct("Meris.CorrectRadiometry", parameters, subsetProduct);
+
+        writeImage(product,
+                   "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)",
+                   "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)",
+                   "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)",
+                   -1.95, -1.35, 1.1,
+                   -1.9, -1.4, 1.1,
+                   -1.3, -0.7, 1.0,
+                   new File(tileDir.getParentFile(), tileDir.getName() + "_ref.png"));
+    }
+
+    private void writeRadianceRgbImage(Product product, File tileDir) throws IOException {
+        writeImage(product,
+                   "log(1.0 + 0.35 * radiance_2 + 0.60 * radiance_5 + radiance_6 + 0.13 * radiance_7)",
+                   "log(1.0 + 0.21 * radiance_3 + 0.50 * radiance_4 + radiance_5 + 0.38 * radiance_6)",
+                   "log(1.0 + 0.21 * radiance_1 + 1.75 * radiance_2 + 0.47 * radiance_3 + 0.16 * radiance_4)",
+                   3.6, 4.5, 1.1,
+                   3.7, 4.3, 1.1,
+                   4.6, 5.0, 1.0,
+                   new File(tileDir.getParentFile(), tileDir.getName() + "_rad.png"));
+    }
+
+    private void writeImage(Product product, String expressionR, String expressionG, String expressionB, double minR, double maxR, double gammaR, double minG, double maxG, double gammaG, double minB, double maxB, double gammaB, File outputFile) throws IOException {
+        final Band r = product.addBand("red", expressionR);
+        final Band g = product.addBand("green", expressionG);
+        final Band b = product.addBand("blue", expressionB);
+
+        final RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"red", "green", "blue"});
+        rgbChannelDef.setMinDisplaySample(0, minR);
+        rgbChannelDef.setMaxDisplaySample(0, maxR);
+        rgbChannelDef.setGamma(0, gammaR);
+
+        rgbChannelDef.setMinDisplaySample(1, minG);
+        rgbChannelDef.setMaxDisplaySample(1, maxG);
+        rgbChannelDef.setGamma(0, gammaG);
+
+        rgbChannelDef.setMinDisplaySample(2, minB);
+        rgbChannelDef.setMaxDisplaySample(2, maxB);
+        rgbChannelDef.setGamma(0, gammaB);
+
+        BufferedImage rgbImage = ProductUtils.createRgbImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), ProgressMonitor.NULL);
+        ImageIO.write(rgbImage, "PNG", outputFile);
     }
 
     private void writeFeatures(Product subsetProduct, File tileDir) throws IOException {
@@ -167,7 +244,7 @@ public class AlgalBloomFex {
         }
     }
 
-    private void writeSubset(Product subsetProduct, File tileDir) throws IOException {
+    private void writeProductSubset(Product subsetProduct, File tileDir) throws IOException {
         final File subsetFile = new File(tileDir, "mer.dim");
         ProductIO.writeProduct(subsetProduct, subsetFile, "BEAM-DIMAP", false);
     }
