@@ -19,20 +19,26 @@ package org.esa.rss.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.io.FileUtils;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.HashMap;
 
 public class AlgalBloomFex {
 
@@ -57,11 +63,10 @@ public class AlgalBloomFex {
     }
 
     void run(String[] args) throws IOException {
-        if (args.length != 1) {
+        if (args.length == 0) {
             printHelpMessage();
             System.exit(1);
         }
-        final String path = args[0];
 
         if (skipFeaturesOutput) {
             System.out.println("Warning: Feature output skipped.");
@@ -72,6 +77,14 @@ public class AlgalBloomFex {
         if (skipRgbImageOutput) {
             System.out.println("Warning: RGB image output skipped.");
         }
+
+        for (String path : args) {
+            extractFeatures(path);
+        }
+    }
+
+    private void extractFeatures(String path) throws IOException {
+        System.out.println("Reading " + path);
 
         final Product sourceProduct = ProductIO.readProduct(path);
         if (sourceProduct == null) {
@@ -105,10 +118,7 @@ public class AlgalBloomFex {
                     throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                 }
 
-                final Product subsetProduct = createSubset(reflectanceProduct, tileY, tileX);
-                writeFeatures(subsetProduct, tileDir);
-                writeSubset(subsetProduct, tileDir);
-                writeRgb(subsetProduct, tileDir);
+                final Product subsetProduct = createSubset(correctedProduct, tileY, tileX);
 
                 if (!skipFeaturesOutput) {
                     writeFeatures(subsetProduct, tileDir);
@@ -160,7 +170,7 @@ public class AlgalBloomFex {
     }
 
     private Product createCorrectedProduct(Product sourceProduct) {
-        final Map<String, Object> radiometryParameters = new HashMap<String, Object>();
+        final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
         radiometryParameters.put("doCalibration", false);
         radiometryParameters.put("doSmile", true);
         radiometryParameters.put("doEqualization", true);
@@ -169,11 +179,9 @@ public class AlgalBloomFex {
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
-    private void writeRgb(Product subsetProduct, File tileDir) throws IOException {
-        // TODO - ProductUtils.createRgbImage(new Band[], )
-    private void writeRgbImages(Product subsetProduct, File tileDir) throws IOException {
-        writeReflectanceRgbImage(subsetProduct, tileDir);
-        writeRadianceRgbImage(subsetProduct, tileDir);
+    private void writeRgbImages(Product product, File tileDir) throws IOException {
+        writeReflectanceRgbImage(product, tileDir);
+        writeRadianceRgbImage(product, tileDir);
     }
 
     private void writeReflectanceRgbImage(Product subsetProduct, File tileDir) throws IOException {
@@ -205,7 +213,14 @@ public class AlgalBloomFex {
                    new File(tileDir.getParentFile(), tileDir.getName() + "_rad.png"));
     }
 
-    private void writeImage(Product product, String expressionR, String expressionG, String expressionB, double minR, double maxR, double gammaR, double minG, double maxG, double gammaG, double minB, double maxB, double gammaB, File outputFile) throws IOException {
+    private void writeImage(Product product,
+                            String expressionR,
+                            String expressionG,
+                            String expressionB,
+                            double minR, double maxR, double gammaR,
+                            double minG, double maxG, double gammaG,
+                            double minB, double maxB, double gammaB,
+                            File outputFile) throws IOException {
         final Band r = product.addBand("red", expressionR);
         final Band g = product.addBand("green", expressionG);
         final Band b = product.addBand("blue", expressionB);
@@ -250,7 +265,7 @@ public class AlgalBloomFex {
     }
 
     private void printHelpMessage() {
-        System.out.println("Usage: " + getClass().getName() + " <product-file>");
+        System.out.println("Usage: " + getClass().getName() + " <product-file-1> <product-file-2> <product-file-3> ...");
     }
 
     public static void main(String[] args) {
