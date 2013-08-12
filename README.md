@@ -1,4 +1,4 @@
-ESA PFA
+ESA PFA - Earth Observation Product Feature Extraction
 =======
 
 As the acquisition and use of Earth Observation data is increasing, it becomes more and more difficult to fully exploit the full mission satellite data archives. In particular, current data selection queries are essentially limited to time and geographic location and leave to the “user” the burden of searching for more specific features. 
