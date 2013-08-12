@@ -41,7 +41,7 @@ public class AlgalBloomFex {
     private static final int TILE_SIZE_X = 200;
     private static final int TILE_SIZE_Y = 200;
 
-    private static final String FEX = ".fex";
+    private static final String FEX_EXTENSION = ".fex";
 
     static {
         System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
@@ -52,9 +52,8 @@ public class AlgalBloomFex {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 
-
     void run(String[] args) throws IOException {
-        if (args.length == 0) {
+        if (args.length != 1) {
             printHelpMessage();
             System.exit(1);
         }
@@ -64,7 +63,7 @@ public class AlgalBloomFex {
             throw new IOException(MessageFormat.format("No reader found for product ''{0}''.", path));
         }
         final File sourceFile = sourceProduct.getFileLocation();
-        final File featureDir = new File(sourceFile.getPath() + FEX);
+        final File featureDir = new File(sourceFile.getPath() + FEX_EXTENSION);
         if (featureDir.exists()) {
             if (!FileUtils.deleteTree(featureDir)) {
                 throw new IOException(
@@ -140,7 +139,7 @@ public class AlgalBloomFex {
     }
 
     private void printHelpMessage() {
-        // TODO - implement
+        System.out.println("Usage: " + getClass().getName() + " <product-file>");
     }
 
     public static void main(String[] args) {
