@@ -83,7 +83,7 @@ public class AlgalBloomFex {
         final Product reflectanceProduct = createReflectanceProduct(sourceProduct);
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
-                final File tileDir = new File(featureDir, String.format("x%dy%d", tileX, tileY));
+                final File tileDir = new File(featureDir, String.format("x%02dy%02d", tileX, tileY));
                 if (!tileDir.mkdir()) {
                     throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                 }
@@ -93,7 +93,7 @@ public class AlgalBloomFex {
                 writeSubset(subsetProduct, tileDir);
                 writeRgb(subsetProduct, tileDir);
 
-                subsetProduct.closeIO();
+                subsetProduct.dispose();
             }
         }
     }
