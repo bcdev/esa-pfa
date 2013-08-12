@@ -19,19 +19,21 @@ package org.esa.rss.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.util.ProductUtils;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.io.FileUtils;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
+import javax.media.jai.operator.FileStoreDescriptor;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -48,6 +50,7 @@ public class AlgalBloomFex {
     private static final int TILE_SIZE_Y = 200;
 
     private static final String FEX_EXTENSION = ".fex";
+    public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -79,18 +82,17 @@ public class AlgalBloomFex {
         }
 
         for (String path : args) {
-            extractFeatures(path);
+            extractFeatures(new File(path));
         }
     }
 
-    private void extractFeatures(String path) throws IOException {
-        System.out.println("Reading " + path);
+    private void extractFeatures(File sourceFile) throws IOException {
+        System.out.println("Reading " + sourceFile);
 
-        final Product sourceProduct = ProductIO.readProduct(path);
+        final Product sourceProduct = ProductIO.readProduct(sourceFile);
         if (sourceProduct == null) {
-            throw new IOException(MessageFormat.format("No reader found for product ''{0}''.", path));
+            throw new IOException(MessageFormat.format("No reader found for product ''{0}''.", sourceFile.getPath()));
         }
-        final File sourceFile = sourceProduct.getFileLocation();
         final File featureDir = new File(sourceFile.getPath() + FEX_EXTENSION);
         if (featureDir.exists()) {
             if (!FileUtils.deleteTree(featureDir)) {
@@ -110,6 +112,8 @@ public class AlgalBloomFex {
         final Product correctedProduct = createCorrectedProduct(sourceProduct);
         addMciBand(correctedProduct);
 
+        Kml kml = null;
+
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
                 final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
@@ -127,11 +131,18 @@ public class AlgalBloomFex {
                     writeProductSubset(subsetProduct, tileDir);
                 }
                 if (!skipRgbImageOutput) {
-                    writeRgbImages(subsetProduct, tileDir);
+                    if (kml == null) {
+                        kml = new Kml(new File(featureDir, "overview.kml"), "RGB tiles from reflectances of " + sourceFile.getName());
+                    }
+                    writeRgbImages(subsetProduct, tileDir, kml);
                 }
 
                 subsetProduct.dispose();
             }
+        }
+
+        if (kml != null) {
+            kml.close();
         }
     }
 
@@ -179,12 +190,33 @@ public class AlgalBloomFex {
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
-    private void writeRgbImages(Product product, File tileDir) throws IOException {
-        writeReflectanceRgbImage(product, tileDir);
-        writeRadianceRgbImage(product, tileDir);
+    private void writeRgbImages(Product product, File tileDir, Kml kml) throws IOException {
+        /*
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("crs", "EPSG:4326");
+        parameters.put("resamplingName", "Bicubic");
+        product = GPF.createProduct("Reproject", parameters, product);
+        */
+
+        float w = product.getSceneRasterWidth();
+        float h = product.getSceneRasterHeight();
+        GeoPos[] quadPositions = new GeoPos[]{
+                product.getGeoCoding().getGeoPos(new PixelPos(0.5f, h - 0.5f), null),
+                product.getGeoCoding().getGeoPos(new PixelPos(w - 0.5f, h - 0.5f), null),
+                product.getGeoCoding().getGeoPos(new PixelPos(w - 0.5f, 0.5f), null),
+                product.getGeoCoding().getGeoPos(new PixelPos(0.5f, 0.5f), null),
+        };
+
+        String rgbBaseName = tileDir.getName() + "_rgb";
+        String rgbFileName = rgbBaseName + ".png";
+        //GeoPos geoPosUL = quadPositions[3];
+        //GeoPos geoPosLR = quadPositions[1];
+        //kml.writeGroundOverlay(reflecBaseName, geoPosUL, geoPosLR, reflecFileName);
+        kml.writeGroundOverlayEx(rgbBaseName, quadPositions, rgbFileName);
+        writeReflectanceRgbImage(product, new File(tileDir.getParentFile(), rgbFileName));
     }
 
-    private void writeReflectanceRgbImage(Product subsetProduct, File tileDir) throws IOException {
+    private void writeReflectanceRgbImage(Product subsetProduct, File outputFile) throws IOException {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("doSmile", false);
         parameters.put("doCalibration", false);
@@ -196,50 +228,49 @@ public class AlgalBloomFex {
                    "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)",
                    "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)",
                    "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)",
+                   FEX_VALID_MASK,
                    -1.95, -1.35, 1.1,
                    -1.9, -1.4, 1.1,
                    -1.3, -0.7, 1.0,
-                   new File(tileDir.getParentFile(), tileDir.getName() + "_ref.png"));
-    }
-
-    private void writeRadianceRgbImage(Product product, File tileDir) throws IOException {
-        writeImage(product,
-                   "log(1.0 + 0.35 * radiance_2 + 0.60 * radiance_5 + radiance_6 + 0.13 * radiance_7)",
-                   "log(1.0 + 0.21 * radiance_3 + 0.50 * radiance_4 + radiance_5 + 0.38 * radiance_6)",
-                   "log(1.0 + 0.21 * radiance_1 + 1.75 * radiance_2 + 0.47 * radiance_3 + 0.16 * radiance_4)",
-                   3.6, 4.5, 1.1,
-                   3.7, 4.3, 1.1,
-                   4.6, 5.0, 1.0,
-                   new File(tileDir.getParentFile(), tileDir.getName() + "_rad.png"));
+                   outputFile);
     }
 
     private void writeImage(Product product,
                             String expressionR,
                             String expressionG,
                             String expressionB,
+                            String expressionA,
                             double minR, double maxR, double gammaR,
                             double minG, double maxG, double gammaG,
                             double minB, double maxB, double gammaB,
                             File outputFile) throws IOException {
-        final Band r = product.addBand("red", expressionR);
-        final Band g = product.addBand("green", expressionG);
-        final Band b = product.addBand("blue", expressionB);
+        final Band r = product.addBand("fexRed", expressionR);
+        final Band g = product.addBand("fexGreen", expressionG);
+        final Band b = product.addBand("fexBlue", expressionB);
 
-        final RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"red", "green", "blue"});
+        r.setValidPixelExpression(expressionA);
+        r.setNoDataValue(Double.NaN);
+        r.setNoDataValueUsed(true);
+
+        final RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"fexRed", "fexGreen", "fexBlue"});
         rgbChannelDef.setMinDisplaySample(0, minR);
         rgbChannelDef.setMaxDisplaySample(0, maxR);
         rgbChannelDef.setGamma(0, gammaR);
 
         rgbChannelDef.setMinDisplaySample(1, minG);
         rgbChannelDef.setMaxDisplaySample(1, maxG);
-        rgbChannelDef.setGamma(0, gammaG);
+        rgbChannelDef.setGamma(1, gammaG);
 
         rgbChannelDef.setMinDisplaySample(2, minB);
         rgbChannelDef.setMaxDisplaySample(2, maxB);
-        rgbChannelDef.setGamma(0, gammaB);
+        rgbChannelDef.setGamma(2, gammaB);
 
-        BufferedImage rgbImage = ProductUtils.createRgbImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), ProgressMonitor.NULL);
-        ImageIO.write(rgbImage, "PNG", outputFile);
+        RenderedImage rgbaImage = ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), 0);
+        FileStoreDescriptor.create(rgbaImage, outputFile.getPath(), "PNG", null, null, null);
+
+        product.removeBand(r);
+        product.removeBand(g);
+        product.removeBand(b);
     }
 
     private void writeFeatures(Product subsetProduct, File tileDir) throws IOException {
