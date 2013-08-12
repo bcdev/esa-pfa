@@ -1,4 +1,4 @@
-package org.esa.rss.pfa.fe;/*
+/*
  * Copyright (c) 2013. Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,6 +14,8 @@ package org.esa.rss.pfa.fe;/*
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
+package org.esa.rss.pfa.fe;
+
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
@@ -21,24 +23,29 @@ import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.io.FileUtils;
 
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.text.MessageFormat;
 
 public class AlgalBloomFex {
 
-    private static final int TILE_WIDTH = 200;
-    private static final int TILE_HEIGHT = 200;
-
     private static final int MiB = 1024 * 1024;
 
+    private static final int TILE_SIZE_X = 200;
+    private static final int TILE_SIZE_Y = 200;
+
+    private static final String FEX = ".fex";
+
     static {
-        System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_WIDTH));
-        System.setProperty("beam.reader.tileHeight", String.valueOf(TILE_HEIGHT));
+        System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
+        System.setProperty("beam.reader.tileHeight", String.valueOf(TILE_SIZE_Y));
 
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(1024 * MiB);
         JAI.getDefaultInstance().getTileScheduler().setParallelism(Runtime.getRuntime().availableProcessors());
@@ -52,60 +59,88 @@ public class AlgalBloomFex {
             System.exit(1);
         }
         final String path = args[0];
-        final Product product = ProductIO.readProduct(path);
-        if (product == null) {
+        final Product sourceProduct = ProductIO.readProduct(path);
+        if (sourceProduct == null) {
             throw new IOException(MessageFormat.format("No reader found for product ''{0}''.", path));
         }
-
-        final File fexDir = new File(product.getFileLocation().getPath() + ".fex");
-        final boolean fexDirCreated = fexDir.mkdir();
-
-        if (fexDirCreated) {
-            final int width = product.getSceneRasterWidth();
-            final int height = product.getSceneRasterHeight();
-            final Rectangle boundary = new Rectangle(0, 0, width, height);
-
-            final int tileCountX = (width + TILE_WIDTH - 1) / TILE_WIDTH;
-            final int tileCountY = (height + TILE_HEIGHT - 1) / TILE_HEIGHT;
-            // TODO - use
-
-            for (int y = 0, tileY = 0; y < height; y += TILE_HEIGHT, tileY++) {
-                for (int x = 0, tileX = 0; x < width; x += TILE_WIDTH, tileX++) {
-                    final SubsetOp subsetOp = new SubsetOp();
-                    final Rectangle region = new Rectangle(x, y, TILE_WIDTH, TILE_HEIGHT).intersection(boundary);
-                    subsetOp.setRegion(region);
-                    subsetOp.setSourceProduct(product);
-                    final Product subsetProduct = subsetOp.getTargetProduct();
-
-                    final File tileDir = new File(fexDir, String.format("x%dy%d", tileX, tileY));
-                    final boolean tileDirCreated = tileDir.mkdir();
-
-                    if (tileDirCreated) {
-                        ProductIO.writeProduct(subsetProduct, new File(tileDir, "mer.dim"), "BEAM-DIMAP", false);
-                        // TODO - ProductUtils.createRgbImage(new Band[], )
-
-                        final StxFactory stxFactory = new StxFactory();
-
-                        final String bandName = "radiance_13";
-                        final Stx stx = stxFactory.create(subsetProduct.getBand(bandName),
-                                                          ProgressMonitor.NULL);
-                        final File featureFile = new File(tileDir, "features.txt");
-                        final PrintWriter writer = new PrintWriter(featureFile);
-                        writer.printf("%s.mean = %s\n", bandName, stx.getMean());
-                        writer.printf("%s.stdev = %s\n", bandName, stx.getStandardDeviation());
-                        writer.close();
-                    } else {
-                        // TODO - handle these cases
-                    }
-                }
+        final File sourceFile = sourceProduct.getFileLocation();
+        final File featureDir = new File(sourceFile.getPath() + FEX);
+        if (featureDir.exists()) {
+            if (!FileUtils.deleteTree(featureDir)) {
+                throw new IOException(
+                        MessageFormat.format("Existing feature directory ''{0}'' cannot be deleted.", featureDir));
             }
-        } else {
-            // TODO - handle these cases
+        }
+        if (!featureDir.mkdir()) {
+            throw new IOException(MessageFormat.format("Feature directory ''{0}'' cannot be created.", featureDir));
+        }
+
+        final int productSizeX = sourceProduct.getSceneRasterWidth();
+        final int productSizeY = sourceProduct.getSceneRasterHeight();
+        final int tileCountX = (productSizeX + TILE_SIZE_X - 1) / TILE_SIZE_X;
+        final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
+
+        for (int tileY = 0; tileY < tileCountY; tileY++) {
+            for (int tileX = 0; tileX < tileCountX; tileX++) {
+                final File tileDir = new File(featureDir, String.format("x%dy%d", tileX, tileY));
+                if (!tileDir.mkdir()) {
+                    throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
+                }
+
+                final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
+                writeFeatures(subsetProduct, tileDir);
+                writeSubset(subsetProduct, tileDir);
+                writeRgb(subsetProduct, tileDir);
+
+                subsetProduct.dispose();
+            }
         }
     }
 
-    private void printHelpMessage() {
+    private Product createSubset(Product sourceProduct, int tileY, int tileX) {
+        final int productSizeX = sourceProduct.getSceneRasterWidth();
+        final int productSizeY = sourceProduct.getSceneRasterHeight();
+        final Rectangle sceneBoundary = new Rectangle(0, 0, productSizeX, productSizeY);
 
+        final int x = tileX * TILE_SIZE_X;
+        final int y = tileY * TILE_SIZE_Y;
+        final Rectangle subsetRegion = new Rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y).intersection(sceneBoundary);
+
+        final SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setRegion(subsetRegion);
+        subsetOp.setSourceProduct(sourceProduct);
+
+        return subsetOp.getTargetProduct();
+    }
+
+    private void writeRgb(Product subsetProduct, File tileDir) throws IOException {
+        // TODO - ProductUtils.createRgbImage(new Band[], )
+    }
+
+    private void writeFeatures(Product subsetProduct, File tileDir) throws IOException {
+        final StxFactory stxFactory = new StxFactory();
+        final String bandName = "radiance_13";
+        final Stx stx = stxFactory.create(subsetProduct.getBand(bandName), ProgressMonitor.NULL);
+        final File featureFile = new File(tileDir, "features.txt");
+        final Writer featureWriter = new BufferedWriter(new FileWriter(featureFile));
+        try {
+            featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
+            featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
+        } finally {
+            try {
+                featureWriter.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    private void writeSubset(Product subsetProduct, File tileDir) throws IOException {
+        final File subsetFile = new File(tileDir, "mer.dim");
+        ProductIO.writeProduct(subsetProduct, subsetFile, "BEAM-DIMAP", false);
+    }
+
+    private void printHelpMessage() {
+        // TODO - implement
     }
 
     public static void main(String[] args) {
