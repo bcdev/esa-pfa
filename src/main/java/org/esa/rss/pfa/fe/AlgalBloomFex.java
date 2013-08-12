@@ -18,6 +18,7 @@ package org.esa.rss.pfa.fe;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
@@ -80,15 +81,18 @@ public class AlgalBloomFex {
         final int tileCountX = (productSizeX + TILE_SIZE_X - 1) / TILE_SIZE_X;
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
-        final Product reflectanceProduct = createReflectanceProduct(sourceProduct);
+        final Product correctedProduct = createCorrectedProduct(sourceProduct);
+        addMciBand(correctedProduct);
+
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
-                final File tileDir = new File(featureDir, String.format("x%02dy%02d", tileX, tileY));
+                final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
+                final File tileDir = new File(featureDir, tileDirName);
                 if (!tileDir.mkdir()) {
                     throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                 }
 
-                final Product subsetProduct = createSubset(reflectanceProduct, tileY, tileX);
+                final Product subsetProduct = createSubset(correctedProduct, tileY, tileX);
                 writeFeatures(subsetProduct, tileDir);
                 writeSubset(subsetProduct, tileDir);
                 writeRgb(subsetProduct, tileDir);
@@ -96,6 +100,26 @@ public class AlgalBloomFex {
                 subsetProduct.dispose();
             }
         }
+    }
+
+    private void addMciBand(Product sourceProduct) {
+        final Band l1 = sourceProduct.getBand("radiance_8");
+        final Band l2 = sourceProduct.getBand("radiance_9");
+        final Band l3 = sourceProduct.getBand("radiance_10");
+
+        final double lambda1 = l1.getSpectralWavelength();
+        final double lambda2 = l2.getSpectralWavelength();
+        final double lambda3 = l3.getSpectralWavelength();
+        final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
+        final double cloudCorrectionFactor = 1.005;
+
+        sourceProduct.addBand("mci",
+                              String.format("%s - %s * (%s - (%s - %s) * %s)",
+                                            l2.getName(),
+                                            cloudCorrectionFactor,
+                                            l1.getName(),
+                                            l3.getName(),
+                                            l1.getName(), factor));
     }
 
     private Product createSubset(Product sourceProduct, int tileY, int tileX) {
@@ -112,12 +136,12 @@ public class AlgalBloomFex {
         return GPF.createProduct("Subset", parameters, sourceProduct);
     }
 
-    private Product createReflectanceProduct(Product sourceProduct) {
+    private Product createCorrectedProduct(Product sourceProduct) {
         final Map<String, Object> radiometryParameters = new HashMap<String, Object>();
         radiometryParameters.put("doCalibration", false);
         radiometryParameters.put("doSmile", true);
         radiometryParameters.put("doEqualization", true);
-        radiometryParameters.put("doRadToRefl", true);
+        radiometryParameters.put("doRadToRefl", false);
 
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
@@ -128,7 +152,7 @@ public class AlgalBloomFex {
 
     private void writeFeatures(Product subsetProduct, File tileDir) throws IOException {
         final StxFactory stxFactory = new StxFactory();
-        final String bandName = "reflec_13";
+        final String bandName = "mci";
         final Stx stx = stxFactory.create(subsetProduct.getBand(bandName), ProgressMonitor.NULL);
         final File featureFile = new File(tileDir, "features.txt");
         final Writer featureWriter = new BufferedWriter(new FileWriter(featureFile));
