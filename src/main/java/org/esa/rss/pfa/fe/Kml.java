@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Simple utility class used to write
+ * Simple utility class for writing Google Earth KML files.
  * @author Norman Fomferra
  */
 public class Kml {
