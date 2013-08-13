@@ -17,17 +17,21 @@
 package org.esa.rss.pfa.fe;
 
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
+import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.jai.ImageManager;
+import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.io.FileUtils;
@@ -36,6 +40,7 @@ import javax.media.jai.JAI;
 import javax.media.jai.operator.FileStoreDescriptor;
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,6 +68,8 @@ public class AlgalBloomFex {
     public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
                                                 "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
     public static final String FEX_VALID_MASK_NAME = "fex_valid";
+
+    public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -125,6 +132,17 @@ public class AlgalBloomFex {
 
         KmlWriter kmlWriter = null;
 
+
+        // todo - dirty code from NF, clean up
+        Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
+        Band coastDistance = coastDistProduct.getBand("coast_dist");
+        final int coastDistWidth = coastDistProduct.getSceneRasterWidth();
+        final int coastDistHeight = coastDistProduct.getSceneRasterHeight();
+        final float[] coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
+        coastDistProduct.dispose();
+
+
+
         //addCloudMask(correctedProduct);
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
@@ -146,6 +164,17 @@ public class AlgalBloomFex {
                     }
                 }
                 addFlhBand(correctedProduct);
+
+                // todo - dirty code from NF, clean up
+                final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
+                coastDistBand.setSourceImage(new DefaultMultiLevelImage(new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
+                    @Override
+                    protected RenderedImage createImage(int level) {
+                        return new WorldDataOpImage(correctedProduct.getGeoCoding(), coastDistBand,
+                                                    ResolutionLevel.create(getModel(), level),
+                                                    coastDistWidth, coastDistHeight, coastDistData);
+                    }
+                }));
 
                 if (!skipFeaturesOutput) {
                     writeFeatures(correctedProduct, tileDir);
