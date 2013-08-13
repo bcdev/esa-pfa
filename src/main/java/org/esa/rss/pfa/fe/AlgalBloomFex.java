@@ -41,7 +41,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -131,19 +130,19 @@ public class AlgalBloomFex {
                 }
 
                 final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
-                final Product featureProduct = createCorrectedProduct(subsetProduct);
-                addValidMask(featureProduct);
-                addMciBand(featureProduct);
-                final Product waterProduct = createReflectanceProduct(featureProduct);
+                final Product correctedProduct = createCorrectedProduct(subsetProduct);
+                addValidMask(correctedProduct);
+                addMciBand(correctedProduct);
+                final Product waterProduct = createReflectanceProduct(correctedProduct);
                 for (final String bandName : waterProduct.getBandNames()) {
                     if (bandName.startsWith("reflec")) {
-                        ProductUtils.copyBand(bandName, waterProduct, featureProduct, true);
+                        ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
                     }
                 }
-                addFlhBand(featureProduct);
+                addFlhBand(correctedProduct);
 
                 if (!skipFeaturesOutput) {
-                    writeFeatures(featureProduct, tileDir);
+                    writeFeatures(correctedProduct, tileDir);
                 }
                 if (!skipRgbImageOutput) {
                     if (kmlWriter == null) {
@@ -151,14 +150,14 @@ public class AlgalBloomFex {
                         kmlWriter = new KmlWriter(writer, sourceFile.getName(),
                                                   "RGB tiles from reflectances of " + sourceFile.getName());
                     }
-                    writeRgbImages(featureProduct, tileDir, kmlWriter);
+                    writeRgbImages(correctedProduct, tileDir, kmlWriter);
                 }
                 if (!skipProductOutput) {
-                    writeProductSubset(featureProduct, tileDir);
+                    writeProductSubset(correctedProduct, tileDir);
                 }
 
                 waterProduct.dispose();
-                featureProduct.dispose();
+                correctedProduct.dispose();
                 subsetProduct.dispose();
             }
         }
@@ -166,6 +165,8 @@ public class AlgalBloomFex {
         if (kmlWriter != null) {
             kmlWriter.close();
         }
+
+        sourceProduct.dispose();
     }
 
     private void addValidMask(Product featureProduct) {
