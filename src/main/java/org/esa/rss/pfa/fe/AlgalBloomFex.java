@@ -55,6 +55,7 @@ public class AlgalBloomFex {
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
     private static boolean skipProductOutput = Boolean.getBoolean("skipProduct");
+    private static boolean equirectangular = Boolean.getBoolean("equirectangular");
 
     static {
         System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
@@ -191,28 +192,33 @@ public class AlgalBloomFex {
     }
 
     private void writeRgbImages(Product product, File tileDir, Kml kml) throws IOException {
-        /*
-        HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("crs", "EPSG:4326");
-        parameters.put("resamplingName", "Bicubic");
-        product = GPF.createProduct("Reproject", parameters, product);
-        */
+
+        if (equirectangular) {
+            HashMap<String, Object> parameters = new HashMap<String, Object>();
+            parameters.put("crs", "EPSG:4326");
+            parameters.put("resamplingName", "Bicubic");
+            product = GPF.createProduct("Reproject", parameters, product);
+        }
 
         float w = product.getSceneRasterWidth();
         float h = product.getSceneRasterHeight();
-        GeoPos[] quadPositions = new GeoPos[]{
-                product.getGeoCoding().getGeoPos(new PixelPos(0.5f, h - 0.5f), null),
-                product.getGeoCoding().getGeoPos(new PixelPos(w - 0.5f, h - 0.5f), null),
-                product.getGeoCoding().getGeoPos(new PixelPos(w - 0.5f, 0.5f), null),
-                product.getGeoCoding().getGeoPos(new PixelPos(0.5f, 0.5f), null),
-        };
 
         String rgbBaseName = tileDir.getName() + "_rgb";
         String rgbFileName = rgbBaseName + ".png";
-        //GeoPos geoPosUL = quadPositions[3];
-        //GeoPos geoPosLR = quadPositions[1];
-        //kml.writeGroundOverlay(reflecBaseName, geoPosUL, geoPosLR, reflecFileName);
-        kml.writeGroundOverlayEx(rgbBaseName, quadPositions, rgbFileName);
+        if (equirectangular) {
+            GeoPos geoPosUL = product.getGeoCoding().getGeoPos(new PixelPos(0, 0), null);
+            GeoPos geoPosLR = product.getGeoCoding().getGeoPos(new PixelPos(w, h), null);
+            kml.writeGroundOverlay(rgbBaseName, geoPosUL, geoPosLR, rgbFileName);
+        } else {
+            // quadPositions: counter clockwise lon,lat coordinates starting at lower-left
+            GeoPos[] quadPositions = new GeoPos[]{
+                    product.getGeoCoding().getGeoPos(new PixelPos(0, h), null),
+                    product.getGeoCoding().getGeoPos(new PixelPos(w, h), null),
+                    product.getGeoCoding().getGeoPos(new PixelPos(w, 0), null),
+                    product.getGeoCoding().getGeoPos(new PixelPos(0, 0), null),
+            };
+            kml.writeGroundOverlayEx(rgbBaseName, quadPositions, rgbFileName);
+        }
         writeReflectanceRgbImage(product, new File(tileDir.getParentFile(), rgbFileName));
     }
 
