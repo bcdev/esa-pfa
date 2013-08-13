@@ -51,6 +51,8 @@ public class AlgalBloomFex {
 
     private static final String FEX_EXTENSION = ".fex";
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
+    public static final String FEX_L1B_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
+            "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -112,6 +114,7 @@ public class AlgalBloomFex {
 
         final Product correctedProduct = createCorrectedProduct(sourceProduct);
         addMciBand(correctedProduct);
+        //addCloudMask(correctedProduct);
 
         KmlWriter kmlWriter = null;
 
@@ -147,6 +150,12 @@ public class AlgalBloomFex {
             kmlWriter.close();
         }
     }
+
+    /*
+    private void addCloudMask(Product product) {
+         product.addMask("fex_cloud_mask", FEX_L1B_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW, 0.5);
+    }
+    */
 
     private void addMciBand(Product sourceProduct) {
         final Band l1 = sourceProduct.getBand("radiance_8");
@@ -224,17 +233,18 @@ public class AlgalBloomFex {
     }
 
     private void writeReflectanceRgbImage(Product subsetProduct, File outputFile) throws IOException {
-        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("doSmile", false);
         parameters.put("doCalibration", false);
         parameters.put("doEqualization", false);
         parameters.put("doRadToRefl", true);
-        final Product product = GPF.createProduct("Meris.CorrectRadiometry", parameters, subsetProduct);
+        Product product = GPF.createProduct("Meris.CorrectRadiometry", parameters, subsetProduct);
 
         writeImage(product,
                    "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)",
                    "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)",
                    "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)",
+                   // FEX_VALID_MASK + " && !fex_cloud_mask",
                    FEX_VALID_MASK,
                    -1.95, -1.35, 1.1,
                    -1.9, -1.4, 1.1,
@@ -251,15 +261,15 @@ public class AlgalBloomFex {
                             double minG, double maxG, double gammaG,
                             double minB, double maxB, double gammaB,
                             File outputFile) throws IOException {
-        final Band r = product.addBand("fexRed", expressionR);
-        final Band g = product.addBand("fexGreen", expressionG);
-        final Band b = product.addBand("fexBlue", expressionB);
+        Band r = product.addBand("fexRed", expressionR);
+        Band g = product.addBand("fexGreen", expressionG);
+        Band b = product.addBand("fexBlue", expressionB);
 
         r.setValidPixelExpression(expressionA);
         r.setNoDataValue(Double.NaN);
         r.setNoDataValueUsed(true);
 
-        final RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"fexRed", "fexGreen", "fexBlue"});
+        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"fexRed", "fexGreen", "fexBlue"});
         rgbChannelDef.setMinDisplaySample(0, minR);
         rgbChannelDef.setMaxDisplaySample(0, maxR);
         rgbChannelDef.setGamma(0, gammaR);
