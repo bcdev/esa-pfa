@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Simple utility class used to write
  * @author Norman Fomferra
  */
 public class Kml {
@@ -20,7 +21,7 @@ public class Kml {
         writer.write(String.format("" +
                                            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                            "<kml xmlns=\"http://www.opengis.net/kml/2.2\"\n" +
-                                           " xmlns:gx=\"http://www.google.com/kml/ext/2.2\">\n" +
+                                           "     xmlns:gx=\"http://www.google.com/kml/ext/2.2\">\n" +
                                            "<Document>\n" +
                                            "  <name>%s</name>\n" +
                                            "  <description>%s</description>\n",
