@@ -34,6 +34,7 @@ import org.esa.beam.util.io.FileUtils;
 
 import javax.media.jai.JAI;
 import javax.media.jai.operator.FileStoreDescriptor;
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.io.BufferedWriter;
@@ -114,12 +115,8 @@ public class AlgalBloomFex {
         final int tileCountX = (productSizeX + TILE_SIZE_X - 1) / TILE_SIZE_X;
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
-        Kml kml = null;
-        final Product correctedProduct = createCorrectedProduct(sourceProduct);
-        addMciBand(correctedProduct);
-        //addCloudMask(correctedProduct);
-
         KmlWriter kmlWriter = null;
+        //addCloudMask(correctedProduct);
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
@@ -131,6 +128,7 @@ public class AlgalBloomFex {
 
                 final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
                 final Product correctedProduct = createCorrectedProduct(subsetProduct);
+                correctedProduct.addMask("featureValid", FEX_VALID_MASK + "AND !(" + FEX_L1B_CLOUD_MASK + ")", "", Color.green, 0.5);
                 addMciBand(correctedProduct);
 
                 final Product waterProduct = createReflectanceProduct(correctedProduct);
@@ -144,15 +142,15 @@ public class AlgalBloomFex {
                 if (!skipFeaturesOutput) {
                     writeFeatures(correctedProduct, tileDir);
                 }
-                if (!skipProductOutput) {
-                    writeProductSubset(correctedProduct, tileDir);
-                }
                 if (!skipRgbImageOutput) {
                     if (kmlWriter == null) {
                         Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
                         kmlWriter = new KmlWriter(writer, sourceFile.getName(), "RGB tiles from reflectances of " + sourceFile.getName());
                     }
-                    writeRgbImages(subsetProduct, tileDir, kmlWriter);
+                    writeRgbImages(correctedProduct, tileDir, kmlWriter);
+                }
+                if (!skipProductOutput) {
+                    writeProductSubset(correctedProduct, tileDir);
                 }
 
                 waterProduct.dispose();
@@ -278,14 +276,7 @@ public class AlgalBloomFex {
         writeReflectanceRgbImage(product, new File(tileDir.getParentFile(), rgbFileName));
     }
 
-    private void writeReflectanceRgbImage(Product subsetProduct, File outputFile) throws IOException {
-        HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("doSmile", false);
-        parameters.put("doCalibration", false);
-        parameters.put("doEqualization", false);
-        parameters.put("doRadToRefl", true);
-        Product product = GPF.createProduct("Meris.CorrectRadiometry", parameters, subsetProduct);
-
+    private void writeReflectanceRgbImage(Product product, File outputFile) throws IOException {
         writeImage(product,
                    "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)",
                    "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)",
@@ -307,15 +298,15 @@ public class AlgalBloomFex {
                             double minG, double maxG, double gammaG,
                             double minB, double maxB, double gammaB,
                             File outputFile) throws IOException {
-        Band r = product.addBand("fexRed", expressionR);
-        Band g = product.addBand("fexGreen", expressionG);
-        Band b = product.addBand("fexBlue", expressionB);
+        Band r = product.addBand("virtualRed", expressionR);
+        Band g = product.addBand("virtualGreen", expressionG);
+        Band b = product.addBand("virtualBlue", expressionB);
 
         r.setValidPixelExpression(expressionA);
         r.setNoDataValue(Double.NaN);
         r.setNoDataValueUsed(true);
 
-        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"fexRed", "fexGreen", "fexBlue"});
+        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"virtualRed", "virtualGreen", "virtualBlue"});
         rgbChannelDef.setMinDisplaySample(0, minR);
         rgbChannelDef.setMaxDisplaySample(0, maxR);
         rgbChannelDef.setGamma(0, gammaR);
@@ -331,26 +322,34 @@ public class AlgalBloomFex {
         RenderedImage rgbaImage = ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), 0);
         FileStoreDescriptor.create(rgbaImage, outputFile.getPath(), "PNG", null, null, null);
 
+        /*
         product.removeBand(r);
         product.removeBand(g);
         product.removeBand(b);
+        */
     }
 
-    private void writeFeatures(Product subsetProduct, File tileDir) throws IOException {
-        final StxFactory stxFactory = new StxFactory();
-        final String bandName = "mci";
-        final Stx stx = stxFactory.create(subsetProduct.getBand(bandName), ProgressMonitor.NULL);
+    private void writeFeatures(Product product, File tileDir) throws IOException {
         final File featureFile = new File(tileDir, "features.txt");
         final Writer featureWriter = new BufferedWriter(new FileWriter(featureFile));
+
         try {
-            featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
-            featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
+            writeFeatures(product, "mci", featureWriter);
+            writeFeatures(product, "flh", featureWriter);
         } finally {
             try {
                 featureWriter.close();
             } catch (IOException ignored) {
             }
         }
+    }
+
+    private void writeFeatures(Product product, String bandName, Writer featureWriter) throws IOException {
+        final StxFactory stxFactory = new StxFactory();
+        stxFactory.withRoiMask(product.getMaskGroup().get("valid"));
+        final Stx stx = stxFactory.create(product.getBand(bandName), ProgressMonitor.NULL);
+        featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
+        featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
     }
 
     private void writeProductSubset(Product subsetProduct, File tileDir) throws IOException {
