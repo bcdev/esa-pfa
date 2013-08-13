@@ -113,7 +113,7 @@ public class AlgalBloomFex {
         final Product correctedProduct = createCorrectedProduct(sourceProduct);
         addMciBand(correctedProduct);
 
-        Kml kml = null;
+        KmlWriter kmlWriter = null;
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
@@ -132,18 +132,19 @@ public class AlgalBloomFex {
                     writeProductSubset(subsetProduct, tileDir);
                 }
                 if (!skipRgbImageOutput) {
-                    if (kml == null) {
-                        kml = new Kml(new File(featureDir, "overview.kml"), "RGB tiles from reflectances of " + sourceFile.getName());
+                    if (kmlWriter == null) {
+                        Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
+                        kmlWriter = new KmlWriter(writer, sourceFile.getName(), "RGB tiles from reflectances of " + sourceFile.getName());
                     }
-                    writeRgbImages(subsetProduct, tileDir, kml);
+                    writeRgbImages(subsetProduct, tileDir, kmlWriter);
                 }
 
                 subsetProduct.dispose();
             }
         }
 
-        if (kml != null) {
-            kml.close();
+        if (kmlWriter != null) {
+            kmlWriter.close();
         }
     }
 
@@ -191,7 +192,7 @@ public class AlgalBloomFex {
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
-    private void writeRgbImages(Product product, File tileDir, Kml kml) throws IOException {
+    private void writeRgbImages(Product product, File tileDir, KmlWriter kmlWriter) throws IOException {
 
         if (equirectangular) {
             HashMap<String, Object> parameters = new HashMap<String, Object>();
@@ -208,7 +209,7 @@ public class AlgalBloomFex {
         if (equirectangular) {
             GeoPos geoPosUL = product.getGeoCoding().getGeoPos(new PixelPos(0, 0), null);
             GeoPos geoPosLR = product.getGeoCoding().getGeoPos(new PixelPos(w, h), null);
-            kml.writeGroundOverlay(rgbBaseName, geoPosUL, geoPosLR, rgbFileName);
+            kmlWriter.writeGroundOverlay(rgbBaseName, geoPosUL, geoPosLR, rgbFileName);
         } else {
             // quadPositions: counter clockwise lon,lat coordinates starting at lower-left
             GeoPos[] quadPositions = new GeoPos[]{
@@ -217,7 +218,7 @@ public class AlgalBloomFex {
                     product.getGeoCoding().getGeoPos(new PixelPos(w, 0), null),
                     product.getGeoCoding().getGeoPos(new PixelPos(0, 0), null),
             };
-            kml.writeGroundOverlayEx(rgbBaseName, quadPositions, rgbFileName);
+            kmlWriter.writeGroundOverlayEx(rgbBaseName, quadPositions, rgbFileName);
         }
         writeReflectanceRgbImage(product, new File(tileDir.getParentFile(), rgbFileName));
     }
