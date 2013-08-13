@@ -28,6 +28,8 @@ import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.jai.ImageManager;
+import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.io.FileUtils;
 
 import javax.media.jai.JAI;
@@ -109,9 +111,6 @@ public class AlgalBloomFex {
         final int tileCountX = (productSizeX + TILE_SIZE_X - 1) / TILE_SIZE_X;
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
-        final Product correctedProduct = createCorrectedProduct(sourceProduct);
-        addMciBand(correctedProduct);
-
         Kml kml = null;
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
@@ -122,13 +121,23 @@ public class AlgalBloomFex {
                     throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                 }
 
-                final Product subsetProduct = createSubset(correctedProduct, tileY, tileX);
+                final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
+                final Product correctedProduct = createCorrectedProduct(subsetProduct);
+                addMciBand(correctedProduct);
+
+                final Product waterProduct = createReflectanceProduct(correctedProduct);
+                for (final String bandName : waterProduct.getBandNames()) {
+                    if (bandName.startsWith("reflec")) {
+                        ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
+                    }
+                }
+                addFlhBand(correctedProduct);
 
                 if (!skipFeaturesOutput) {
-                    writeFeatures(subsetProduct, tileDir);
+                    writeFeatures(correctedProduct, tileDir);
                 }
                 if (!skipProductOutput) {
-                    writeProductSubset(subsetProduct, tileDir);
+                    writeProductSubset(correctedProduct, tileDir);
                 }
                 if (!skipRgbImageOutput) {
                     if (kml == null) {
@@ -137,6 +146,8 @@ public class AlgalBloomFex {
                     writeRgbImages(subsetProduct, tileDir, kml);
                 }
 
+                waterProduct.dispose();
+                correctedProduct.dispose();
                 subsetProduct.dispose();
             }
         }
@@ -144,6 +155,36 @@ public class AlgalBloomFex {
         if (kml != null) {
             kml.close();
         }
+    }
+
+    private Product createReflectanceProduct(Product sourceProduct) {
+        final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
+        radiometryParameters.put("doCalibration", false);
+        radiometryParameters.put("doSmile", false);
+        radiometryParameters.put("doEqualization", false);
+        radiometryParameters.put("doRadToRefl", true);
+
+        return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
+    }
+
+    private void addFlhBand(Product sourceProduct) {
+        final Band l1 = sourceProduct.getBand("reflec_7");
+        final Band l2 = sourceProduct.getBand("reflec_8");
+        final Band l3 = sourceProduct.getBand("reflec_9");
+
+        final double lambda1 = l1.getSpectralWavelength();
+        final double lambda2 = l2.getSpectralWavelength();
+        final double lambda3 = l3.getSpectralWavelength();
+        final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
+        final double cloudCorrectionFactor = 1.005;
+
+        sourceProduct.addBand("flh",
+                              String.format("%s - %s * (%s - (%s - %s) * %s)",
+                                            l2.getName(),
+                                            cloudCorrectionFactor,
+                                            l1.getName(),
+                                            l3.getName(),
+                                            l1.getName(), factor));
     }
 
     private void addMciBand(Product sourceProduct) {
@@ -185,6 +226,7 @@ public class AlgalBloomFex {
         radiometryParameters.put("doCalibration", false);
         radiometryParameters.put("doSmile", true);
         radiometryParameters.put("doEqualization", true);
+        radiometryParameters.put("reproVersion", ReprocessingVersion.REPROCESSING_3);
         radiometryParameters.put("doRadToRefl", false);
 
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
