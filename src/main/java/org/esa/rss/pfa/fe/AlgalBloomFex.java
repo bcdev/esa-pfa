@@ -45,6 +45,12 @@ import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.HashMap;
 
+/**
+ * For extracting algal bloom features.
+ *
+ * @author Norman Fomferra
+ * @author Ralf Quast
+ */
 public class AlgalBloomFex {
 
     private static final int MiB = 1024 * 1024;

@@ -20,6 +20,11 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
+/**
+ * For extracting features from all files in a directory.
+ *
+ * @author Ralf Quast
+ */
 public class FexRunner {
 
     public static void main(String[] args) {
@@ -45,8 +50,6 @@ public class FexRunner {
                 }
             }
         }
-
-
     }
 
 }
