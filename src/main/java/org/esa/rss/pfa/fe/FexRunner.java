@@ -32,7 +32,7 @@ public class FexRunner {
 
         final File dir = new File(dirPath);
         if (dir.exists()) {
-            final String[] files = dir.list(new FilenameFilter() {
+            final File[] files = dir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.endsWith(".N1");
@@ -40,9 +40,9 @@ public class FexRunner {
             });
             if (files != null) {
                 final AlgalBloomFex fex = new AlgalBloomFex();
-                for (final String file : files) {
+                for (final File file : files) {
                     try {
-                        fex.run(new String[]{file});
+                        fex.run(new String[]{file.getPath()});
                     } catch (IOException e) {
                         e.printStackTrace();
                         System.exit(2);
