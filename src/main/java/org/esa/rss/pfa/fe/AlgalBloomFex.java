@@ -41,6 +41,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -52,10 +53,11 @@ public class AlgalBloomFex {
     private static final int TILE_SIZE_X = 200;
     private static final int TILE_SIZE_Y = 200;
 
-    private static final String FEX_EXTENSION = ".fex";
+    public static final String FEX_EXTENSION = ".fex";
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
-    public static final String FEX_L1B_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
-            "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
+    public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
+                                                "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
+    public static final String FEX_VALID_MASK_NAME = "fex_valid";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -70,6 +72,7 @@ public class AlgalBloomFex {
         JAI.getDefaultInstance().getTileScheduler().setParallelism(Runtime.getRuntime().availableProcessors());
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
+
 
     void run(String[] args) throws IOException {
         if (args.length == 0) {
@@ -116,6 +119,7 @@ public class AlgalBloomFex {
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
         KmlWriter kmlWriter = null;
+
         //addCloudMask(correctedProduct);
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
@@ -127,34 +131,34 @@ public class AlgalBloomFex {
                 }
 
                 final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
-                final Product correctedProduct = createCorrectedProduct(subsetProduct);
-                correctedProduct.addMask("featureValid", FEX_VALID_MASK + "AND !(" + FEX_L1B_CLOUD_MASK + ")", "", Color.green, 0.5);
-                addMciBand(correctedProduct);
-
-                final Product waterProduct = createReflectanceProduct(correctedProduct);
+                final Product featureProduct = createCorrectedProduct(subsetProduct);
+                addValidMask(featureProduct);
+                addMciBand(featureProduct);
+                final Product waterProduct = createReflectanceProduct(featureProduct);
                 for (final String bandName : waterProduct.getBandNames()) {
                     if (bandName.startsWith("reflec")) {
-                        ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
+                        ProductUtils.copyBand(bandName, waterProduct, featureProduct, true);
                     }
                 }
-                addFlhBand(correctedProduct);
+                addFlhBand(featureProduct);
 
                 if (!skipFeaturesOutput) {
-                    writeFeatures(correctedProduct, tileDir);
+                    writeFeatures(featureProduct, tileDir);
                 }
                 if (!skipRgbImageOutput) {
                     if (kmlWriter == null) {
                         Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
-                        kmlWriter = new KmlWriter(writer, sourceFile.getName(), "RGB tiles from reflectances of " + sourceFile.getName());
+                        kmlWriter = new KmlWriter(writer, sourceFile.getName(),
+                                                  "RGB tiles from reflectances of " + sourceFile.getName());
                     }
-                    writeRgbImages(correctedProduct, tileDir, kmlWriter);
+                    writeRgbImages(featureProduct, tileDir, kmlWriter);
                 }
                 if (!skipProductOutput) {
-                    writeProductSubset(correctedProduct, tileDir);
+                    writeProductSubset(featureProduct, tileDir);
                 }
 
                 waterProduct.dispose();
-                correctedProduct.dispose();
+                featureProduct.dispose();
                 subsetProduct.dispose();
             }
         }
@@ -162,6 +166,11 @@ public class AlgalBloomFex {
         if (kmlWriter != null) {
             kmlWriter.close();
         }
+    }
+
+    private void addValidMask(Product featureProduct) {
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK);
+        featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "", Color.green, 0.5);
     }
 
     private Product createReflectanceProduct(Product sourceProduct) {
@@ -172,26 +181,6 @@ public class AlgalBloomFex {
         radiometryParameters.put("doRadToRefl", true);
 
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
-    }
-
-    private void addFlhBand(Product sourceProduct) {
-        final Band l1 = sourceProduct.getBand("reflec_7");
-        final Band l2 = sourceProduct.getBand("reflec_8");
-        final Band l3 = sourceProduct.getBand("reflec_9");
-
-        final double lambda1 = l1.getSpectralWavelength();
-        final double lambda2 = l2.getSpectralWavelength();
-        final double lambda3 = l3.getSpectralWavelength();
-        final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
-        final double cloudCorrectionFactor = 1.005;
-
-        sourceProduct.addBand("flh",
-                              String.format("%s - %s * (%s - (%s - %s) * %s)",
-                                            l2.getName(),
-                                            cloudCorrectionFactor,
-                                            l1.getName(),
-                                            l3.getName(),
-                                            l1.getName(), factor));
     }
 
     /*
@@ -211,13 +200,35 @@ public class AlgalBloomFex {
         final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
         final double cloudCorrectionFactor = 1.005;
 
-        sourceProduct.addBand("mci",
-                              String.format("%s - %s * (%s - (%s - %s) * %s)",
-                                            l2.getName(),
-                                            cloudCorrectionFactor,
-                                            l1.getName(),
-                                            l3.getName(),
-                                            l1.getName(), factor));
+        final Band mci = sourceProduct.addBand("mci",
+                                               String.format("%s - %s * (%s - (%s - %s) * %s)",
+                                                             l2.getName(),
+                                                             cloudCorrectionFactor,
+                                                             l1.getName(),
+                                                             l3.getName(),
+                                                             l1.getName(), factor));
+        mci.setValidPixelExpression(FEX_VALID_MASK_NAME);
+    }
+
+    private void addFlhBand(Product sourceProduct) {
+        final Band l1 = sourceProduct.getBand("reflec_7");
+        final Band l2 = sourceProduct.getBand("reflec_8");
+        final Band l3 = sourceProduct.getBand("reflec_9");
+
+        final double lambda1 = l1.getSpectralWavelength();
+        final double lambda2 = l2.getSpectralWavelength();
+        final double lambda3 = l3.getSpectralWavelength();
+        final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
+        final double cloudCorrectionFactor = 1.005;
+
+        final Band flh = sourceProduct.addBand("flh",
+                                               String.format("%s - %s * (%s - (%s - %s) * %s)",
+                                                             l2.getName(),
+                                                             cloudCorrectionFactor,
+                                                             l1.getName(),
+                                                             l3.getName(),
+                                                             l1.getName(), factor));
+        flh.setValidPixelExpression(FEX_VALID_MASK_NAME);
     }
 
     private Product createSubset(Product sourceProduct, int tileY, int tileX) {
@@ -298,15 +309,15 @@ public class AlgalBloomFex {
                             double minG, double maxG, double gammaG,
                             double minB, double maxB, double gammaB,
                             File outputFile) throws IOException {
-        Band r = product.addBand("virtualRed", expressionR);
-        Band g = product.addBand("virtualGreen", expressionG);
-        Band b = product.addBand("virtualBlue", expressionB);
+        Band r = product.addBand("virtual_red", expressionR);
+        Band g = product.addBand("virtual_green", expressionG);
+        Band b = product.addBand("virtual_blue", expressionB);
 
         r.setValidPixelExpression(expressionA);
         r.setNoDataValue(Double.NaN);
         r.setNoDataValueUsed(true);
 
-        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"virtualRed", "virtualGreen", "virtualBlue"});
+        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"virtual_red", "virtual_green", "virtual_blue"});
         rgbChannelDef.setMinDisplaySample(0, minR);
         rgbChannelDef.setMaxDisplaySample(0, maxR);
         rgbChannelDef.setGamma(0, gammaR);
@@ -319,7 +330,8 @@ public class AlgalBloomFex {
         rgbChannelDef.setMaxDisplaySample(2, maxB);
         rgbChannelDef.setGamma(2, gammaB);
 
-        RenderedImage rgbaImage = ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), 0);
+        RenderedImage rgbaImage = ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b},
+                                                                                    new ImageInfo(rgbChannelDef), 0);
         FileStoreDescriptor.create(rgbaImage, outputFile.getPath(), "PNG", null, null, null);
 
         /*
@@ -346,7 +358,7 @@ public class AlgalBloomFex {
 
     private void writeFeatures(Product product, String bandName, Writer featureWriter) throws IOException {
         final StxFactory stxFactory = new StxFactory();
-        stxFactory.withRoiMask(product.getMaskGroup().get("valid"));
+        stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(bandName), ProgressMonitor.NULL);
         featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
         featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
@@ -358,7 +370,8 @@ public class AlgalBloomFex {
     }
 
     private void printHelpMessage() {
-        System.out.println("Usage: " + getClass().getName() + " <product-file-1> <product-file-2> <product-file-3> ...");
+        System.out.println(
+                "Usage: " + getClass().getName() + " <product-file-1> <product-file-2> <product-file-3> ...");
     }
 
     public static void main(String[] args) {
