@@ -124,6 +124,7 @@ public class AlgalBloomFex {
         try {
             for (final String path : args) {
                 extractFeatures(new File(path), tilesFileWriter, coastDistData, coastDistWidth, coastDistHeight);
+                tilesFileWriter.flush();
             }
         } finally {
             tilesFileWriter.close();
@@ -211,8 +212,7 @@ public class AlgalBloomFex {
                     if (!skipProductOutput) {
                         writeProductSubset(correctedProduct, tileDir);
                     }
-                    tilesFileWriter.write(String.format("%s\n",
-                                                        String.format("%s/%s", featureDir.getName(), tileDir.getName())));
+                    tilesFileWriter.write(String.format("%s/%s\n", featureDir.getName(), tileDir.getName()));
 
                     waterProduct.dispose();
                     correctedProduct.dispose();
