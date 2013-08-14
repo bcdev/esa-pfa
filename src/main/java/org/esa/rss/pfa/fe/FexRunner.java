@@ -39,14 +39,16 @@ public class FexRunner {
                 }
             });
             if (files != null) {
+                final String[] paths = new String[files.length];
+                for (int i = 0; i < files.length; i++) {
+                    paths[i] = files[i].getPath();
+                }
                 final AlgalBloomFex fex = new AlgalBloomFex();
-                for (final File file : files) {
-                    try {
-                        fex.run(new String[]{file.getPath()});
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        System.exit(2);
-                    }
+                try {
+                    fex.run(paths);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(2);
                 }
             }
         }

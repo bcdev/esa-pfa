@@ -111,16 +111,30 @@ public class AlgalBloomFex {
         }
 
         final Writer tilesFileWriter = new PrintWriter(tilesFile);
+         // todo - dirty code from NF, clean up
+        Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
+        //Band coastDistance = coastDistProduct.getBand("coast_dist");
+        final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
+                                                                    "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
+        final int coastDistWidth = coastDistProduct.getSceneRasterWidth();
+        final int coastDistHeight = coastDistProduct.getSceneRasterHeight();
+        final float[] coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
+        coastDistProduct.dispose();
+
         try {
             for (String path : args) {
-                extractFeatures(new File(path), tilesFileWriter);
+                extractFeatures(new File(path), tilesFileWriter, coastDistData, coastDistWidth, coastDistHeight);
             }
         } finally {
             tilesFileWriter.close();
         }
     }
 
-    private void extractFeatures(File sourceFile, Writer tilesFileWriter) throws IOException {
+    private void extractFeatures(final File sourceFile,
+                                 final Writer tilesFileWriter,
+                                 final float[] coastDistData,
+                                 final int coastDistWidth,
+                                 final int coastDistHeight) throws IOException {
         System.out.println("Reading " + sourceFile);
 
         final Product sourceProduct = ProductIO.readProduct(sourceFile);
@@ -144,16 +158,6 @@ public class AlgalBloomFex {
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
         KmlWriter kmlWriter = null;
-
-        // todo - dirty code from NF, clean up
-        Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
-        //Band coastDistance = coastDistProduct.getBand("coast_dist");
-        final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
-                                                                    "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
-        final int coastDistWidth = coastDistProduct.getSceneRasterWidth();
-        final int coastDistHeight = coastDistProduct.getSceneRasterHeight();
-        final float[] coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
-        coastDistProduct.dispose();
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
@@ -222,7 +226,6 @@ public class AlgalBloomFex {
             kmlWriter.close();
         }
 
-        coastDistProduct.dispose();
         sourceProduct.dispose();
     }
 
