@@ -46,6 +46,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -68,6 +69,7 @@ public class AlgalBloomFex {
     public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
                                                 "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
     public static final String FEX_VALID_MASK_NAME = "fex_valid";
+    private static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
 
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
 
@@ -102,12 +104,23 @@ public class AlgalBloomFex {
             System.out.println("Warning: RGB image output skipped.");
         }
 
-        for (String path : args) {
-            extractFeatures(new File(path));
+        final File parentDir = new File(args[0]).getParentFile();
+        final File tilesFile = new File(parentDir, "tiles.txt");
+        if (tilesFile.exists()) {
+            tilesFile.delete();
+        }
+
+        final Writer tilesFileWriter = new PrintWriter(tilesFile);
+        try {
+            for (String path : args) {
+                extractFeatures(new File(path), tilesFileWriter);
+            }
+        } finally {
+            tilesFileWriter.close();
         }
     }
 
-    private void extractFeatures(File sourceFile) throws IOException {
+    private void extractFeatures(File sourceFile, Writer tilesFileWriter) throws IOException {
         System.out.println("Reading " + sourceFile);
 
         final Product sourceProduct = ProductIO.readProduct(sourceFile);
@@ -132,68 +145,76 @@ public class AlgalBloomFex {
 
         KmlWriter kmlWriter = null;
 
-
         // todo - dirty code from NF, clean up
         Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
-        Band coastDistance = coastDistProduct.getBand("coast_dist");
+        //Band coastDistance = coastDistProduct.getBand("coast_dist");
+        final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
+                                                                    "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
         final int coastDistWidth = coastDistProduct.getSceneRasterWidth();
         final int coastDistHeight = coastDistProduct.getSceneRasterHeight();
         final float[] coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
         coastDistProduct.dispose();
 
-
-
-        //addCloudMask(correctedProduct);
-
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
-                final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
-                final File tileDir = new File(featureDir, tileDirName);
-                if (!tileDir.mkdir()) {
-                    throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
-                }
-
                 final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
                 final Product correctedProduct = createCorrectedProduct(subsetProduct);
+                addCloudMask(correctedProduct);
                 addValidMask(correctedProduct);
-                addMciBand(correctedProduct);
-                final Product waterProduct = createReflectanceProduct(correctedProduct);
-                for (final String bandName : waterProduct.getBandNames()) {
-                    if (bandName.startsWith("reflec")) {
-                        ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
-                    }
-                }
-                addFlhBand(correctedProduct);
+                final Band mciBand = addMciBand(correctedProduct);
 
-                // todo - dirty code from NF, clean up
-                final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
-                coastDistBand.setSourceImage(new DefaultMultiLevelImage(new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
-                    @Override
-                    protected RenderedImage createImage(int level) {
-                        return new WorldDataOpImage(correctedProduct.getGeoCoding(), coastDistBand,
-                                                    ResolutionLevel.create(getModel(), level),
-                                                    coastDistWidth, coastDistHeight, coastDistData);
-                    }
-                }));
+                final StxFactory stxFactory = new StxFactory();
+                stxFactory.withRoiMask(correctedProduct.getMaskGroup().get(FEX_VALID_MASK_NAME));
+                final Stx stx = stxFactory.create(mciBand, ProgressMonitor.NULL);
 
-                if (!skipFeaturesOutput) {
-                    writeFeatures(correctedProduct, tileDir);
-                }
-                if (!skipRgbImageOutput) {
-                    if (kmlWriter == null) {
-                        Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
-                        kmlWriter = new KmlWriter(writer, sourceFile.getName(),
-                                                  "RGB tiles from reflectances of " + sourceFile.getName());
+                if (stx.getSampleCount() > 0) {
+                    final Product waterProduct = createReflectanceProduct(correctedProduct);
+                    for (final String bandName : waterProduct.getBandNames()) {
+                        if (bandName.startsWith("reflec")) {
+                            ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
+                        }
                     }
-                    writeRgbImages(correctedProduct, tileDir, kmlWriter);
-                }
-                if (!skipProductOutput) {
-                    writeProductSubset(correctedProduct, tileDir);
-                }
+                    addFlhBand(correctedProduct);
 
-                waterProduct.dispose();
-                correctedProduct.dispose();
-                subsetProduct.dispose();
+                    // todo - dirty code from NF, clean up
+                    final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
+                    coastDistBand.setSourceImage(new DefaultMultiLevelImage(
+                            new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
+                                @Override
+                                protected RenderedImage createImage(int level) {
+                                    return new WorldDataOpImage(correctedProduct.getGeoCoding(), coastDistBand,
+                                                                ResolutionLevel.create(getModel(), level),
+                                                                coastDistWidth, coastDistHeight, coastDistData);
+                                }
+                            }));
+
+                    final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
+                    final File tileDir = new File(featureDir, tileDirName);
+                    if (!tileDir.mkdir()) {
+                        throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
+                    }
+                    if (!skipFeaturesOutput) {
+                        writeFeatures(correctedProduct, tileDir);
+                    }
+                    if (!skipRgbImageOutput) {
+                        if (kmlWriter == null) {
+                            Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
+                            kmlWriter = new KmlWriter(writer, sourceFile.getName(),
+                                                      "RGB tiles from reflectances of " + sourceFile.getName());
+                        }
+                        writeRgbImages(correctedProduct, tileDir, kmlWriter);
+                    }
+                    if (!skipProductOutput) {
+                        writeProductSubset(correctedProduct, tileDir);
+                    }
+                    tilesFileWriter.write(String.format("%s\n", tileDir.getAbsolutePath()));
+
+                    waterProduct.dispose();
+                    correctedProduct.dispose();
+                    subsetProduct.dispose();
+                } else {
+                    subsetProduct.dispose();
+                }
             }
         }
 
@@ -201,12 +222,8 @@ public class AlgalBloomFex {
             kmlWriter.close();
         }
 
+        coastDistProduct.dispose();
         sourceProduct.dispose();
-    }
-
-    private void addValidMask(Product featureProduct) {
-        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK);
-        featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "", Color.green, 0.5);
     }
 
     private Product createReflectanceProduct(Product sourceProduct) {
@@ -219,13 +236,16 @@ public class AlgalBloomFex {
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
-    /*
-    private void addCloudMask(Product product) {
-         product.addMask("fex_cloud_mask", FEX_L1B_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW, 0.5);
+    private void addValidMask(Product featureProduct) {
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK);
+        featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "", Color.green, 0.5);
     }
-    */
 
-    private void addMciBand(Product sourceProduct) {
+    private void addCloudMask(Product product) {
+         product.addMask(FEX_CLOUD_MASK_NAME, FEX_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW, 0.5);
+    }
+
+    private Band addMciBand(Product sourceProduct) {
         final Band l1 = sourceProduct.getBand("radiance_8");
         final Band l2 = sourceProduct.getBand("radiance_9");
         final Band l3 = sourceProduct.getBand("radiance_10");
@@ -244,6 +264,7 @@ public class AlgalBloomFex {
                                                              l3.getName(),
                                                              l1.getName(), factor));
         mci.setValidPixelExpression(FEX_VALID_MASK_NAME);
+        return mci;
     }
 
     private void addFlhBand(Product sourceProduct) {
@@ -293,7 +314,6 @@ public class AlgalBloomFex {
     }
 
     private void writeRgbImages(Product product, File tileDir, KmlWriter kmlWriter) throws IOException {
-
         if (equirectangular) {
             HashMap<String, Object> parameters = new HashMap<String, Object>();
             parameters.put("crs", "EPSG:4326");
@@ -384,6 +404,7 @@ public class AlgalBloomFex {
         try {
             writeFeatures(product, "mci", featureWriter);
             writeFeatures(product, "flh", featureWriter);
+            writeFeatures(product, "coast_dist", featureWriter);
         } finally {
             try {
                 featureWriter.close();
@@ -398,6 +419,7 @@ public class AlgalBloomFex {
         final Stx stx = stxFactory.create(product.getBand(bandName), ProgressMonitor.NULL);
         featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
         featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
+        featureWriter.write(String.format("%s.count = %s\n", bandName, stx.getSampleCount()));
     }
 
     private void writeProductSubset(Product subsetProduct, File tileDir) throws IOException {
