@@ -59,7 +59,7 @@ import java.util.HashMap;
  */
 public class AlgalBloomFex {
 
-    private static final int MiB = 1024 * 1024;
+    private static final long MiB = 1024L * 1024L;
 
     private static final int TILE_SIZE_X = 200;
     private static final int TILE_SIZE_Y = 200;
@@ -82,7 +82,7 @@ public class AlgalBloomFex {
         System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
         System.setProperty("beam.reader.tileHeight", String.valueOf(TILE_SIZE_Y));
 
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(1024 * MiB);
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(2048L * MiB);
         JAI.getDefaultInstance().getTileScheduler().setParallelism(Runtime.getRuntime().availableProcessors());
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
@@ -111,11 +111,11 @@ public class AlgalBloomFex {
         }
 
         final Writer tilesFileWriter = new PrintWriter(tilesFile);
-         // todo - dirty code from NF, clean up
+        // todo - dirty code from NF, clean up
         Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
         //Band coastDistance = coastDistProduct.getBand("coast_dist");
         final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
-                                                                    "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
+                                                            "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
         final int coastDistWidth = coastDistProduct.getSceneRasterWidth();
         final int coastDistHeight = coastDistProduct.getSceneRasterHeight();
         final float[] coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
@@ -183,7 +183,7 @@ public class AlgalBloomFex {
 
                     // todo - dirty code from NF, clean up
                     final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
-                    coastDistBand.setSourceImage(new DefaultMultiLevelImage(
+                    final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
                             new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
                                 @Override
                                 protected RenderedImage createImage(int level) {
@@ -191,12 +191,14 @@ public class AlgalBloomFex {
                                                                 ResolutionLevel.create(getModel(), level),
                                                                 coastDistWidth, coastDistHeight, coastDistData);
                                 }
-                            }));
+                            });
+                    coastDistBand.setSourceImage(coastDistImage);
 
                     final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
                     final File tileDir = new File(featureDir, tileDirName);
                     if (!tileDir.mkdir()) {
-                        throw new IOException(MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
+                        throw new IOException(
+                                MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                     }
                     if (!skipFeaturesOutput) {
                         writeFeatures(correctedProduct, tileDir);
@@ -214,12 +216,11 @@ public class AlgalBloomFex {
                     }
                     tilesFileWriter.write(String.format("%s/%s\n", featureDir.getName(), tileDir.getName()));
 
+                    coastDistImage.dispose();
                     waterProduct.dispose();
-                    correctedProduct.dispose();
-                    subsetProduct.dispose();
-                } else {
-                    subsetProduct.dispose();
                 }
+                correctedProduct.dispose();
+                subsetProduct.dispose();
             }
         }
 
@@ -241,12 +242,13 @@ public class AlgalBloomFex {
     }
 
     private void addValidMask(Product featureProduct) {
-        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK);
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK_NAME);
         featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "", Color.green, 0.5);
     }
 
     private void addCloudMask(Product product) {
-         product.addMask(FEX_CLOUD_MASK_NAME, FEX_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW, 0.5);
+        product.addMask(FEX_CLOUD_MASK_NAME, FEX_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW,
+                        0.5);
     }
 
     private Band addMciBand(Product sourceProduct) {
