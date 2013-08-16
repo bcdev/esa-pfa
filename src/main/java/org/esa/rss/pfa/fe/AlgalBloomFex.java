@@ -49,6 +49,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -72,6 +74,7 @@ public class AlgalBloomFex {
     private static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
 
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
+    private static final String VERSION = "1.0-SNAPSHOT";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -105,12 +108,15 @@ public class AlgalBloomFex {
         }
 
         final File parentDir = new File(args[0]).getParentFile();
-        final File tilesFile = new File(parentDir, "tiles.txt");
+        final File tilesFile = new File(parentDir, "fex-tiles.txt");
         if (tilesFile.exists()) {
-            tilesFile.delete();
+            if (!tilesFile.delete()) {
+                throw new IOException(
+                        MessageFormat.format("Existing file ''{0}'' cannot be deleted.", tilesFile.getPath()));
+            }
         }
 
-        final Writer tilesFileWriter = new PrintWriter(tilesFile);
+        final PrintWriter tilesFileWriter = new PrintWriter(tilesFile);
         // todo - dirty code from NF, clean up
         Product coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
         //Band coastDistance = coastDistProduct.getBand("coast_dist");
@@ -123,7 +129,8 @@ public class AlgalBloomFex {
 
         try {
             for (final String path : args) {
-                extractFeatures(new File(path), tilesFileWriter, coastDistData, coastDistWidth, coastDistHeight);
+                final File file = new File(path);
+                extractFeatures(file, tilesFileWriter, coastDistData, coastDistWidth, coastDistHeight);
                 tilesFileWriter.flush();
             }
         } finally {
@@ -131,8 +138,30 @@ public class AlgalBloomFex {
         }
     }
 
+    private static class Tile {
+
+        String name;
+        int tileX;
+        int tileY;
+        int x;
+        int y;
+        int width;
+        int height;
+
+        Tile(String name, int tileX, int tileY, Rectangle rectangle) {
+            this.name = name;
+            this.tileX = tileX;
+            this.tileY = tileY;
+
+            x = rectangle.x;
+            y = rectangle.y;
+            width = rectangle.width;
+            height = rectangle.height;
+        }
+    }
+
     private void extractFeatures(final File sourceFile,
-                                 final Writer tilesFileWriter,
+                                 final PrintWriter tilesFileWriter,
                                  final float[] coastDistData,
                                  final int coastDistWidth,
                                  final int coastDistHeight) throws IOException {
@@ -159,10 +188,46 @@ public class AlgalBloomFex {
         final int tileCountY = (productSizeY + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
         KmlWriter kmlWriter = null;
+        // todo - dirty code from NRQ, clean up
+        final File metadataFile = new File(featureDir, "fex-metadata.txt");
+        final PrintWriter metadataWriter = new PrintWriter(metadataFile);
+        metadataWriter.println("# Algal bloom feature extraction");
+        metadataWriter.println(String.format("version = %s", VERSION));
+        metadataWriter.println(
+                String.format("time = %s",
+                              ProductData.UTC.create(new Date(System.currentTimeMillis()), 0).format().replace(" ",
+                                                                                                               "T")));
+        metadataWriter.println();
+        metadataWriter.println("# Extracted features:");
+        metadataWriter.println("  featureCount = 9");
+        metadataWriter.println("# Mean MCI");
+        metadataWriter.println("  features.0 = mci.mean");
+        metadataWriter.println("# Standard deviation of MCI");
+        metadataWriter.println("  features.1 = mci.stdev");
+        metadataWriter.println("# Number of pixels where MCI was calculated");
+        metadataWriter.println("  features.2 = mci.count");
+        metadataWriter.println("# Mean FLH");
+        metadataWriter.println("  features.3 = flh.mean");
+        metadataWriter.println("# Standard deviation of FLH");
+        metadataWriter.println("  features.4 = flh.stdev");
+        metadataWriter.println("# Number of pixels where FLH was calculated");
+        metadataWriter.println("  features.5 = flh.count");
+        metadataWriter.println("# Mean distance of water pixels to coast (nautical miles)");
+        metadataWriter.println("  features.6 = coast_dist.mean");
+        metadataWriter.println("# Standard deviation of distance of water pixels to coast (nautical miles)");
+        metadataWriter.println("  features.7 = coast_dist.stdev");
+        metadataWriter.println(
+                "# Number of pixels where distance to coast was calculated (i.e. number of water pixels)");
+        metadataWriter.println("  features.8 = coast_dist.count");
+        metadataWriter.println();
+
+        final ArrayList<Tile> tileList = new ArrayList<Tile>();
+        int tileCount = 0;
 
         for (int tileY = 0; tileY < tileCountY; tileY++) {
             for (int tileX = 0; tileX < tileCountX; tileX++) {
-                final Product subsetProduct = createSubset(sourceProduct, tileY, tileX);
+                final Rectangle subsetRegion = createSubsetRegion(sourceProduct, tileY, tileX);
+                final Product subsetProduct = createSubset(sourceProduct, subsetRegion);
                 final Product correctedProduct = createCorrectedProduct(subsetProduct);
                 addCloudMask(correctedProduct);
                 addValidMask(correctedProduct);
@@ -173,56 +238,88 @@ public class AlgalBloomFex {
                 final Stx stx = stxFactory.create(mciBand, ProgressMonitor.NULL);
 
                 if (stx.getSampleCount() > 0) {
-                    final Product waterProduct = createReflectanceProduct(correctedProduct);
-                    for (final String bandName : waterProduct.getBandNames()) {
-                        if (bandName.startsWith("reflec")) {
-                            ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
-                        }
-                    }
-                    addFlhBand(correctedProduct);
-
-                    // todo - dirty code from NF, clean up
-                    final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
-                    final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
-                            new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
-                                @Override
-                                protected RenderedImage createImage(int level) {
-                                    return new WorldDataOpImage(correctedProduct.getGeoCoding(), coastDistBand,
-                                                                ResolutionLevel.create(getModel(), level),
-                                                                coastDistWidth, coastDistHeight, coastDistData);
-                                }
-                            });
-                    coastDistBand.setSourceImage(coastDistImage);
-
                     final String tileDirName = String.format("x%02dy%02d", tileX, tileY);
                     final File tileDir = new File(featureDir, tileDirName);
                     if (!tileDir.mkdir()) {
                         throw new IOException(
                                 MessageFormat.format("Tile directory ''{0}'' cannot be created.", tileDir));
                     }
-                    if (!skipFeaturesOutput) {
-                        writeFeatures(correctedProduct, tileDir);
-                    }
-                    if (!skipRgbImageOutput) {
-                        if (kmlWriter == null) {
-                            Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
-                            kmlWriter = new KmlWriter(writer, sourceFile.getName(),
-                                                      "RGB tiles from reflectances of " + sourceFile.getName());
-                        }
-                        writeRgbImages(correctedProduct, tileDir, kmlWriter);
-                    }
-                    if (!skipProductOutput) {
-                        writeProductSubset(correctedProduct, tileDir);
-                    }
-                    tilesFileWriter.write(String.format("%s/%s\n", featureDir.getName(), tileDir.getName()));
+                    final String tileInfo = String.format("%s%s%s %s %s %s %s %s %s", featureDir.getName(),
+                                                          "/",
+                                                          tileDir.getName(),
+                                                          tileX,
+                                                          tileY,
+                                                          subsetRegion.x,
+                                                          subsetRegion.y,
+                                                          subsetRegion.width,
+                                                          subsetRegion.height);
+                    tilesFileWriter.println(tileInfo);
+                    tileCount++;
+                    tileList.add(new Tile(tileDir.getName(), tileX, tileY, subsetRegion));
 
-                    coastDistImage.dispose();
-                    waterProduct.dispose();
+                    if (skipFeaturesOutput && skipRgbImageOutput && skipProductOutput) {
+                        final Product waterProduct = createReflectanceProduct(correctedProduct);
+                        for (final String bandName : waterProduct.getBandNames()) {
+                            if (bandName.startsWith("reflec")) {
+                                ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
+                            }
+                        }
+                        addFlhBand(correctedProduct);
+
+                        // todo - dirty code from NF, clean up
+                        final Band coastDistBand = correctedProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
+                        final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
+                                new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
+                                    @Override
+                                    protected RenderedImage createImage(int level) {
+                                        return new WorldDataOpImage(correctedProduct.getGeoCoding(), coastDistBand,
+                                                                    ResolutionLevel.create(getModel(), level),
+                                                                    coastDistWidth, coastDistHeight, coastDistData);
+                                    }
+                                });
+                        coastDistBand.setSourceImage(coastDistImage);
+
+                        if (!skipFeaturesOutput) {
+                            writeFeatures(correctedProduct, tileDir);
+                        }
+                        if (!skipRgbImageOutput) {
+                            if (kmlWriter == null) {
+                                Writer writer = new FileWriter(new File(featureDir, "overview.kml"));
+                                kmlWriter = new KmlWriter(writer, sourceFile.getName(),
+                                                          "RGB tiles from reflectances of " + sourceFile.getName());
+                            }
+                            writeRgbImages(correctedProduct, tileDir, kmlWriter);
+                        }
+                        if (!skipProductOutput) {
+                            writeProductSubset(correctedProduct, tileDir);
+                        }
+
+                        coastDistImage.dispose();
+                        waterProduct.dispose();
+                    }
                 }
                 correctedProduct.dispose();
                 subsetProduct.dispose();
             }
         }
+
+        // todo - dirty code from RQ, clean up
+        metadataWriter.println("# Number of tiles generated");
+        metadataWriter.println(String.format("  tileCount = %d", tileCount));
+        metadataWriter.println();
+        metadataWriter.println("# List of tiles");
+        for (int i = 0; i < tileList.size(); i++) {
+            final Tile tile = tileList.get(i);
+            metadataWriter.println(String.format("  tiles.%d.name = %s", i, tile.name));
+            metadataWriter.println(String.format("  tiles.%d.tileX = %d", i, tile.tileX));
+            metadataWriter.println(String.format("  tiles.%d.tileY = %d", i, tile.tileY));
+            metadataWriter.println(String.format("  tiles.%d.x = %d", i, tile.x));
+            metadataWriter.println(String.format("  tiles.%d.y = %d", i, tile.y));
+            metadataWriter.println(String.format("  tiles.%d.width = %d", i, tile.width));
+            metadataWriter.println(String.format("  tiles.%d.height = %d", i, tile.height));
+            metadataWriter.println();
+        }
+        metadataWriter.close();
 
         if (kmlWriter != null) {
             kmlWriter.close();
@@ -294,18 +391,20 @@ public class AlgalBloomFex {
         flh.setValidPixelExpression(FEX_VALID_MASK_NAME);
     }
 
-    private Product createSubset(Product sourceProduct, int tileY, int tileX) {
+    private Product createSubset(Product sourceProduct, Rectangle subsetRegion) {
+        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("region", subsetRegion);
+
+        return GPF.createProduct("Subset", parameters, sourceProduct);
+    }
+
+    private Rectangle createSubsetRegion(Product sourceProduct, int tileY, int tileX) {
         final int productSizeX = sourceProduct.getSceneRasterWidth();
         final int productSizeY = sourceProduct.getSceneRasterHeight();
         final Rectangle sceneBoundary = new Rectangle(0, 0, productSizeX, productSizeY);
         final int x = tileX * TILE_SIZE_X;
         final int y = tileY * TILE_SIZE_Y;
-        final Rectangle subsetRegion = new Rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y).intersection(sceneBoundary);
-
-        final HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("region", subsetRegion);
-
-        return GPF.createProduct("Subset", parameters, sourceProduct);
+        return new Rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y).intersection(sceneBoundary);
     }
 
     private Product createCorrectedProduct(Product sourceProduct) {
