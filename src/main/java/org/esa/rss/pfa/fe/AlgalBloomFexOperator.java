@@ -27,6 +27,7 @@ import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.main.GPT;
 import org.esa.beam.jai.ImageManager;
@@ -278,4 +279,12 @@ public class AlgalBloomFexOperator extends FexOperator {
             System.exit(1);
         }
     }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(AlgalBloomFexOperator.class);
+        }
+    }
+
 }
