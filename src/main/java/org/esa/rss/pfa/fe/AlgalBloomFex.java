@@ -61,7 +61,9 @@ import java.util.HashMap;
  */
 public class AlgalBloomFex {
 
-    private static final long MiB = 1024L * 1024L;
+    private static final long KiB = 1024L;
+    private static final long MiB = 1024L * KiB;
+    private static final long GiB = 1024L * MiB;
 
     private static final int TILE_SIZE_X = 200;
     private static final int TILE_SIZE_Y = 200;
@@ -74,7 +76,7 @@ public class AlgalBloomFex {
     private static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
 
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
-    private static final String VERSION = "1.0-SNAPSHOT";
+    private static final String FEX_VERSION = "1.1";
 
     private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
     private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
@@ -85,7 +87,7 @@ public class AlgalBloomFex {
         System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
         System.setProperty("beam.reader.tileHeight", String.valueOf(TILE_SIZE_Y));
 
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(2048L * MiB);
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(4 * GiB);
         JAI.getDefaultInstance().getTileScheduler().setParallelism(Runtime.getRuntime().availableProcessors());
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
@@ -192,33 +194,30 @@ public class AlgalBloomFex {
         final File metadataFile = new File(featureDir, "fex-metadata.txt");
         final PrintWriter metadataWriter = new PrintWriter(metadataFile);
         metadataWriter.println("# Algal bloom feature extraction");
-        metadataWriter.println(String.format("version = %s", VERSION));
+        metadataWriter.println(String.format("version = %s", FEX_VERSION));
         metadataWriter.println(
-                String.format("time = %s",
+                String.format("processing_time = %s",
                               ProductData.UTC.create(new Date(System.currentTimeMillis()), 0).format().replace(" ",
                                                                                                                "T")));
         metadataWriter.println();
-        metadataWriter.println("# Extracted features:");
-        metadataWriter.println("  featureCount = 9");
-        metadataWriter.println("# Mean MCI");
-        metadataWriter.println("  features.0 = mci.mean");
-        metadataWriter.println("# Standard deviation of MCI");
-        metadataWriter.println("  features.1 = mci.stdev");
-        metadataWriter.println("# Number of pixels where MCI was calculated");
-        metadataWriter.println("  features.2 = mci.count");
-        metadataWriter.println("# Mean FLH");
-        metadataWriter.println("  features.3 = flh.mean");
-        metadataWriter.println("# Standard deviation of FLH");
-        metadataWriter.println("  features.4 = flh.stdev");
-        metadataWriter.println("# Number of pixels where FLH was calculated");
-        metadataWriter.println("  features.5 = flh.count");
-        metadataWriter.println("# Mean distance of water pixels to coast (nautical miles)");
-        metadataWriter.println("  features.6 = coast_dist.mean");
-        metadataWriter.println("# Standard deviation of distance of water pixels to coast (nautical miles)");
-        metadataWriter.println("  features.7 = coast_dist.stdev");
-        metadataWriter.println(
-                "# Number of pixels where distance to coast was calculated (i.e. number of water pixels)");
-        metadataWriter.println("  features.8 = coast_dist.count");
+        metadataWriter.println("# Common feature attributes:");
+        metadataWriter.println("#   mean - The mean value of valid feature pixels");
+        metadataWriter.println("#   median - The median value of valid feature pixels (estimation from 512-bin histogram)");
+        metadataWriter.println("#   stdev - The standard deviation of valid feature pixels");
+        metadataWriter.println("#   count - The number of valid feature pixels (currently the same for all features, since only a single mask is used)");
+        metadataWriter.println("#");
+        metadataWriter.println("# Features:");
+        metadataWriter.println();
+        metadataWriter.println("features.length = 9");
+        metadataWriter.println();
+        metadataWriter.println("features.0.name = mci");
+        metadataWriter.println("features.0.description = Maximum Chlorophyll Index");
+        metadataWriter.println();
+        metadataWriter.println("features.1.name = flh");
+        metadataWriter.println("features.1.description = Fluorescence Line Height");
+        metadataWriter.println();
+        metadataWriter.println("features.2.name = coast_dist");
+        metadataWriter.println("features.2.description = Distance from coast in km");
         metadataWriter.println();
 
         final ArrayList<Tile> tileList = new ArrayList<Tile>();
@@ -305,18 +304,18 @@ public class AlgalBloomFex {
 
         // todo - dirty code from RQ, clean up
         metadataWriter.println("# Number of tiles generated");
-        metadataWriter.println(String.format("  tileCount = %d", tileCount));
+        metadataWriter.println(String.format("tiles.length = %d", tileCount));
         metadataWriter.println();
         metadataWriter.println("# List of tiles");
         for (int i = 0; i < tileList.size(); i++) {
             final Tile tile = tileList.get(i);
-            metadataWriter.println(String.format("  tiles.%d.name = %s", i, tile.name));
-            metadataWriter.println(String.format("  tiles.%d.tileX = %d", i, tile.tileX));
-            metadataWriter.println(String.format("  tiles.%d.tileY = %d", i, tile.tileY));
-            metadataWriter.println(String.format("  tiles.%d.x = %d", i, tile.x));
-            metadataWriter.println(String.format("  tiles.%d.y = %d", i, tile.y));
-            metadataWriter.println(String.format("  tiles.%d.width = %d", i, tile.width));
-            metadataWriter.println(String.format("  tiles.%d.height = %d", i, tile.height));
+            metadataWriter.println(String.format("tiles.%d.name = %s", i, tile.name));
+            metadataWriter.println(String.format("tiles.%d.tileX = %d", i, tile.tileX));
+            metadataWriter.println(String.format("tiles.%d.tileY = %d", i, tile.tileY));
+            metadataWriter.println(String.format("tiles.%d.x = %d", i, tile.x));
+            metadataWriter.println(String.format("tiles.%d.y = %d", i, tile.y));
+            metadataWriter.println(String.format("tiles.%d.width = %d", i, tile.width));
+            metadataWriter.println(String.format("tiles.%d.height = %d", i, tile.height));
             metadataWriter.println();
         }
         metadataWriter.close();
@@ -523,6 +522,7 @@ public class AlgalBloomFex {
         stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(bandName), ProgressMonitor.NULL);
         featureWriter.write(String.format("%s.mean = %s\n", bandName, stx.getMean()));
+        featureWriter.write(String.format("%s.median = %s\n", bandName, stx.getMedian()));
         featureWriter.write(String.format("%s.stdev = %s\n", bandName, stx.getStandardDeviation()));
         featureWriter.write(String.format("%s.count = %s\n", bandName, stx.getSampleCount()));
     }
