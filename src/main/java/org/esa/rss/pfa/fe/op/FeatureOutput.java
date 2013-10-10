@@ -9,6 +9,6 @@ import java.io.IOException;
 */
 public interface FeatureOutput {
     void writeMetadata(FeatureType... featureTypes) throws IOException;
-    void writePatchFeatures(int patchX, int patchY, Product product, Feature... features) throws IOException;
+    void writePatchData(int patchX, int patchY, Product product, Feature... features) throws IOException;
     void close()throws IOException;
 }

@@ -1,16 +1,23 @@
 package org.esa.rss.pfa.fe.op;
 
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static org.junit.Assert.*;
+
 /**
  * @author Norman Fomferra
  */
 public class FexOperatorTest {
+
+    static {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+    }
 
     @Test
     public void testOp() throws Exception {
@@ -20,38 +27,45 @@ public class FexOperatorTest {
         sourceProduct.addBand("B2", "2");
 
         MyFeatureOutputFactory outputFactory = new MyFeatureOutputFactory();
-        Assert.assertNull(outputFactory.featureOutput);
+        assertEquals(null, outputFactory.featureOutput);
 
         FexOperator fexOperator = new MyFexOperator();
         fexOperator.setTargetPath("test");
+        fexOperator.setOverwriteMode(true);
+        fexOperator.setSkipProductOutput(true);
         fexOperator.setPatchWidth(100);
         fexOperator.setPatchHeight(100);
         fexOperator.setSourceProduct(sourceProduct);
         fexOperator.setFeatureOutputFactory(outputFactory);
         Product targetProduct = fexOperator.getTargetProduct();
 
-        Assert.assertEquals("test", outputFactory.targetPath);
-        Assert.assertSame(targetProduct, sourceProduct);
-        Assert.assertNotNull(outputFactory.featureOutput);
-        Assert.assertTrue(outputFactory.featureOutput.metadataWritten);
-        Assert.assertTrue(outputFactory.featureOutput.closed);
-        Assert.assertEquals(9, outputFactory.featureOutput.patchOutputs.size());
+        assertEquals("test", outputFactory.getTargetPath());
+        assertEquals(true, outputFactory.isOverwriteMode());
+        assertEquals(false, outputFactory.getSkipFeatureOutput());
+        assertEquals(true, outputFactory.getSkipProductOutput());
+        assertEquals(false, outputFactory.getSkipQuicklookOutput());
 
-        Assert.assertNotNull(outputFactory.featureOutput.patchOutputs.get(0).product);
-        Assert.assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterWidth());
-        Assert.assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterHeight());
+        assertSame(targetProduct, sourceProduct);
+        assertNotNull(outputFactory.featureOutput);
+        assertTrue(outputFactory.featureOutput.metadataWritten);
+        assertTrue(outputFactory.featureOutput.closed);
+        assertEquals(9, outputFactory.featureOutput.patchOutputs.size());
 
-        Assert.assertNotNull(outputFactory.featureOutput.patchOutputs.get(2).product);
-        Assert.assertEquals(56, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterWidth());
-        Assert.assertEquals(100, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(0).product);
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterWidth());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterHeight());
 
-        Assert.assertNotNull(outputFactory.featureOutput.patchOutputs.get(6).product);
-        Assert.assertEquals(100, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterWidth());
-        Assert.assertEquals(60, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(2).product);
+        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterWidth());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterHeight());
 
-        Assert.assertNotNull(outputFactory.featureOutput.patchOutputs.get(8).product);
-        Assert.assertEquals(56, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterWidth());
-        Assert.assertEquals(60, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(6).product);
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterWidth());
+        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterHeight());
+
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(8).product);
+        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterWidth());
+        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterHeight());
     }
 
 
@@ -76,15 +90,10 @@ public class FexOperatorTest {
     }
 
 
-    public static class MyFeatureOutputFactory implements FeatureOutputFactory {
+    public static class MyFeatureOutputFactory extends FeatureOutputFactory {
 
         MyFeatureOutput featureOutput;
         String targetPath;
-
-        @Override
-        public void setTargetPath(String targetPath) {
-            this.targetPath = targetPath;
-        }
 
         @Override
         public FeatureOutput createFeatureOutput(Product sourceProduct) {
@@ -104,7 +113,7 @@ public class FexOperatorTest {
         }
 
         @Override
-        public void writePatchFeatures(int patchX, int patchY, Product product, Feature... features) throws IOException {
+        public void writePatchData(int patchX, int patchY, Product product, Feature... features) throws IOException {
             MyPatchOutput patchOutput = new MyPatchOutput(product, features);
             patchOutputs.add(patchOutput);
         }

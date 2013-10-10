@@ -20,31 +20,27 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.datamodel.StxFactory;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.main.GPT;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.ProductUtils;
-import org.esa.rss.pfa.fe.op.AttributeType;
 import org.esa.rss.pfa.fe.op.Feature;
 import org.esa.rss.pfa.fe.op.FeatureType;
 import org.esa.rss.pfa.fe.op.FexOperator;
 
-import javax.media.jai.JAI;
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
+import java.util.List;
 
 /**
  * An operator for extracting algal bloom features.
@@ -52,56 +48,30 @@ import java.util.HashMap;
  * @author Norman Fomferra
  * @author Ralf Quast
  */
+@OperatorMetadata(alias = "AlgalBloomFex", version = "1.1")
 public class AlgalBloomFexOperator extends FexOperator {
 
-    private static final long KiB = 1024L;
-    private static final long MiB = 1024L * KiB;
-    private static final long GiB = 1024L * MiB;
-
-    private static final int TILE_SIZE_X = 200;
-    private static final int TILE_SIZE_Y = 200;
-
-    public static final String FEX_EXTENSION = ".fex";
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
     public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
             "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
     public static final String FEX_VALID_MASK_NAME = "fex_valid";
-    private static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
-
+    public static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
-    private static final String FEX_VERSION = "1.1";
-
-    private static boolean skipFeaturesOutput = Boolean.getBoolean("skipFeatures");
-    private static boolean skipRgbImageOutput = Boolean.getBoolean("skipRgbImage");
-    private static boolean skipProductOutput = Boolean.getBoolean("skipProduct");
-    private static boolean equirectangular = Boolean.getBoolean("equirectangular");
 
     @Parameter(defaultValue = "0.25")
-    private double validPixelRatioThreshold;
-
-
-    static {
-        System.setProperty("beam.reader.tileWidth", String.valueOf(TILE_SIZE_X));
-        System.setProperty("beam.reader.tileHeight", String.valueOf(TILE_SIZE_Y));
-
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(4 * GiB);
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(Runtime.getRuntime().availableProcessors());
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-    }
+    private double minValidPixelRatio;
 
     private transient float[] coastDistData;
     private transient int coastDistWidth;
     private transient int coastDistHeight;
-    public static final AttributeType[] STX_ATTRIBUTE_TYPES = new AttributeType[]{
-            new AttributeType("mean", "Mean value of valid feature pixels", Double.class),
-            new AttributeType("median", "Median value of valid feature pixels (estimation from 512-bin histogram)", Double.class),
-            new AttributeType("stdev", "Standard deviation of valid feature pixels", Double.class),
-            new AttributeType("count", "Number of valid feature pixels (currently the same for all features, since only a single mask is used)", Integer.class),
-    };
+
     public static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
-            new FeatureType("mci", "Maximum Chlorophyll Index", null, STX_ATTRIBUTE_TYPES),
-            new FeatureType("flh", "Fluorescence Line Height", null, STX_ATTRIBUTE_TYPES),
-            new FeatureType("coast_dist", "Distance from coast in km", null, STX_ATTRIBUTE_TYPES),
+            // todo - NF: allow the following
+            // new FeatureType("patch", "Patch product", Product.class),
+            // new FeatureType("patch_ql", "Quicklook for patch product", RenderedImage.class),
+            new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
+            new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
+            new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
     };
 
     @Override
@@ -111,9 +81,8 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     @Override
     public void initialize() throws OperatorException {
-        super.initialize();
 
-        Product coastDistProduct = null;
+        Product coastDistProduct;
         try {
             coastDistProduct = ProductIO.readProduct(FEX_COAST_DIST_PRODUCT_PATH);
         } catch (IOException e) {
@@ -121,17 +90,20 @@ public class AlgalBloomFexOperator extends FexOperator {
         }
 
         //Band coastDistance = coastDistProduct.getBand("coast_dist");
+        // todo - regenerate a better costDist dataset. The current one has a cutoff at ~800 nm
         final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
                                                             "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
         coastDistWidth = coastDistProduct.getSceneRasterWidth();
         coastDistHeight = coastDistProduct.getSceneRasterHeight();
         coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
         coastDistProduct.dispose();
+
+        super.initialize();
     }
 
     @Override
     protected Feature[] extractPatchFeatures(Product patchProduct) {
-        if (skipFeaturesOutput && skipRgbImageOutput && skipProductOutput) {
+        if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
             return null;
         }
 
@@ -139,7 +111,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         int numPixelsTotal = patchProduct.getSceneRasterWidth() * patchProduct.getSceneRasterHeight();
 
         double patchPixelRatio = numPixelsTotal / (double) numPixelsRequired;
-        if (patchPixelRatio < validPixelRatioThreshold) {
+        if (patchPixelRatio < minValidPixelRatio) {
             return null;
         }
 
@@ -153,7 +125,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         final Stx stx = stxFactory.create(mciBand, ProgressMonitor.NULL);
 
         double validPixelRatio = stx.getSampleCount() / (double) numPixelsRequired;
-        if (validPixelRatio < validPixelRatioThreshold) {
+        if (validPixelRatio < minValidPixelRatio) {
             return null;
         }
 
@@ -197,7 +169,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         radiometryParameters.put("doSmile", false);
         radiometryParameters.put("doEqualization", false);
         radiometryParameters.put("doRadToRefl", true);
-
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
@@ -268,16 +239,31 @@ public class AlgalBloomFexOperator extends FexOperator {
         final StxFactory stxFactory = new StxFactory();
         stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(featureType.getName()), ProgressMonitor.NULL);
-        return new Feature<Object>(featureType, null, stx.getMean(), stx.getMedian(), stx.getStandardDeviation(), stx.getSampleCount());
+        return new Feature<Object>(featureType, null,
+                                   stx.getMinimum(),
+                                   stx.getMaximum(),
+                                   stx.getMean(),
+                                   stx.getMedian(),
+                                   stx.getStandardDeviation(),
+                                   stx.getSampleCount());
     }
 
     public static void main(String[] args) {
+        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
         try {
-            GPT.main(args);
+            GPT.main(appendArgs("AlgalBloomFex", args));
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private static String[] appendArgs(String algalBloomFex1, String[] args) {
+        List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(algalBloomFex1));
+        algalBloomFex.addAll(Arrays.asList(args));
+        return algalBloomFex.toArray(new String[0]);
     }
 
     public static class Spi extends OperatorSpi {

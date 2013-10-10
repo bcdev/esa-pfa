@@ -1,13 +1,20 @@
 package org.esa.rss.pfa.fe.op;
 
+import com.bc.ceres.core.Assert;
+
 /**
 * @author Norman Fomferra
 */
 public class FeatureType extends AttributeType {
     private final AttributeType[] attributeTypes;
 
-    public FeatureType(String name, String description, Class<?> valueType, AttributeType... attributeTypes) {
+    public FeatureType(String name, String description, Class<?> valueType) {
         super(name, description, valueType);
+        this.attributeTypes = null;
+    }
+
+    public FeatureType(String name, String description, AttributeType... attributeTypes) {
+        super(name, description, Void.class);
         this.attributeTypes = attributeTypes;
     }
 

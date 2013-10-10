@@ -1,5 +1,7 @@
 package org.esa.rss.pfa.fe.op;
 
+import com.bc.ceres.core.Assert;
+
 /**
 * @author Norman Fomferra
 */
@@ -9,6 +11,7 @@ public class Feature<T> {
     private final Object[] attributeValues;
 
     public Feature(FeatureType featureType, T value, Object... attributeValues) {
+        Assert.notNull(featureType, "featureType");
         this.featureType = featureType;
         this.value = value;
         this.attributeValues = attributeValues;

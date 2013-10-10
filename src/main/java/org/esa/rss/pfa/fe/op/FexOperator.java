@@ -22,6 +22,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 
 import java.awt.Rectangle;
@@ -36,18 +37,38 @@ import java.util.HashMap;
 @OperatorMetadata(alias = "FexOp", version = "1.0")
 public abstract class FexOperator extends Operator implements Output {
 
+    public static final AttributeType[] STX_ATTRIBUTE_TYPES = new AttributeType[]{
+            new AttributeType("min", "Minimim value of valid feature pixels", Double.class),
+            new AttributeType("max", "Maximum value of valid feature pixels", Double.class),
+            new AttributeType("mean", "Mean value of valid feature pixels", Double.class),
+            new AttributeType("median", "Median value of valid feature pixels (estimation from 512-bin histogram)", Double.class),
+            new AttributeType("stdev", "Standard deviation of valid feature pixels", Double.class),
+            //new AttributeType("cvar", "Coefficient of variation of valid feature pixels", Double.class),
+            new AttributeType("count", "Number of valid feature pixels", Integer.class),
+    };
+    public static final int DEFAULT_PATCH_SIZE = 200;
+
+    @SourceProduct
+    protected Product sourceProduct;
+
+    @Parameter(defaultValue = DEFAULT_PATCH_SIZE + "")
+    protected int patchWidth;
+
+    @Parameter(defaultValue = DEFAULT_PATCH_SIZE + "")
+    protected int patchHeight;
+
     @Parameter(description = "The path where features will be extracted to")
     protected String targetPath;
 
-    @Parameter(defaultValue = "200")
-    protected int patchWidth;
-    @Parameter(defaultValue = "200")
-    protected int patchHeight;
+    @Parameter(defaultValue = "false")
+    protected boolean overwriteMode;
 
     @Parameter(defaultValue = "false")
     protected boolean skipFeaturesOutput;
+
     @Parameter(defaultValue = "false")
-    protected boolean skipRgbImageOutput;
+    protected boolean skipQuicklookOutput;
+
     @Parameter(defaultValue = "false")
     protected boolean skipProductOutput;
 
@@ -58,6 +79,22 @@ public abstract class FexOperator extends Operator implements Output {
 
     public void setTargetPath(String targetPath) {
         this.targetPath = targetPath;
+    }
+
+    public void setOverwriteMode(boolean overwriteMode) {
+        this.overwriteMode = overwriteMode;
+    }
+
+    public void setSkipFeaturesOutput(boolean skipFeaturesOutput) {
+        this.skipFeaturesOutput = skipFeaturesOutput;
+    }
+
+    public void setSkipProductOutput(boolean skipProductOutput) {
+        this.skipProductOutput = skipProductOutput;
+    }
+
+    public void setSkipQuicklookOutput(boolean skipQuicklookOutput) {
+        this.skipQuicklookOutput = skipQuicklookOutput;
     }
 
     public void setPatchWidth(int patchWidth) {
@@ -82,22 +119,33 @@ public abstract class FexOperator extends Operator implements Output {
         if (featureOutputFactory == null) {
             initFeatureOutputFactory();
         }
-        featureOutputFactory.setTargetPath(targetPath);
 
+        // todo - nf20131010 - make 'outputProperties' an operator parameter so that we can have FeatureOutputFactory-specific properties (e.g. from Hadoop job requests)
+        HashMap<String, String> outputProperties = new HashMap<String, String>();
+        outputProperties.put(FeatureOutputFactory.PROPERTY_TARGET_PATH, targetPath);
+        outputProperties.put(FeatureOutputFactory.PROPERTY_OVERWRITE_MODE, overwriteMode + "");
+        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput + "");
+        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput + "");
+        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput + "");
+        featureOutputFactory.configure(outputProperties);
+
+        if (overwriteMode) {
+            System.out.println("Warning: FexOp: Overwrite mode is on.");
+        }
         if (skipFeaturesOutput) {
-            System.out.println("Warning: Feature output skipped.");
+            System.out.println("Warning: FexOp: Feature output skipped.");
         }
         if (skipProductOutput) {
-            System.out.println("Warning: Product output skipped.");
+            System.out.println("Warning: FexOp: Product output skipped.");
         }
-        if (skipRgbImageOutput) {
-            System.out.println("Warning: RGB image output skipped.");
+        if (skipQuicklookOutput) {
+            System.out.println("Warning: FexOp: RGB image output skipped.");
         }
 
-        setTargetProduct(getSourceProduct());
+        setTargetProduct(sourceProduct);
 
-        int productSizeX = getSourceProduct().getSceneRasterWidth();
-        int productSizeY = getSourceProduct().getSceneRasterHeight();
+        int productSizeX = sourceProduct.getSceneRasterWidth();
+        int productSizeY = sourceProduct.getSceneRasterHeight();
         int patchCountX = (productSizeX + patchWidth - 1) / patchWidth;
         int patchCountY = (productSizeY + patchHeight - 1) / patchHeight;
 
@@ -109,7 +157,6 @@ public abstract class FexOperator extends Operator implements Output {
     }
 
     private void run(int patchCountX, int patchCountY) throws IOException {
-        Product sourceProduct = getSourceProduct();
         FeatureOutput featureOutput = featureOutputFactory.createFeatureOutput(sourceProduct);
         FeatureType[] featureTypes = getFeatureTypes();
         featureOutput.writeMetadata(featureTypes);
@@ -122,7 +169,7 @@ public abstract class FexOperator extends Operator implements Output {
 
                 Feature[] features = extractPatchFeatures(patchProduct);
                 if (features != null) {
-                    featureOutput.writePatchFeatures(patchX, patchY, patchProduct, features);
+                    featureOutput.writePatchData(patchX, patchY, patchProduct, features);
                 }
 
                 patchProduct.dispose();
@@ -159,9 +206,4 @@ public abstract class FexOperator extends Operator implements Output {
         parameters.put("region", subsetRegion);
         return GPF.createProduct("Subset", parameters, sourceProduct);
     }
-
-    static {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-    }
-
 }
