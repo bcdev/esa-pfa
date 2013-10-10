@@ -109,7 +109,8 @@ public class AlgalBloomFex {
             System.out.println("Warning: RGB image output skipped.");
         }
 
-        final File parentDir = new File(args[0]).getParentFile();
+        String firstPath = args[0];
+        final File parentDir = new File(firstPath).getParentFile();
         final File tilesFile = new File(parentDir, "fex-tiles.txt");
         if (tilesFile.exists()) {
             if (!tilesFile.delete()) {
