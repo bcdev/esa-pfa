@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe;
 
+import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -28,6 +29,10 @@ public class WorldDataOpImage extends RasterDataNodeSampleOpImage {
      */
     public WorldDataOpImage(GeoCoding geoCoding, Band band, ResolutionLevel level, int worldWidth, int worldHeight, float[] worldData) {
         super(band, level);
+        Assert.notNull(geoCoding, "geoCoding");
+        Assert.notNull(band, "band");
+        Assert.notNull(level, "level");
+        Assert.notNull(worldData, "worldData");
         this.geoCoding = geoCoding;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
