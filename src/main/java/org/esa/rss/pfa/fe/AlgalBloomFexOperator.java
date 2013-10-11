@@ -20,7 +20,11 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.Stx;
+import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -35,11 +39,14 @@ import org.esa.rss.pfa.fe.op.Feature;
 import org.esa.rss.pfa.fe.op.FeatureType;
 import org.esa.rss.pfa.fe.op.FexOperator;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -102,7 +109,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     @Override
-    protected Feature[] extractPatchFeatures(Product patchProduct) {
+    protected Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle subsetRegion, Product patchProduct) {
         if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
             return null;
         }
@@ -112,6 +119,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         double patchPixelRatio = numPixelsTotal / (double) numPixelsRequired;
         if (patchPixelRatio < minValidPixelRatio) {
+            getLogger().warning(String.format("Rejected patch x%dy%d, patchPixelRatio=%f%%", patchX, patchY, patchPixelRatio * 100));
             return null;
         }
 
@@ -126,6 +134,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         double validPixelRatio = stx.getSampleCount() / (double) numPixelsRequired;
         if (validPixelRatio < minValidPixelRatio) {
+            getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio=%f%%", patchX, patchY, validPixelRatio * 100));
             return null;
         }
 
