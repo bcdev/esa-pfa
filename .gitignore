@@ -6,3 +6,4 @@ target
 *.dim
 *.data
 auxdata/continents
+output
