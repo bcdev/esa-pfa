@@ -21,8 +21,10 @@ import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
@@ -58,6 +60,19 @@ import java.util.List;
 @OperatorMetadata(alias = "AlgalBloomFex", version = "1.1")
 public class AlgalBloomFexOperator extends FexOperator {
 
+    public static void main(String[] args) {
+        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        try {
+            GPT.main(appendArgs("AlgalBloomFex", args));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
     public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
             "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
@@ -65,7 +80,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     public static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
 
-    @Parameter(defaultValue = "0.25")
+    @Parameter(defaultValue = "0.2")
     private double minValidPixelRatio;
 
     private transient float[] coastDistData;
@@ -73,9 +88,9 @@ public class AlgalBloomFexOperator extends FexOperator {
     private transient int coastDistHeight;
 
     public static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
-            // todo - NF: allow the following
-            // new FeatureType("patch", "Patch product", Product.class),
-            // new FeatureType("patch_ql", "Quicklook for patch product", RenderedImage.class),
+            new FeatureType("patch", "Patch product", Product.class),
+            new FeatureType("patch_ql", "Quicklook for patch product", RenderedImage.class),
+            new FeatureType("patch_ql_masked", "Masked quicklook for patch product", RenderedImage.class),
             new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
             new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
@@ -96,7 +111,6 @@ public class AlgalBloomFexOperator extends FexOperator {
             throw new OperatorException(e);
         }
 
-        //Band coastDistance = coastDistProduct.getBand("coast_dist");
         // todo - regenerate a better costDist dataset. The current one has a cutoff at ~800 nm
         final Band coastDistance = coastDistProduct.addBand("coast_dist_nm_cleaned",
                                                             "coast_dist_nm > 300.0 ? 300.0 : coast_dist_nm");
@@ -138,10 +152,10 @@ public class AlgalBloomFexOperator extends FexOperator {
             return null;
         }
 
-        final Product waterProduct = createReflectanceProduct(correctedProduct);
-        for (final String bandName : waterProduct.getBandNames()) {
+        final Product reflectanceProduct = createReflectanceProduct(correctedProduct);
+        for (final String bandName : reflectanceProduct.getBandNames()) {
             if (bandName.startsWith("reflec")) {
-                ProductUtils.copyBand(bandName, waterProduct, correctedProduct, true);
+                ProductUtils.copyBand(bandName, reflectanceProduct, correctedProduct, true);
             }
         }
         addFlhBand(correctedProduct);
@@ -160,13 +174,16 @@ public class AlgalBloomFexOperator extends FexOperator {
         coastDistBand.setSourceImage(coastDistImage);
 
         Feature[] features = {
-                createFeature(FEATURE_TYPES[0], correctedProduct),
-                createFeature(FEATURE_TYPES[1], correctedProduct),
-                createFeature(FEATURE_TYPES[2], correctedProduct),
+                new Feature(FEATURE_TYPES[0], reflectanceProduct),
+                new Feature(FEATURE_TYPES[1], createReflectanceRgbImage(reflectanceProduct)),
+                new Feature(FEATURE_TYPES[2], createReflectanceRgbImageMasked(reflectanceProduct)),
+                createFeature(FEATURE_TYPES[3], correctedProduct),
+                createFeature(FEATURE_TYPES[4], correctedProduct),
+                createFeature(FEATURE_TYPES[5], correctedProduct),
         };
 
         coastDistImage.dispose();
-        waterProduct.dispose();
+        reflectanceProduct.dispose();
         correctedProduct.dispose();
 
         return features;
@@ -248,26 +265,82 @@ public class AlgalBloomFexOperator extends FexOperator {
         final StxFactory stxFactory = new StxFactory();
         stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(featureType.getName()), ProgressMonitor.NULL);
-        return new Feature<Object>(featureType, null,
-                                   stx.getMinimum(),
-                                   stx.getMaximum(),
-                                   stx.getMean(),
-                                   stx.getMedian(),
-                                   stx.getStandardDeviation(),
-                                   stx.getSampleCount());
+        return new Feature(featureType, null,
+                           stx.getMinimum(),
+                           stx.getMaximum(),
+                           stx.getMean(),
+                           stx.getMedian(),
+                           stx.getStandardDeviation(),
+                           stx.getSampleCount());
     }
 
-    public static void main(String[] args) {
-        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
-        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-        try {
-            GPT.main(appendArgs("AlgalBloomFex", args));
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+    private RenderedImage createReflectanceRgbImageMasked(Product product) {
+        return createReflectanceRgbImage(product, FEX_VALID_MASK);
     }
+
+    private RenderedImage createReflectanceRgbImage(Product product) {
+        return createReflectanceRgbImage(product, "NOT l1_flags.INVALID");
+    }
+
+    private RenderedImage createReflectanceRgbImage(Product product, String validMask) {
+        return createImage(product,
+                           "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)",
+                           "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)",
+                           "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)",
+                           validMask,
+                           -2.0, -1.0, 1.2,
+                           -2.0, -1.0, 1.2,
+                           -1.5, -0.5, 1.5);
+                           /*
+                           -2, 0, 1.0,
+                           -2, 0, 1.0,
+                           -2, 0, 1.0);
+                           */
+                           /*
+                           -1.95, -1.35, 1.1,
+                           -1.9, -1.4, 1.1,
+                           -1.3, -0.7, 1.0);
+                           */
+    }
+
+    private RenderedImage createImage(Product product,
+                                      String expressionR,
+                                      String expressionG,
+                                      String expressionB,
+                                      String expressionA,
+                                      double minR, double maxR, double gammaR,
+                                      double minG, double maxG, double gammaG,
+                                      double minB, double maxB, double gammaB) {
+        Band r = product.addBand("virtual_red", expressionR);
+        Band g = product.addBand("virtual_green", expressionG);
+        Band b = product.addBand("virtual_blue", expressionB);
+
+        r.setValidPixelExpression(expressionA);
+        r.setNoDataValue(Double.NaN);
+        r.setNoDataValueUsed(true);
+
+        RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{"virtual_red", "virtual_green", "virtual_blue"});
+        rgbChannelDef.setMinDisplaySample(0, minR);
+        rgbChannelDef.setMaxDisplaySample(0, maxR);
+        rgbChannelDef.setGamma(0, gammaR);
+
+        rgbChannelDef.setMinDisplaySample(1, minG);
+        rgbChannelDef.setMaxDisplaySample(1, maxG);
+        rgbChannelDef.setGamma(1, gammaG);
+
+        rgbChannelDef.setMinDisplaySample(2, minB);
+        rgbChannelDef.setMaxDisplaySample(2, maxB);
+        rgbChannelDef.setGamma(2, gammaB);
+
+        RenderedImage rgbaImage = ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b},
+                                                                                    new ImageInfo(rgbChannelDef), 0);
+        product.removeBand(r);
+        product.removeBand(g);
+        product.removeBand(b);
+
+        return rgbaImage;
+    }
+
 
     private static String[] appendArgs(String algalBloomFex1, String[] args) {
         List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(algalBloomFex1));

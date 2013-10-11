@@ -1,12 +1,17 @@
 package org.esa.rss.pfa.fe.op;
 
-import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.rss.pfa.fe.KmlWriter;
 
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Norman Fomferra
@@ -15,13 +20,14 @@ public class DefaultFeatureOutput implements FeatureOutput {
 
     public static final String PATCH_ID_PATTERN = "x%02dy%02d";
     public static final String METADATA_FILE_NAME = "fex-metadata.txt";
+    public static final String KML_OVERVIEW_FILE_NAME = "fex-overview.kml";
     public static final String PRODUCT_DIR_NAME_EXTENSION = ".fex";
 
-    private final FeatureOutputFactory featureOutputFactory;
     private final File productTargetDir;
+    private List<KmlWriter> kmlWriters;
+    private final boolean overwriteMode;
 
     public DefaultFeatureOutput(FeatureOutputFactory featureOutputFactory, String productName) throws IOException {
-        this.featureOutputFactory = featureOutputFactory;
 
         String targetPath = featureOutputFactory.getTargetPath();
         if (targetPath == null) {
@@ -30,15 +36,16 @@ public class DefaultFeatureOutput implements FeatureOutput {
 
         File targetDir = new File(targetPath).getAbsoluteFile();
 
+        overwriteMode = featureOutputFactory.isOverwriteMode();
         if (targetDir.exists()) {
-            if (!featureOutputFactory.isOverwriteMode()) {
+            if (!overwriteMode) {
                 String[] contents = targetDir.list();
                 if (contents != null && contents.length > 0) {
                     throw new IOException(String.format("Directory is not empty: '%s'", targetDir));
                 }
             }
         } else {
-            if (!featureOutputFactory.isOverwriteMode()) {
+            if (!overwriteMode) {
                 throw new IOException(String.format("Directory does not exist: '%s'", targetDir));
             } else {
                 if (!targetDir.mkdirs()) {
@@ -85,13 +92,77 @@ public class DefaultFeatureOutput implements FeatureOutput {
         }
     }
 
-    public static void writeFeatures(Feature[] features, Writer writer) throws IOException {
-        for (Feature feature : features) {
-            writeFeature(feature, writer);
+    @Override
+    public void initialize(Product sourceProduct, FeatureType... featureTypes) throws IOException {
+        Writer metadataWriter = new FileWriter(new File(productTargetDir, METADATA_FILE_NAME));
+        try {
+            writeFeatureTypes(featureTypes, metadataWriter);
+        } finally {
+            metadataWriter.close();
+        }
+
+        // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
+        kmlWriters = new ArrayList<KmlWriter>();
+        for (FeatureType featureType : featureTypes) {
+            if (isRenderedImageFeatureType(featureType)) {
+                KmlWriter kmlWriter = new KmlWriter(new FileWriter(new File(productTargetDir, featureType.getName() + "_overview.kml")),
+                                                    sourceProduct.getName(),
+                                                    "RGB tiles from reflectances of " + sourceProduct.getName());
+                kmlWriters.add(kmlWriter);
+            }
         }
     }
 
-    public static void writeFeature(Feature feature, Writer writer) throws IOException {
+    private boolean isRenderedImageFeatureType(FeatureType featureType) {
+        return RenderedImage.class.isAssignableFrom(featureType.getValueType());
+    }
+
+    @Override
+    public void writePatchFeatures(int patchX, int patchY, Product patchProduct, Feature... features) throws IOException {
+        String patchId = String.format(PATCH_ID_PATTERN, patchX, patchY);
+
+        final File patchTargetDir = new File(productTargetDir, patchId);
+        if (!patchTargetDir.exists()) {
+            if (!patchTargetDir.mkdir()) {
+                throw new IOException(String.format("Failed to create directory '%s'", patchTargetDir));
+            }
+        }
+
+        File file = new File(patchTargetDir, "features.txt");
+        Writer writer = new FileWriter(file);
+        try {
+            int kmlWriterIndex = 0;
+            for (Feature feature : features) {
+                FeatureWriter featureWriter = feature.getExtension(FeatureWriter.class);
+                if (featureWriter != null) {
+                    featureWriter.writeFeature(feature, patchTargetDir.getPath());
+
+                    // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
+                    if (isRenderedImageFeatureType(feature.getFeatureType())) {
+                        float w = patchProduct.getSceneRasterWidth();
+                        float h = patchProduct.getSceneRasterHeight();
+                        // quadPositions: counter clockwise lon,lat coordinates starting at lower-left
+                        GeoPos[] quadPositions = new GeoPos[]{
+                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(0, h), null),
+                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(w, h), null),
+                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(w, 0), null),
+                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(0, 0), null),
+                        };
+                        kmlWriters.get(kmlWriterIndex).writeGroundOverlayEx(patchId, quadPositions, patchId + "/" + feature.getName() + ".png");
+                        kmlWriterIndex++;
+                    }
+
+                } else {
+                    writeFeature(feature, writer);
+                }
+            }
+        } finally {
+            writer.close();
+        }
+
+    }
+
+    private void writeFeature(Feature feature, Writer writer) throws IOException {
         Object[] attributeValues = feature.getAttributeValues();
         if (attributeValues != null) {
             for (int i = 0; i < attributeValues.length; i++) {
@@ -108,54 +179,9 @@ public class DefaultFeatureOutput implements FeatureOutput {
     }
 
     @Override
-    public void writeMetadata(FeatureType... featureTypes) throws IOException {
-
-        File file = new File(productTargetDir, METADATA_FILE_NAME);
-        Writer writer = new FileWriter(file);
-
-        try {
-            writeFeatureTypes(featureTypes, writer);
-        } finally {
-            writer.close();
-        }
-
-        if (!featureOutputFactory.getSkipQuicklookOutput()) {
-            // todo - write KML
-        }
-    }
-
-    @Override
-    public void writePatchData(int patchX, int patchY, Product product, Feature... features) throws IOException {
-        String patchId = String.format(PATCH_ID_PATTERN, patchX, patchY);
-
-        final File patchTargetDir = new File(productTargetDir, patchId);
-        if (!patchTargetDir.mkdir()) {
-            throw new IOException(String.format("Failed to create directory '%s'", patchTargetDir));
-        }
-
-        if (!featureOutputFactory.getSkipFeatureOutput()) {
-            File file = new File(patchTargetDir, "features.txt");
-            Writer writer = new FileWriter(file);
-            try {
-                writeFeatures(features, writer);
-            } finally {
-                writer.close();
-            }
-        }
-
-        if (!featureOutputFactory.getSkipProductOutput()) {
-            ProductIO.writeProduct(product, new File(patchTargetDir, product.getName() + ".dim"), "BEAM-DIMAP", false);
-        }
-
-        if (!featureOutputFactory.getSkipQuicklookOutput()) {
-            // todo - write RGB
-        }
-    }
-
-    @Override
-    public void close() {
-        if (!featureOutputFactory.getSkipQuicklookOutput()) {
-            // todo - close KML
+    public void close() throws IOException {
+        for (KmlWriter kmlWriter : kmlWriters) {
+            kmlWriter.close();
         }
     }
 }

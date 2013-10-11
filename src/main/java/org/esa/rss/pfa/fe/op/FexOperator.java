@@ -159,7 +159,7 @@ public abstract class FexOperator extends Operator implements Output {
     private void run(int patchCountX, int patchCountY) throws IOException {
         FeatureOutput featureOutput = featureOutputFactory.createFeatureOutput(sourceProduct);
         FeatureType[] featureTypes = getFeatureTypes();
-        featureOutput.writeMetadata(featureTypes);
+        featureOutput.initialize(getSourceProduct(), featureTypes);
 
         for (int patchY = 0; patchY < patchCountY; patchY++) {
             for (int patchX = 0; patchX < patchCountX; patchX++) {
@@ -170,7 +170,7 @@ public abstract class FexOperator extends Operator implements Output {
 
                 Feature[] features = extractPatchFeatures(patchX, patchY, patchRegion, patchProduct);
                 if (features != null) {
-                    featureOutput.writePatchData(patchX, patchY, patchProduct, features);
+                    featureOutput.writePatchFeatures(patchX, patchY, patchProduct, features);
                 }
 
                 patchProduct.dispose();

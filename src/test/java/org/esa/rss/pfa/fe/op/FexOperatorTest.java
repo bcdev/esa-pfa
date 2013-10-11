@@ -47,7 +47,7 @@ public class FexOperatorTest {
 
         assertSame(targetProduct, sourceProduct);
         assertNotNull(outputFactory.featureOutput);
-        assertTrue(outputFactory.featureOutput.metadataWritten);
+        assertTrue(outputFactory.featureOutput.initialized);
         assertTrue(outputFactory.featureOutput.closed);
         assertEquals(9, outputFactory.featureOutput.patchOutputs.size());
 
@@ -83,8 +83,8 @@ public class FexOperatorTest {
         @Override
         protected Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle subsetRegion, Product patchProduct) {
             return new Feature[]{
-                    new Feature<String>(FEATURE_TYPES[0], "bibo"),
-                    new Feature<Double>(FEATURE_TYPES[1], 3.14),
+                    new Feature(FEATURE_TYPES[0], "bibo"),
+                    new Feature(FEATURE_TYPES[1], 3.14),
             };
         }
     }
@@ -104,16 +104,16 @@ public class FexOperatorTest {
 
     private static class MyFeatureOutput implements FeatureOutput {
         ArrayList<MyPatchOutput> patchOutputs = new ArrayList<MyPatchOutput>();
-        boolean metadataWritten;
+        boolean initialized;
         boolean closed;
 
         @Override
-        public void writeMetadata(FeatureType... featureTypes) {
-            metadataWritten = true;
+        public void initialize(Product sourceProduct, FeatureType... featureTypes) throws IOException {
+            initialized = true;
         }
 
         @Override
-        public void writePatchData(int patchX, int patchY, Product product, Feature... features) throws IOException {
+        public void writePatchFeatures(int patchX, int patchY, Product product, Feature... features) throws IOException {
             MyPatchOutput patchOutput = new MyPatchOutput(product, features);
             patchOutputs.add(patchOutput);
         }
