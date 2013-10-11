@@ -111,7 +111,7 @@ public abstract class FexOperator extends Operator implements Output {
 
     protected abstract FeatureType[] getFeatureTypes();
 
-    protected abstract Feature[] extractPatchFeatures(Product patchProduct);
+    protected abstract Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle patchRegion, Product patchProduct);
 
     @Override
     public void initialize() throws OperatorException {
@@ -164,10 +164,11 @@ public abstract class FexOperator extends Operator implements Output {
         for (int patchY = 0; patchY < patchCountY; patchY++) {
             for (int patchX = 0; patchX < patchCountX; patchX++) {
 
-                Rectangle subsetRegion = createSubsetRegion(sourceProduct, patchY, patchX);
-                Product patchProduct = createSubset(sourceProduct, subsetRegion);
+                Rectangle patchRegion = createSubsetRegion(sourceProduct, patchY, patchX);
+                Product patchProduct = createSubset(sourceProduct, patchRegion);
+                patchProduct.setName("patch");
 
-                Feature[] features = extractPatchFeatures(patchProduct);
+                Feature[] features = extractPatchFeatures(patchX, patchY, patchRegion, patchProduct);
                 if (features != null) {
                     featureOutput.writePatchData(patchX, patchY, patchProduct, features);
                 }

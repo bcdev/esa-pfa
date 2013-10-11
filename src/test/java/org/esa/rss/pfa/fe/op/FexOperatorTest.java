@@ -2,9 +2,9 @@ package org.esa.rss.pfa.fe.op;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.junit.Assert;
 import org.junit.Test;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -81,7 +81,7 @@ public class FexOperatorTest {
         }
 
         @Override
-        protected Feature[] extractPatchFeatures(Product patchProduct) {
+        protected Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle subsetRegion, Product patchProduct) {
             return new Feature[]{
                     new Feature<String>(FEATURE_TYPES[0], "bibo"),
                     new Feature<Double>(FEATURE_TYPES[1], 3.14),
