@@ -34,9 +34,6 @@ public class DefaultFeatureOutput implements FeatureOutput {
             if (!featureOutputFactory.isOverwriteMode()) {
                 String[] contents = targetDir.list();
                 if (contents != null && contents.length > 0) {
-                    for (String content : contents) {
-                        System.out.println("content = " + content);
-                    }
                     throw new IOException(String.format("Directory is not empty: '%s'", targetDir));
                 }
             }
