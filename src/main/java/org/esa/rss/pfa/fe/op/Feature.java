@@ -42,6 +42,10 @@ public class Feature extends ExtensibleObject {
         return featureType.getName();
     }
 
+    public Class<?> getValueType() {
+        return featureType.getValueType();
+    }
+
     public FeatureType getFeatureType() {
         return featureType;
     }

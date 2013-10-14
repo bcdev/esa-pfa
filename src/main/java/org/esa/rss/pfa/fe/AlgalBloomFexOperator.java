@@ -22,6 +22,7 @@ import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
@@ -94,6 +95,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
             new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
+            new FeatureType("section_length", "Max. section length metric", Double.class),
     };
 
     @Override
@@ -173,6 +175,10 @@ public class AlgalBloomFexOperator extends FexOperator {
                 });
         coastDistBand.setSourceImage(coastDistImage);
 
+
+        Mask mask = correctedProduct.getMaskGroup().get(FEX_VALID_MASK_NAME);
+        ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(mask);
+
         Feature[] features = {
                 new Feature(FEATURE_TYPES[0], reflectanceProduct),
                 new Feature(FEATURE_TYPES[1], createReflectanceRgbImage(reflectanceProduct)),
@@ -180,6 +186,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[3], correctedProduct),
                 createFeature(FEATURE_TYPES[4], correctedProduct),
                 createFeature(FEATURE_TYPES[5], correctedProduct),
+                new Feature(FEATURE_TYPES[6], connectivityMetric.sectionLengthRatio),
         };
 
         coastDistImage.dispose();
@@ -188,6 +195,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         return features;
     }
+
 
     private Product createReflectanceProduct(Product sourceProduct) {
         final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
@@ -266,10 +274,10 @@ public class AlgalBloomFexOperator extends FexOperator {
         stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(featureType.getName()), ProgressMonitor.NULL);
         return new Feature(featureType, null,
-                           stx.getMinimum(),
-                           stx.getMaximum(),
                            stx.getMean(),
                            stx.getMedian(),
+                           stx.getMinimum(),
+                           stx.getMaximum(),
                            stx.getStandardDeviation(),
                            stx.getSampleCount());
     }

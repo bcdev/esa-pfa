@@ -38,10 +38,10 @@ import java.util.HashMap;
 public abstract class FexOperator extends Operator implements Output {
 
     public static final AttributeType[] STX_ATTRIBUTE_TYPES = new AttributeType[]{
-            new AttributeType("min", "Minimim value of valid feature pixels", Double.class),
-            new AttributeType("max", "Maximum value of valid feature pixels", Double.class),
             new AttributeType("mean", "Mean value of valid feature pixels", Double.class),
             new AttributeType("median", "Median value of valid feature pixels (estimation from 512-bin histogram)", Double.class),
+            new AttributeType("min", "Minimim value of valid feature pixels", Double.class),
+            new AttributeType("max", "Maximum value of valid feature pixels", Double.class),
             new AttributeType("stdev", "Standard deviation of valid feature pixels", Double.class),
             //new AttributeType("cvar", "Coefficient of variation of valid feature pixels", Double.class),
             new AttributeType("count", "Number of valid feature pixels", Integer.class),
