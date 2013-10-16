@@ -19,10 +19,16 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * For computing the contagion, see p. 28 at
+ * http://lanpartei.de/~anubis/Gecko/Faecher/landschaftsökologie/Vorlesung/vl_lec_2008_05_26.pdf
+ *
+ * @author Ralf Quast
+ */
 public class ContagionTest {
 
     @Test
-    public void testCompute4x4() throws Exception {
+    public void testCompute4x4_1() throws Exception {
         Contagion cm = Contagion.computeQueen(4, 4, new byte[]{
                 1, 1, 1, 1,
                 1, 1, 1, 1,
@@ -49,6 +55,78 @@ public class ContagionTest {
         assertEquals(5.0 / 12.0, cm.p10, 0.0);
 
         assertEquals(12.0 / 12.0, cm.p11, 0.0);
+
+        assertTrue(cm.c >= 0.0);
+
+        assertTrue(cm.c <= 1.0);
+
+        System.out.println("cm.c = " + cm.c);
+    }
+
+    @Test
+    public void testCompute4x4_2() throws Exception {
+        Contagion cm = Contagion.computeQueen(4, 4, new byte[]{
+                1, 1, 1, 1,
+                1, 1, 1, 1,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+        });
+
+        assertEquals(8, cm.n0);
+
+        assertEquals(8, cm.n1);
+
+        assertEquals(8, cm.n00);
+
+        assertEquals(4, cm.n01);
+
+        assertEquals(4, cm.n10);
+
+        assertEquals(8, cm.n11);
+
+        assertEquals(8.0 / 8.0, cm.p00, 0.0);
+
+        assertEquals(4.0 / 8.0, cm.p01, 0.0);
+
+        assertEquals(4.0 / 8.0, cm.p10, 0.0);
+
+        assertEquals(8.0 / 8.0, cm.p11, 0.0);
+
+        assertTrue(cm.c >= 0.0);
+
+        assertTrue(cm.c <= 1.0);
+
+        System.out.println("cm.c = " + cm.c);
+    }
+
+    @Test
+    public void testCompute4x4_3() throws Exception {
+        Contagion cm = Contagion.computeQueen(4, 4, new byte[]{
+                1, 0, 1, 0,
+                0, 1, 0, 1,
+                1, 0, 1, 0,
+                0, 1, 0, 1,
+        });
+
+        assertEquals(8, cm.n0);
+
+        assertEquals(8, cm.n1);
+
+        assertEquals(8, cm.n00);
+
+        assertEquals(8, cm.n01);
+
+        assertEquals(8, cm.n10);
+
+        assertEquals(8, cm.n11);
+
+        assertEquals(8.0 / 8.0, cm.p00, 0.0);
+
+        assertEquals(8.0 / 8.0, cm.p01, 0.0);
+
+        assertEquals(8.0 / 8.0, cm.p10, 0.0);
+
+        assertEquals(8.0 / 8.0, cm.p11, 0.0);
 
         assertTrue(cm.c >= 0.0);
 
