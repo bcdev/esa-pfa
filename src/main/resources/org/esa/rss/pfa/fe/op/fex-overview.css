@@ -1,0 +1,19 @@
+body {
+    font: "Helvetica";
+}
+
+p {
+    font-size: 16px;
+}
+
+.feature_name {
+    color: darkblue;
+}
+
+.attribute_name {
+    color: darkblue;
+}
+
+.value {
+    font: "Monospaced"
+}

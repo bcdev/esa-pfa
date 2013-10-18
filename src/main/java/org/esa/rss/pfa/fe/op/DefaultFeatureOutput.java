@@ -25,6 +25,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
     public static final String METADATA_FILE_NAME = "fex-metadata.txt";
     public static final String OVERVIEW_XML_FILE_NAME = "fex-overview.xml";
     public static final String OVERVIEW_XSL_FILE_NAME = "fex-overview.xsl";
+    public static final String OVERVIEW_CSS_FILE_NAME = "fex-overview.css";
     public static final String PRODUCT_DIR_NAME_EXTENSION = ".fex";
 
     private final File productTargetDir;
@@ -134,8 +135,19 @@ public class DefaultFeatureOutput implements FeatureOutput {
             }
         }
 
-        InputStream xslIs = getClass().getResourceAsStream(OVERVIEW_XSL_FILE_NAME);
-        OutputStream xslOs = new FileOutputStream(new File(productTargetDir, OVERVIEW_XSL_FILE_NAME));
+        copyResource(getClass(), OVERVIEW_XSL_FILE_NAME, productTargetDir);
+        copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, productTargetDir);
+
+        overviewWriter = new FileWriter(new File(productTargetDir, OVERVIEW_XML_FILE_NAME));
+        overviewWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        overviewWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
+        overviewWriter.write("<featureExtraction source=\"" + sourceProduct.getName() + "\">\n");
+        writeFeatureTypeXml(featureTypes);
+    }
+
+    private static void copyResource(Class<? extends DefaultFeatureOutput> aClass, String resourceName, File targetDir) throws IOException {
+        InputStream xslIs = aClass.getResourceAsStream(resourceName);
+        OutputStream xslOs = new FileOutputStream(new File(targetDir, resourceName));
         byte[] bytes = new byte[16 * 1024];
         int len;
         while ((len = xslIs.read(bytes)) > 0) {
@@ -143,12 +155,6 @@ public class DefaultFeatureOutput implements FeatureOutput {
         }
         xslOs.close();
         xslIs.close();
-
-        overviewWriter = new FileWriter(new File(productTargetDir, OVERVIEW_XML_FILE_NAME));
-        overviewWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        overviewWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
-        overviewWriter.write("<featureExtraction source=\"" + sourceProduct.getName() + "\">\n");
-        writeFeatureTypeXml(featureTypes);
     }
 
     private boolean isImageFeatureType(FeatureType featureType) {

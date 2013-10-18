@@ -16,7 +16,7 @@
     <html>
         <head>
             <title>Feature Extraction Result</title>
-            <link rel="stylesheet" type="text/css" href="styleset.css"/>
+            <link rel="stylesheet" type="text/css" href="fex-overview.css"/>
         </head>
         <body>
             <xsl:apply-templates/>
@@ -41,7 +41,7 @@
 </xsl:template>
 
 <xsl:template match="featureType">
-    <th>
+    <th class="feature_name">
         <xsl:value-of select="@name"/>
     </th>
 </xsl:template>
@@ -65,39 +65,25 @@
                 </a>
             </xsl:when>
             <xsl:otherwise>
-                <!-- use this instaed
-                <xsl:otherwise>
-                    <xsl:if test=". = ''">
+                <xsl:choose>
+                    <xsl:when test="count(./*) = 0">
+                        <p class="value"><xsl:value-of select="."/></p>
+                    </xsl:when>
+                    <xsl:otherwise>
                         <table>
-                            <tr>
-                                <th>Name</th>
-                                <th>Value</th>
-                            </tr>
-                            <xsl:for-each select="*">
+                            <xsl:for-each select="./*">
                                 <tr>
-                                    <td><xsl:value-of select="local-name()"/>:
+                                    <td class="attribute_name">
+                                        <emp><xsl:value-of select="local-name()"/></emp>:
                                     </td>
-                                    <td>
+                                    <td class="value">
                                         <xsl:value-of select="."/>
                                     </td>
                                 </tr>
                             </xsl:for-each>
                         </table>
-                    </xsl:if>
-                    <xsl:if test=". != ''">
-                       <xsl:value-of select="."/>
-                    </xsl:if>
-                </xsl:otherwise>
-                -->
-
-                <table>
-                <xsl:for-each select="*">
-                    <tr>
-                        <td><xsl:value-of select ="local-name()"/>:</td>
-                        <td><xsl:value-of select="."/><br/></td>
-                    </tr>
-                </xsl:for-each>
-                </table>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:otherwise>
         </xsl:choose>
     </td>
