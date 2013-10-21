@@ -96,7 +96,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
             new FeatureType("valid_pixels", "Ratio of valid pixels in patch", Double.class),
-            new FeatureType("section_length", "Max. section length metric", Double.class),
+            new FeatureType("contagion_index", "Relative contagion", Double.class),
     };
 
     @Override
@@ -178,7 +178,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
 
         Mask mask = correctedProduct.getMaskGroup().get(FEX_VALID_MASK_NAME);
-        ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(mask);
+        ContagionIndex contagionIndex = ContagionIndex.compute(mask);
 
         Feature[] features = {
                 new Feature(FEATURE_TYPES[0], reflectanceProduct),
@@ -188,7 +188,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[4], correctedProduct),
                 createFeature(FEATURE_TYPES[5], correctedProduct),
                 new Feature(FEATURE_TYPES[7], validPixelRatio),
-                new Feature(FEATURE_TYPES[6], connectivityMetric.sectionLengthRatio),
+                new Feature(FEATURE_TYPES[6], contagionIndex.rc2),
         };
 
         coastDistImage.dispose();
