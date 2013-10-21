@@ -19,6 +19,7 @@ package org.esa.rss.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
+import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -74,11 +75,16 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
 
-    public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN OR l1_flags.BRIGHT OR l1_flags.GLINT_RISK)";
-    public static final String FEX_CLOUD_MASK = "distance(radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1," +
-            "1.0744720212301275,1.0733119255986385,1.0479161563791768,0.9315456603467167,0.8480901646693009,0.8288787653690769,0.8071113370747969,0.764724290638019,0.7128622108550259,0.23310952131660026,0.666867538685338,0.5517312317788085,0.5319259202911271,0.4004727059350037)/15 < 0.095";
+    public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN)";
+
+    public static final String FEX_CLOUD_MASK_1_NAME = "fex_cloud_1";
+    public static final String FEX_CLOUD_MASK_1_VALUE = "inrange(1.0,radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1,0.9825,0.8912440298255327,0.7053624619190219,0.632554865136358,0.4575615968608662,0.2179392690391927,0.16292546567267474,0.14507751149298348,0.11298530962868607,0.07717095822527878,0.026874729262769237,0.0644775478429025,0.032459522893688454,0.02857828581108522,0.019437950982025554,1.0175,1.1763689248192413,1.273366916408814,1.2648073865199438,1.203150647878767,1.131659556515563,1.119413895149373,1.0961100428051727,0.9982435054213645,1.1191481235570606,0.5293549869787241,1.0707186507909972,0.9215112851384355,0.8887876651578702,0.6442855617909731)";
+
+    public static final String FEX_CLOUD_MASK_2_NAME = "fex_cloud_2";
+    public static final String FEX_CLOUD_MASK_2_VALUE = "cl_wat_3_val > 2.0";
+
     public static final String FEX_VALID_MASK_NAME = "fex_valid";
-    public static final String FEX_CLOUD_MASK_NAME = "fex_cloud";
+
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
 
     @Parameter(defaultValue = "0.2")
@@ -209,12 +215,23 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private void addValidMask(Product featureProduct) {
-        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK_NAME);
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK_2_NAME);
         featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "", Color.green, 0.5);
     }
 
     private void addCloudMask(Product product) {
-        product.addMask(FEX_CLOUD_MASK_NAME, FEX_CLOUD_MASK, "Special MERIS L1B 'cloud' mask for PFA", Color.YELLOW,
+
+        CcNnHsOp ccNnHsOp = new CcNnHsOp();
+        ccNnHsOp.setSourceProduct(product);
+        ccNnHsOp.setValidPixelExpression(FEX_VALID_MASK);
+        ccNnHsOp.setAlgorithmName(CcNnHsOp.ALGORITHM_2013_05_09);
+        Product cloudProduct = ccNnHsOp.getTargetProduct();
+
+        ProductUtils.copyBand("cl_wat_3_val", cloudProduct, product, true);
+
+        product.addMask(FEX_CLOUD_MASK_1_NAME, FEX_CLOUD_MASK_1_VALUE, "Special MERIS L1B cloud mask for PFA (magic wand)", Color.YELLOW,
+                        0.5);
+        product.addMask(FEX_CLOUD_MASK_2_NAME, FEX_CLOUD_MASK_2_VALUE, "Special MERIS L1B cloud mask for PFA (Schiller NN)", Color.ORANGE,
                         0.5);
     }
 
