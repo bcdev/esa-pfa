@@ -105,6 +105,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             new FeatureType("p11", "p11", Double.class),
             new FeatureType("n11 / (n10 + n11)", "n11 / (n10 + n11)", Double.class),
             new FeatureType("n11 / n10", "n11 / n10", Double.class),
+            new FeatureType("clumpiness", "Clumpiness index", Double.class),
     };
 
     @Override
@@ -186,7 +187,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
 
         Mask mask = correctedProduct.getMaskGroup().get(FEX_VALID_MASK_NAME);
-        ContagionIndex contagionIndex = ContagionIndex.compute(mask);
+        AggregationMetrics aggregationMetrics = AggregationMetrics.compute(mask);
 
         Feature[] features = {
                 new Feature(FEATURE_TYPES[0], reflectanceProduct),
@@ -196,9 +197,10 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[4], correctedProduct),
                 createFeature(FEATURE_TYPES[5], correctedProduct),
                 new Feature(FEATURE_TYPES[7], validPixelRatio),
-                new Feature(FEATURE_TYPES[6], contagionIndex.p11),
-                new Feature(FEATURE_TYPES[8], (double) contagionIndex.n11 / (double) (contagionIndex.n10 + contagionIndex.n11)),
-                new Feature(FEATURE_TYPES[9], (double) contagionIndex.n11 / (double) contagionIndex.n10),
+                new Feature(FEATURE_TYPES[6], aggregationMetrics.p11),
+                new Feature(FEATURE_TYPES[8], (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
+                new Feature(FEATURE_TYPES[9], (double) aggregationMetrics.n11 / (double) aggregationMetrics.n10),
+                new Feature(FEATURE_TYPES[10], aggregationMetrics.clumpiness),
         };
 
         coastDistImage.dispose();

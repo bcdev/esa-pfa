@@ -22,13 +22,15 @@ import org.esa.beam.framework.datamodel.Mask;
  *
  * @author Ralf Quast
  */
-class ContagionIndex {
+class AggregationMetrics {
 
     private static final int N = 2;
     private static final double EE_MAX = 2.0 * Math.log(N);
 
     private final boolean queenNeighborhood;
 
+    public int n0;
+    public int n1;
     public int n00;
     public int n01;
     public int n10;
@@ -39,26 +41,27 @@ class ContagionIndex {
     public double p10;
     public double p11;
 
-    public double rc2;
+    public double contagion;
+    public double clumpiness;
 
-    public ContagionIndex(boolean queenNeighborhood) {
+    public AggregationMetrics(boolean queenNeighborhood) {
         this.queenNeighborhood = queenNeighborhood;
     }
 
-    public static ContagionIndex compute(Mask mask) {
-        ContagionIndex contagionIndex = new ContagionIndex(true);
-        contagionIndex.run(mask);
-        return contagionIndex;
+    public static AggregationMetrics compute(Mask mask) {
+        AggregationMetrics aggregationMetrics = new AggregationMetrics(true);
+        aggregationMetrics.run(mask);
+        return aggregationMetrics;
     }
 
-    public static ContagionIndex compute(int width, int height, byte[] data) {
+    public static AggregationMetrics compute(int width, int height, byte[] data) {
         return compute(width, height, data, true);
     }
 
-    private static ContagionIndex compute(int width, int height, byte[] data, boolean queenNeighborhood) {
-        final ContagionIndex contagionIndex = new ContagionIndex(queenNeighborhood);
-        contagionIndex.run(width, height, data);
-        return contagionIndex;
+    private static AggregationMetrics compute(int width, int height, byte[] data, boolean queenNeighborhood) {
+        final AggregationMetrics aggregationMetrics = new AggregationMetrics(queenNeighborhood);
+        aggregationMetrics.run(width, height, data);
+        return aggregationMetrics;
     }
 
     public void run(Mask mask) {
@@ -70,6 +73,8 @@ class ContagionIndex {
     }
 
     private void run(int width, int height, byte[] data) {
+        n0 = 0;
+        n1 = 0;
         n00 = 0;
         n01 = 0;
         n10 = 0;
@@ -79,6 +84,11 @@ class ContagionIndex {
             for (int x = 0; x < width; x++) {
                 final int centerIndex = y * width + x;
                 final byte centerValue = data[centerIndex];
+                if (centerValue == 0) {
+                    n0++;
+                } else {
+                    n1++;
+                }
 
                 final boolean goEast = x + 1 < width;
                 final boolean goWest = x > 0;
@@ -126,7 +136,21 @@ class ContagionIndex {
         p11 = (double) (n11) / (double) adjacentPairCount; // P_1 * P_{1|1}
 
         // Eq. (23)
-        rc2 = 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
+        contagion = 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
+
+        final double p1 = (double) n1 / (double) (n0 + n1);
+        if (p1 == 0.0) {
+            clumpiness = -1.0;
+        } else if (p1 == 1.0) {
+            clumpiness = 1.0;
+        } else {
+            final double g1 = (double) n11 / (double) (n10 + n11);
+            if (g1 < p1 && p1 < 0.5) {
+                clumpiness = (g1 - p1) / p1;
+            } else {
+                clumpiness = (g1 - p1) / (1.0 - p1);
+            }
+        }
     }
 
     private void count(byte centerValue, byte neighborValue) {
