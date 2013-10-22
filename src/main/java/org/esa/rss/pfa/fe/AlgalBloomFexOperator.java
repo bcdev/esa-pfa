@@ -194,7 +194,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[4], correctedProduct),
                 createFeature(FEATURE_TYPES[5], correctedProduct),
                 new Feature(FEATURE_TYPES[7], validPixelRatio),
-                new Feature(FEATURE_TYPES[6], contagionIndex.rc2),
+                new Feature(FEATURE_TYPES[6], contagionIndex.p11),
         };
 
         coastDistImage.dispose();
