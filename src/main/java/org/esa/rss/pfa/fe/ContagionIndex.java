@@ -126,7 +126,7 @@ class ContagionIndex {
         p11 = (double) (n11) / (double) adjacentPairCount; // P_1 * P_{1|1}
 
         // Eq. (23)
-        rc2 = 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
+        rc2 = (n10 + n11) > 0 ? (double) n11 / (double) (n10 + n11) : 0; // 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
     }
 
     private void count(byte centerValue, byte neighborValue) {
