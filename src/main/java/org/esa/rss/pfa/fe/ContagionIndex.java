@@ -119,10 +119,11 @@ class ContagionIndex {
         }
 
         // Eq. (6)
-        p00 = (double) (n00) / (double) (n00 + n01 + n10 + n11); // P_0 * P_{0|0}
-        p01 = (double) (n01) / (double) (n00 + n01 + n10 + n11); // P_0 * P_{1|0}
-        p10 = (double) (n10) / (double) (n00 + n01 + n10 + n11); // P_1 * P_{0|1}
-        p11 = (double) (n11) / (double) (n00 + n01 + n10 + n11); // P_1 * P_{1|1}
+        final int adjacentPairCount = n00 + n01 + n10 + n11;
+        p00 = (double) (n00) / (double) adjacentPairCount; // P_0 * P_{0|0}
+        p01 = (double) (n01) / (double) adjacentPairCount; // P_0 * P_{1|0}
+        p10 = (double) (n10) / (double) adjacentPairCount; // P_1 * P_{0|1}
+        p11 = (double) (n11) / (double) adjacentPairCount; // P_1 * P_{1|1}
 
         // Eq. (23)
         rc2 = 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
