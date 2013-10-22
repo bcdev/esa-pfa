@@ -22,4 +22,20 @@
 
     <categories>Processor</categories>
 
+    <extension point="beam-ui:actions">
+        <action>
+            <id>Meris.Fronts.CloudMask</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <operatorName>Meris.Fronts.CloudMask</operatorName>
+            <text>Fronts Cloud Classification (MERIS)</text>
+            <shortDescr>
+                A cloud mask algorithm developed by G.Kirches and M.Paperin in the frame of the Fronts project with
+                German BSH.
+            </shortDescr>
+            <mnemonic/>
+            <parent>tool</parent>
+            <placeAfter/>
+        </action>
+    </extension>
+
 </module>
