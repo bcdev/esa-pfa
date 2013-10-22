@@ -104,6 +104,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             new FeatureType("valid_pixels", "Ratio of valid pixels in patch", Double.class),
             new FeatureType("p11", "p11", Double.class),
             new FeatureType("n11 / (n10 + n11)", "n11 / (n10 + n11)", Double.class),
+            new FeatureType("n11 / n10", "n11 / n10", Double.class),
     };
 
     @Override
@@ -197,6 +198,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(FEATURE_TYPES[7], validPixelRatio),
                 new Feature(FEATURE_TYPES[6], contagionIndex.p11),
                 new Feature(FEATURE_TYPES[8], (double) contagionIndex.n11 / (double) (contagionIndex.n10 + contagionIndex.n11)),
+                new Feature(FEATURE_TYPES[9], (double) contagionIndex.n11 / (double) contagionIndex.n10),
         };
 
         coastDistImage.dispose();
