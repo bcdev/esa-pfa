@@ -19,7 +19,6 @@ package org.esa.rss.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
-import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -195,7 +194,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID", FEX_VALID_MASK_NAME);
 
         return new Feature[]{
-        final Feature[] features = {
                 new Feature(FEATURE_TYPES[0], featureProduct),
                 new Feature(FEATURE_TYPES[1], images[0]),
                 new Feature(FEATURE_TYPES[2], images[1]),
@@ -206,16 +204,10 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(FEATURE_TYPES[7], connectivityMetric.connectionRatio),
                 new Feature(FEATURE_TYPES[8], connectivityMetric.fractalIndex),
                 new Feature(FEATURE_TYPES[9], aggregationMetrics.p11),
-                new Feature(FEATURE_TYPES[10],
-                            (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
+                new Feature(FEATURE_TYPES[10], (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
                 new Feature(FEATURE_TYPES[11], (double) aggregationMetrics.n11 / (double) aggregationMetrics.n10),
                 new Feature(FEATURE_TYPES[12], aggregationMetrics.clumpiness),
         };
-
-        reflectanceProduct.dispose();
-        featureProduct.dispose();
-
-        return features;
     }
 
 
