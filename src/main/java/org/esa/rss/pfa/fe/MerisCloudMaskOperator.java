@@ -13,6 +13,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.Color;
@@ -62,10 +64,12 @@ public class MerisCloudMaskOperator extends Operator {
         cloudDataAlgoBand = targetProduct.addBand("cloud_data_algo", ProductData.TYPE_FLOAT64);
         targetProduct.addMask("cloud_mask", "cloud_data_ori_or_flag  > " + threshold, "", Color.ORANGE, 0.5);
 
+        // todo - use VirtualBandOpImage.createMask(roiExpr, sourceProduct, ResolutionLevel.MAXRES) when making PixelOp
         roiProduct = new Product("Meris.Fronts.ROI",
                                  "Meris.Fronts.ROI",
                                  sourceProduct.getSceneRasterWidth(),
                                  sourceProduct.getSceneRasterHeight());
+        ProductUtils.copyFlagBands(sourceProduct, roiProduct, true);
         roiMask = roiProduct.addMask("roi", roiExpr, "", Color.WHITE, 0.0);
     }
 

@@ -152,6 +152,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         }
 
         final Product featureProduct = createCorrectedProduct(patchProduct);
+        final Product reflectanceProduct = createReflectanceProduct(featureProduct);
+        for (final String bandName : reflectanceProduct.getBandNames()) {
+            if (bandName.startsWith("reflec")) {
+                ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
+            }
+        }
         addCloudMask(featureProduct);
         addValidMask(featureProduct);
         final Band mciBand = addMciBand(featureProduct);
@@ -166,12 +172,6 @@ public class AlgalBloomFexOperator extends FexOperator {
             return null;
         }
 
-        final Product reflectanceProduct = createReflectanceProduct(featureProduct);
-        for (final String bandName : reflectanceProduct.getBandNames()) {
-            if (bandName.startsWith("reflec")) {
-                ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
-            }
-        }
         addFlhBand(featureProduct);
 
         // todo - dirty code from NF, clean up
@@ -195,6 +195,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID", FEX_VALID_MASK_NAME);
 
         return new Feature[]{
+        final Feature[] features = {
                 new Feature(FEATURE_TYPES[0], featureProduct),
                 new Feature(FEATURE_TYPES[1], images[0]),
                 new Feature(FEATURE_TYPES[2], images[1]),
@@ -205,10 +206,16 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(FEATURE_TYPES[7], connectivityMetric.connectionRatio),
                 new Feature(FEATURE_TYPES[8], connectivityMetric.fractalIndex),
                 new Feature(FEATURE_TYPES[9], aggregationMetrics.p11),
-                new Feature(FEATURE_TYPES[10], (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
+                new Feature(FEATURE_TYPES[10],
+                            (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
                 new Feature(FEATURE_TYPES[11], (double) aggregationMetrics.n11 / (double) aggregationMetrics.n10),
                 new Feature(FEATURE_TYPES[12], aggregationMetrics.clumpiness),
         };
+
+        reflectanceProduct.dispose();
+        featureProduct.dispose();
+
+        return features;
     }
 
 
@@ -222,24 +229,26 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private void addValidMask(Product featureProduct) {
-        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK_2_NAME);
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, "cloud_mask");
         featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "ROI for pixels used for the feature extraction", Color.green, 0.5);
     }
 
     private void addCloudMask(Product product) {
+        MerisCloudMaskOperator op = new MerisCloudMaskOperator();
+        op.setSourceProduct(product);
+        op.setRoiExpr(FEX_VALID_MASK);
+        op.setThreshold(9);
+        Product cloudProduct = op.getTargetProduct();
 
-        CcNnHsOp ccNnHsOp = new CcNnHsOp();
-        ccNnHsOp.setSourceProduct(product);
-        ccNnHsOp.setValidPixelExpression(FEX_VALID_MASK);
-        ccNnHsOp.setAlgorithmName(CcNnHsOp.ALGORITHM_2013_05_09);
-        Product cloudProduct = ccNnHsOp.getTargetProduct();
+        ProductUtils.copyBand("cloud_data_ori_or_flag", cloudProduct, product, true);
+        ProductUtils.copyMasks(cloudProduct, product);
 
-        ProductUtils.copyBand("cl_wat_3_val", cloudProduct, product, true);
-
+        /*
         product.addMask(FEX_CLOUD_MASK_1_NAME, FEX_CLOUD_MASK_1_VALUE, "Special MERIS L1B cloud mask for PFA (magic wand)", Color.YELLOW,
                         0.5);
         product.addMask(FEX_CLOUD_MASK_2_NAME, FEX_CLOUD_MASK_2_VALUE, "Special MERIS L1B cloud mask for PFA (Schiller NN)", Color.ORANGE,
                         0.5);
+        */
     }
 
     private Band addMciBand(Product sourceProduct) {
