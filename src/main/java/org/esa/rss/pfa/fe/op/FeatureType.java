@@ -1,7 +1,5 @@
 package org.esa.rss.pfa.fe.op;
 
-import com.bc.ceres.core.Assert;
-
 /**
 * @author Norman Fomferra
 */
@@ -20,5 +18,9 @@ public class FeatureType extends AttributeType {
 
     public AttributeType[] getAttributeTypes() {
         return attributeTypes;
+    }
+
+    public boolean hasAttributes() {
+        return attributeTypes != null && attributeTypes.length > 0;
     }
 }

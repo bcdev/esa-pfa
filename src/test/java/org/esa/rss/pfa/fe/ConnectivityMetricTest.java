@@ -9,6 +9,70 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConnectivityMetricTest {
     @Test
+    public void testCompute2x3_noneSet() throws Exception {
+        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+                0, 0, 0,
+                0, 0, 0,
+        });
+
+        assertEquals(24, cm.connectionCountMax);
+        assertEquals(0, cm.connectionCount);
+        assertEquals(0.0, cm.connectionRatio, 1e-5);
+
+        assertEquals(0, cm.insideCount);
+        assertEquals(0, cm.borderCount);
+        assertEquals(2.0, cm.fractalIndex, 1e-5);
+    }
+
+    @Test
+    public void testCompute2x3_allSet() throws Exception {
+        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+                1, 1, 1,
+                1, 1, 1,
+        });
+
+        assertEquals(24, cm.connectionCountMax);
+        assertEquals(24, cm.connectionCount);
+        assertEquals(1.0, cm.connectionRatio, 1e-5);
+
+        assertEquals(6, cm.insideCount);
+        assertEquals(0, cm.borderCount);
+        assertEquals(1.0, cm.fractalIndex, 1e-5);
+    }
+
+    @Test
+    public void testCompute2x3_noConn() throws Exception {
+        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+                1, 0, 1,
+                0, 1, 0,
+        });
+
+        assertEquals(24, cm.connectionCountMax);
+        assertEquals(5, cm.connectionCount);
+        assertEquals(5.0/24, cm.connectionRatio, 1e-5);
+
+        assertEquals(0, cm.insideCount);
+        assertEquals(3, cm.borderCount);
+        assertEquals(2.0, cm.fractalIndex, 1e-5);
+    }
+
+    @Test
+    public void testCompute2x3_someConn() throws Exception {
+        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+                1, 1, 1,
+                0, 1, 0,
+        });
+
+        assertEquals(24, cm.connectionCountMax);
+        assertEquals(12, cm.connectionCount);
+        assertEquals(0.5, cm.connectionRatio, 1e-5);
+
+        assertEquals(1, cm.insideCount);
+        assertEquals(3, cm.borderCount);
+        assertEquals(1.75, cm.fractalIndex, 1e-5);
+    }
+
+    @Test
     public void testCompute4x4() throws Exception {
         ConnectivityMetric cm = ConnectivityMetric.compute(4, 4, new byte[]{
                 1, 1, 1, 1,
@@ -17,11 +81,13 @@ public class ConnectivityMetricTest {
                 1, 1, 0, 0,
         });
 
-        assertEquals((4 + 4 + 2 + 2) / 4.0, cm.meanMaxSectionLengthH, 1e-5);
+        assertEquals(64, cm.connectionCountMax);
+        assertEquals(44, cm.connectionCount);
+        assertEquals(0.6875, cm.connectionRatio, 1e-5);
 
-        assertEquals((4 + 4 + 2 + 2) / 4.0, cm.meanMaxSectionLengthV, 1e-5);
-
-        assertEquals(0.75, cm.sectionLengthRatio, 1e-5);
+        assertEquals(8, cm.insideCount);
+        assertEquals(4, cm.borderCount);
+        assertEquals(1.0 + 1.0/3.0, cm.fractalIndex, 1e-5);
     }
 
     @Test
@@ -34,11 +100,9 @@ public class ConnectivityMetricTest {
                 0, 1, 0, 1, 0,
         });
 
-        assertEquals((3 + 2 + 1 + 1 + 1) / 5.0, cm.meanMaxSectionLengthH, 1e-5);
-
-        assertEquals((3 + 2 + 1 + 2 + 3) / 5.0, cm.meanMaxSectionLengthV, 1e-5);
-
-        assertEquals(0.38, cm.sectionLengthRatio, 1e-5);
+        assertEquals(100, cm.connectionCountMax);
+        assertEquals(34, cm.connectionCount);
+        assertEquals(0.34, cm.connectionRatio, 1e-5);
     }
 
     @Test
@@ -51,11 +115,9 @@ public class ConnectivityMetricTest {
                 0, 1, 1, 1, 0,
         });
 
-        assertEquals(4.2, cm.meanMaxSectionLengthH, 1e-5);
-
-        assertEquals(4.2, cm.meanMaxSectionLengthV, 1e-5);
-
-        assertEquals(0.84, cm.sectionLengthRatio, 1e-5);
+        assertEquals(100, cm.connectionCountMax);
+        assertEquals(76, cm.connectionCount);
+        assertEquals(0.76, cm.connectionRatio, 1e-5);
     }
 
     @Test
@@ -68,10 +130,8 @@ public class ConnectivityMetricTest {
                 0, 0, 0, 1, 1,
         });
 
-        assertEquals(3, cm.meanMaxSectionLengthH, 1e-5);
-
-        assertEquals(3, cm.meanMaxSectionLengthV, 1e-5);
-
-        assertEquals(0.6, cm.sectionLengthRatio, 1e-5);
+        assertEquals(100, cm.connectionCountMax);
+        assertEquals(48, cm.connectionCount);
+        assertEquals(0.48, cm.connectionRatio, 1e-5);
     }
 }

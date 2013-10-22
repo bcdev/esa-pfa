@@ -24,6 +24,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -161,8 +162,12 @@ public abstract class FexOperator extends Operator implements Output {
         FeatureType[] featureTypes = getFeatureTypes();
         featureOutput.initialize(getSourceProduct(), featureTypes);
 
+        double patchSecAvg = 0;
+
+        long t0 = System.currentTimeMillis();
         for (int patchY = 0; patchY < patchCountY; patchY++) {
             for (int patchX = 0; patchX < patchCountX; patchX++) {
+                long t1 = System.currentTimeMillis();
 
                 Rectangle patchRegion = createSubsetRegion(sourceProduct, patchY, patchX);
                 Product patchProduct = createSubset(sourceProduct, patchRegion);
@@ -174,10 +179,32 @@ public abstract class FexOperator extends Operator implements Output {
                 }
 
                 patchProduct.dispose();
+
+                patchSecAvg = logProgress(t1, patchCountX, patchCountY, patchX, patchY, patchSecAvg);
             }
         }
 
         featureOutput.close();
+
+        logCompletion(t0, patchCountX, patchCountY);
+    }
+
+    private void logCompletion(long t0, int patchCountX, int patchCountY) {
+        int patchCount = patchCountX * patchCountY;
+        double totalSec = (System.currentTimeMillis() - t0) / 1000.0;
+        BeamLogManager.getSystemLogger().info(String.format("Completed %d patches in %.1f sec", patchCount, totalSec));
+    }
+
+    private double logProgress(long t0, int patchCountX, int patchCountY, int patchX, int patchY, double patchSecAvg) {
+        int patchCount = patchCountX * patchCountY;
+        int patchIndex = patchY * patchCountX + patchX;
+        int progress = (int) (100.0 * patchIndex / (patchCount - 1.0) + 0.5);
+        double patchSec = (System.currentTimeMillis() - t0) / 1000.0;
+        patchSecAvg = 0.5 * (patchSecAvg + patchSec);
+        double totalSec = (patchCount - (patchIndex + 1)) * patchSecAvg;
+        BeamLogManager.getSystemLogger().info(String.format("Completed patch %d of %d patches (%d%% done) in %.1f sec. Still %.1f sec left to completion.",
+                                                            patchIndex + 1, patchCount, progress, patchSec, totalSec));
+        return patchSecAvg;
     }
 
     private void initFeatureOutputFactory() {

@@ -26,7 +26,7 @@ public class Feature extends ExtensibleObject {
                 throw new IllegalArgumentException("Expected " + valueType + ", but got " + value.getClass());
             }
         }
-        if (attributeValues != null && attributeValues.length > 0) {
+        if (featureType.hasAttributes()) {
             AttributeType[] attributeTypes = featureType.getAttributeTypes();
             if (attributeTypes != null) {
                 if (attributeTypes.length != attributeValues.length) {
@@ -56,5 +56,9 @@ public class Feature extends ExtensibleObject {
 
     public Object[] getAttributeValues() {
         return attributeValues;
+    }
+
+    public boolean hasAttributes() {
+        return featureType.hasAttributes() && attributeValues != null && attributeValues.length > 0;
     }
 }

@@ -15,5 +15,15 @@ p {
 }
 
 .value {
-    font: "Monospaced"
+    font: "Monospaced";
+}
+
+.image_cell {
+    background-color:DarkSlateGray;
+}
+
+.product_cell {
+}
+
+.value_cell {
 }

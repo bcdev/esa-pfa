@@ -9,15 +9,13 @@ import java.awt.image.DataBufferByte;
  */
 public class ConnectivityMetric {
 
-    private int currentSectionLength;
-    private int currentSectionLengthMax;
-
-    private int lastValue;
-
-    double meanMaxSectionLengthV;
-    double meanMaxSectionLengthH;
-
-    double sectionLengthRatio;
+    int connectionCount;
+    double connectionRatio;
+    int connectionCountMax;
+    int occupiedCount;
+    int borderCount;
+    int insideCount;
+    double fractalIndex;
 
     private ConnectivityMetric() {
     }
@@ -40,53 +38,50 @@ public class ConnectivityMetric {
     }
 
     private void run(int width, int height, byte[] data) {
-        meanMaxSectionLengthH = 0;
+        int connectionCount = 0;
+        int occupiedCount = 0;
+        int borderCount = 0;
+        int insideCount = 0;
 
         for (int y = 0; y < height; y++) {
-            initLineValueProcessing();
             for (int x = 0; x < width; x++) {
-                processLineValue(data[(y * width + x)]);
-            }
-            processLineValue(0);
-            //System.out.println("y = " + y + ", currentSectionLengthMax=" + currentSectionLengthMax);
-            meanMaxSectionLengthH += currentSectionLengthMax;
-        }
-        meanMaxSectionLengthH /= height;
+                boolean valC = isSet(data, width, x, y);
+                if (valC) {
+                    boolean valN = y <= 0 || isSet(data, width, x, y - 1);
+                    boolean valS = y >= height - 1 || isSet(data, width, x, y + 1);
+                    boolean valW = x <= 0 || isSet(data, width, x - 1, y);
+                    boolean valE = x >= width - 1 || isSet(data, width, x + 1, y);
+                    int neighborCount = 0;
+                    if (valN)
+                        neighborCount++;
+                    if (valS)
+                        neighborCount++;
+                    if (valW)
+                        neighborCount++;
+                    if (valE)
+                        neighborCount++;
 
-        meanMaxSectionLengthV = 0;
+                    connectionCount += neighborCount;
+                    occupiedCount++;
 
-        for (int x = 0; x < width; x++) {
-            initLineValueProcessing();
-            for (int y = 0; y < height; y++) {
-                processLineValue(data[(y * width + x)]);
-            }
-            processLineValue(0);
-            //System.out.println("x = " + x + ", currentSectionLengthMax=" + currentSectionLengthMax);
-
-            meanMaxSectionLengthV += currentSectionLengthMax;
-        }
-        meanMaxSectionLengthV /= width;
-
-        sectionLengthRatio = (meanMaxSectionLengthH + meanMaxSectionLengthV) / (width  + height);
-    }
-
-    private void initLineValueProcessing() {
-        currentSectionLengthMax = 0;
-        currentSectionLength = 0;
-        lastValue = 0;
-    }
-
-    private void processLineValue(int value) {
-        if (value != 0) {
-            currentSectionLength++;
-        } else {
-            if (value != lastValue) {
-                if (currentSectionLength > currentSectionLengthMax) {
-                    currentSectionLengthMax = currentSectionLength;
+                    if (neighborCount > 0 && neighborCount < 4)
+                        borderCount++;
+                    if (neighborCount == 4)
+                        insideCount++;
                 }
-                currentSectionLength = 0;
             }
         }
-        lastValue = value;
+
+        this.occupiedCount = occupiedCount;
+        this.connectionCount = connectionCount;
+        this.connectionCountMax = 4 * width * height;
+        connectionRatio = connectionCount / (double) connectionCountMax;
+        this.borderCount = borderCount;
+        this.insideCount = insideCount;
+        fractalIndex = 2.0 - (insideCount > 0 ? insideCount / ((double) insideCount + (double) borderCount) : 0.0);
+    }
+
+    private boolean isSet(byte[] data, int width, int x, int y) {
+        return data[y * width + x] != 0;
     }
 }

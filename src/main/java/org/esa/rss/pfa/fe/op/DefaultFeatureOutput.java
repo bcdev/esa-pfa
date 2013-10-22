@@ -84,8 +84,8 @@ public class DefaultFeatureOutput implements FeatureOutput {
         writer.write("#\n");
         writer.write(String.format("featureTypes.%d.name = %s%n", i, featureType.getName()));
         writer.write(String.format("featureTypes.%d.description = %s%n", i, featureType.getDescription()));
-        AttributeType[] attributeTypes = featureType.getAttributeTypes();
-        if (attributeTypes != null) {
+        if (featureType.hasAttributes()) {
+            AttributeType[] attributeTypes = featureType.getAttributeTypes();
             writer.write(String.format("featureTypes.%d.attributeTypes.length = %s%n", i, attributeTypes.length));
             for (int j = 0; j < attributeTypes.length; j++) {
                 AttributeType attributeType = attributeTypes[j];
@@ -100,8 +100,8 @@ public class DefaultFeatureOutput implements FeatureOutput {
 
     private void writeFeatureTypeXml(FeatureType[] featureTypes) throws IOException {
         for (FeatureType featureType : featureTypes) {
-            AttributeType[] attributeTypes = featureType.getAttributeTypes();
-            if (attributeTypes != null) {
+            if (featureType.hasAttributes()) {
+                AttributeType[] attributeTypes = featureType.getAttributeTypes();
                 overviewWriter.write(String.format("<featureType name=\"%s\">\n", featureType.getName()));
                 for (AttributeType attributeType : attributeTypes) {
                     overviewWriter.write(String.format("\t<attributeType name=\"%s\" valueType=\"%s\"/>\n", attributeType.getName(), attributeType.getValueType().getSimpleName()));
@@ -220,8 +220,8 @@ public class DefaultFeatureOutput implements FeatureOutput {
     }
 
     private void writeFeatureProperties(Feature feature, Writer writer) throws IOException {
-        Object[] attributeValues = feature.getAttributeValues();
-        if (attributeValues != null) {
+        if (feature.hasAttributes()) {
+            Object[] attributeValues = feature.getAttributeValues();
             for (int i = 0; i < attributeValues.length; i++) {
                 Object attributeValue = attributeValues[i];
                 writer.write(String.format("%s.%s = %s%n",
@@ -245,8 +245,8 @@ public class DefaultFeatureOutput implements FeatureOutput {
     }
 
     private void writeAttributedFeatureXml(Feature feature) throws IOException {
-        Object[] attributeValues = feature.getAttributeValues();
-        if (attributeValues != null && attributeValues.length > 0) {
+        if (feature.hasAttributes()) {
+            Object[] attributeValues = feature.getAttributeValues();
             overviewWriter.write(String.format("\t<feature name=\"%s\">\n", feature.getName()));
             for (int i = 0; i < attributeValues.length; i++) {
                 Object value = attributeValues[i];
