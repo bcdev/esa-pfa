@@ -26,6 +26,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.JAI;
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.HashMap;
@@ -176,9 +177,12 @@ public abstract class FexOperator extends Operator implements Output {
                 Feature[] features = extractPatchFeatures(patchX, patchY, patchRegion, patchProduct);
                 if (features != null) {
                     featureOutput.writePatchFeatures(patchX, patchY, patchProduct, features);
+                    disposeProducts(features);
                 }
 
                 patchProduct.dispose();
+
+                JAI.getDefaultInstance().getTileCache().flush();
 
                 patchSecAvg = logProgress(t1, patchCountX, patchCountY, patchX, patchY, patchSecAvg);
             }
@@ -187,6 +191,15 @@ public abstract class FexOperator extends Operator implements Output {
         featureOutput.close();
 
         logCompletion(t0, patchCountX, patchCountY);
+    }
+
+    private void disposeProducts(Feature[] features) {
+        for (Feature feature : features) {
+            if (feature.getValue() instanceof Product) {
+                Product product = (Product) feature.getValue();
+                product.dispose();
+            }
+        }
     }
 
     private void logCompletion(long t0, int patchCountX, int patchCountY) {
