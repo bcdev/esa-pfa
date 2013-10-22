@@ -22,6 +22,60 @@ import static org.junit.Assert.assertTrue;
 public class ContagionIndexTest {
 
     @Test
+    public void testCompute3x3_1() throws Exception {
+        ContagionIndex cm = ContagionIndex.compute(3, 3, new byte[]{
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+        });
+
+        assertEquals(0, cm.n00);
+
+        assertEquals(0, cm.n01);
+
+        assertEquals(0, cm.n10);
+
+        assertEquals(40, cm.n11);
+
+        assertTrue(cm.p01 == cm.p10);
+
+        assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
+
+        assertTrue(cm.rc2 >= 0.0);
+
+        assertTrue(cm.rc2 <= 1.0);
+
+        System.out.println("cm.c = " + cm.rc2);
+    }
+
+    @Test
+    public void testCompute3x3_2() throws Exception {
+        ContagionIndex cm = ContagionIndex.compute(3, 3, new byte[]{
+                0, 0, 0,
+                0, 0, 0,
+                0, 0, 0,
+        });
+
+        assertEquals(40, cm.n00);
+
+        assertEquals(0, cm.n01);
+
+        assertEquals(0, cm.n10);
+
+        assertEquals(0, cm.n11);
+
+        assertTrue(cm.p01 == cm.p10);
+
+        assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
+
+        assertTrue(cm.rc2 >= 0.0);
+
+        assertTrue(cm.rc2 <= 1.0);
+
+        System.out.println("cm.c = " + cm.rc2);
+    }
+
+    @Test
     public void testCompute4x4_1() throws Exception {
         ContagionIndex cm = ContagionIndex.compute(4, 4, new byte[]{
                 1, 1, 1, 1,
@@ -37,6 +91,8 @@ public class ContagionIndexTest {
         assertEquals(1 + 2 + 2 + 2 + 2, cm.n10);
 
         assertEquals(3 + 5 + 5 + 3 + 5 + 7 + 6 + 3 + 5 + 6 + 3 + 3, cm.n11);
+
+        assertTrue(cm.p01 == cm.p10);
 
         assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
 
@@ -61,6 +117,8 @@ public class ContagionIndexTest {
         assertEquals(2 + 3 + 3 + 2, cm.n01);
 
         assertEquals(2 + 3 + 3 + 2, cm.n10);
+
+        assertTrue(cm.p01 == cm.p10);
 
         assertEquals(3 + 5 + 5 + 3 + 3 + 5 + 5 + 3, cm.n11);
 
@@ -90,6 +148,8 @@ public class ContagionIndexTest {
 
         assertEquals(1 + 2 + 4 + 2 + 2 + 4 + 2 + 1, cm.n11);
 
+        assertTrue(cm.p01 == cm.p10);
+
         assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
 
         assertTrue(cm.rc2 >= 0.0);
@@ -116,6 +176,8 @@ public class ContagionIndexTest {
         assertEquals(1 + 2 + 1 + 0 + 2 + 3 + 2 + 1 + 2 + 4 + 2 + 5 + 5 + 4 + 4, cm.n10);
 
         assertEquals(2 + 3 + 4 + 3 + 3 + 5 + 6 + 4 + 3 + 4 + 3 + 3 + 3 + 1 + 1, cm.n11);
+
+        assertTrue(cm.p01 == cm.p10);
 
         assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
 
@@ -144,6 +206,8 @@ public class ContagionIndexTest {
 
         assertEquals(120, cm.n11);
 
+        assertTrue(cm.p01 == cm.p10);
+
         assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
 
         assertTrue(cm.rc2 >= 0.0);
@@ -170,6 +234,39 @@ public class ContagionIndexTest {
         assertEquals(26, cm.n10, 1e-5);
 
         assertEquals(72, cm.n11, 1e-5);
+
+        assertTrue(cm.p01 == cm.p10);
+
+        assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
+
+        assertTrue(cm.rc2 >= 0.0);
+
+        assertTrue(cm.rc2 <= 1.0);
+
+        System.out.println("cm.c = " + cm.rc2);
+    }
+
+    @Test
+    public void testCompute200x200() throws Exception {
+        final byte[] data = new byte[200 * 200];
+        for (int y = 0; y < 200; y++) {
+            for (int x = 0; x < 200; x++) {
+                if (y < 100) {
+                    data[x + y * 200] = 1;
+                }
+            }
+        }
+        ContagionIndex cm = ContagionIndex.compute(200, 200, data);
+
+        assertEquals(158204, cm.n00);
+
+        assertEquals(198 * 3 + 2 + 2, cm.n01);
+
+        assertEquals(198 * 3 + 2 + 2, cm.n10, 1e-5);
+
+        assertEquals(158204, cm.n11, 1e-5);
+
+        assertTrue(cm.p01 == cm.p10);
 
         assertEquals(1.0, cm.p00 + cm.p01 + cm.p10 + cm.p11, 0.0);
 

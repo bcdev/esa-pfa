@@ -31,8 +31,6 @@ class ContagionIndex {
 
     private final boolean queenNeighborhood;
 
-    public int m0;
-    public int m1;
     public int n00;
     public int n01;
     public int n10;
@@ -72,9 +70,6 @@ class ContagionIndex {
     }
 
     private void run(int width, int height, byte[] data) {
-        m0 = 0;
-        m1 = 0;
-
         n00 = 0;
         n01 = 0;
         n10 = 0;
@@ -84,11 +79,6 @@ class ContagionIndex {
             for (int x = 0; x < width; x++) {
                 final int centerIndex = y * width + x;
                 final byte centerValue = data[centerIndex];
-                if (centerValue == 0) {
-                    m0++;
-                } else {
-                    m1++;
-                }
 
                 final boolean goEast = x + 1 < width;
                 final boolean goWest = x > 0;
@@ -128,15 +118,11 @@ class ContagionIndex {
             }
         }
 
-        final int m = m0 + m1;
-        final int n0 = n00 + n01;
-        final int n1 = n10 + n11;
-
         // Eq. (6)
-        p00 = (double) (m0 * n00) / (double) (m * n0); // P_0 * P_{0|0}
-        p01 = (double) (m0 * n01) / (double) (m * n0); // P_0 * P_{1|0}
-        p10 = (double) (m1 * n10) / (double) (m * n1); // P_1 * P_{0|1}
-        p11 = (double) (m1 * n11) / (double) (m * n1); // P_1 * P_{1|1}
+        p00 = (double) (n00) / (double) (n00 + n01 + n10 + n11); // P_0 * P_{0|0}
+        p01 = (double) (n01) / (double) (n00 + n01 + n10 + n11); // P_0 * P_{1|0}
+        p10 = (double) (n10) / (double) (n00 + n01 + n10 + n11); // P_1 * P_{0|1}
+        p11 = (double) (n11) / (double) (n00 + n01 + n10 + n11); // P_1 * P_{1|1}
 
         // Eq. (23)
         rc2 = 1.0 + (term(p00) + term(p01) + term(p10) + term(p11)) / EE_MAX;
