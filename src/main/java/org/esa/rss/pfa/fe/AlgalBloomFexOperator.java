@@ -152,6 +152,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         }
 
         final Product featureProduct = createCorrectedProduct(patchProduct);
+        final Product reflectanceProduct = createReflectanceProduct(featureProduct);
+        for (final String bandName : reflectanceProduct.getBandNames()) {
+            if (bandName.startsWith("reflec")) {
+                ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
+            }
+        }
         addCloudMask(featureProduct);
         addValidMask(featureProduct);
         final Band mciBand = addMciBand(featureProduct);
@@ -166,12 +172,6 @@ public class AlgalBloomFexOperator extends FexOperator {
             return null;
         }
 
-        final Product reflectanceProduct = createReflectanceProduct(featureProduct);
-        for (final String bandName : reflectanceProduct.getBandNames()) {
-            if (bandName.startsWith("reflec")) {
-                ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
-            }
-        }
         addFlhBand(featureProduct);
 
         // todo - dirty code from NF, clean up
@@ -220,19 +220,19 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private void addValidMask(Product featureProduct) {
-        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, FEX_CLOUD_MASK_2_NAME);
+        final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, "cloud_mask");
         featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "ROI for pixels used for the feature extraction", Color.green, 0.5);
     }
 
     private void addCloudMask(Product product) {
+        MerisCloudMaskOperator op = new MerisCloudMaskOperator();
+        op.setSourceProduct(product);
+        op.setRoiExpr("true");
+        op.setThreshold(9);
+        Product cloudProduct = op.getTargetProduct();
 
-        CcNnHsOp ccNnHsOp = new CcNnHsOp();
-        ccNnHsOp.setSourceProduct(product);
-        ccNnHsOp.setValidPixelExpression(FEX_VALID_MASK);
-        ccNnHsOp.setAlgorithmName(CcNnHsOp.ALGORITHM_2013_05_09);
-        Product cloudProduct = ccNnHsOp.getTargetProduct();
-
-        ProductUtils.copyBand("cl_wat_3_val", cloudProduct, product, true);
+        ProductUtils.copyBand("cloud_data_ori_or_flag", cloudProduct, product, true);
+        ProductUtils.copyMasks(cloudProduct, product);
 
         product.addMask(FEX_CLOUD_MASK_1_NAME, FEX_CLOUD_MASK_1_VALUE, "Special MERIS L1B cloud mask for PFA (magic wand)", Color.YELLOW,
                         0.5);
