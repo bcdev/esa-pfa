@@ -16,8 +16,6 @@ package org.esa.rss.pfa.fe;/*
 
 import org.esa.beam.framework.datamodel.Mask;
 
-import java.awt.image.DataBufferByte;
-
 /**
  * For computing the contagion index, see Li & Reynolds (1993, Landscape Ecology vol. 8 no. 3 pp 155-162)
  * http://andrewsforest.oregonstate.edu/pubs/pdf/pub1502.pdf
@@ -66,7 +64,9 @@ class ContagionIndex {
     public void run(Mask mask) {
         final int w = mask.getRasterWidth();
         final int h = mask.getRasterHeight();
-        run(w, h, ((DataBufferByte) mask.getSourceImage().getData().getDataBuffer()).getData());
+        final byte[] data = new byte[w * h];
+        mask.getSourceImage().getData().getDataElements(0, 0, w, h, data);
+        run(w, h, data);
     }
 
     private void run(int width, int height, byte[] data) {

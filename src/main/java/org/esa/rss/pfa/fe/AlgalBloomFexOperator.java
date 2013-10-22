@@ -102,7 +102,8 @@ public class AlgalBloomFexOperator extends FexOperator {
             new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
             new FeatureType("valid_pixels", "Ratio of valid pixels in patch", Double.class),
-            new FeatureType("contagion_index", "Relative contagion", Double.class),
+            new FeatureType("p11", "p11", Double.class),
+            new FeatureType("n11 / (n10 + n11)", "n11 / (n10 + n11)", Double.class),
     };
 
     @Override
@@ -195,6 +196,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[5], correctedProduct),
                 new Feature(FEATURE_TYPES[7], validPixelRatio),
                 new Feature(FEATURE_TYPES[6], contagionIndex.p11),
+                new Feature(FEATURE_TYPES[8], (double) contagionIndex.n11 / (double) (contagionIndex.n10 + contagionIndex.n11)),
         };
 
         coastDistImage.dispose();
