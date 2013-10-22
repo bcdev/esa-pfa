@@ -69,6 +69,7 @@ public class MerisCloudMaskOperator extends Operator {
                                  "Meris.Fronts.ROI",
                                  sourceProduct.getSceneRasterWidth(),
                                  sourceProduct.getSceneRasterHeight());
+        ProductUtils.copyFlagBands(sourceProduct, roiProduct, true);
         roiMask = roiProduct.addMask("roi", roiExpr, "", Color.WHITE, 0.0);
     }
 

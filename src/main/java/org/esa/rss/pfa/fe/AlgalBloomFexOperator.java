@@ -192,7 +192,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         AggregationMetrics aggregationMetrics = AggregationMetrics.compute(mask);
         ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(mask);
 
-        return new Feature[]{
+        final Feature[] features = {
                 new Feature(FEATURE_TYPES[0], featureProduct),
                 new Feature(FEATURE_TYPES[1], createReflectanceRgbImage(featureProduct)),
                 new Feature(FEATURE_TYPES[2], createReflectanceRgbImageMasked(featureProduct)),
@@ -203,10 +203,16 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(FEATURE_TYPES[7], connectivityMetric.connectionRatio),
                 new Feature(FEATURE_TYPES[8], connectivityMetric.fractalIndex),
                 new Feature(FEATURE_TYPES[9], aggregationMetrics.p11),
-                new Feature(FEATURE_TYPES[10], (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
+                new Feature(FEATURE_TYPES[10],
+                            (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
                 new Feature(FEATURE_TYPES[11], (double) aggregationMetrics.n11 / (double) aggregationMetrics.n10),
                 new Feature(FEATURE_TYPES[12], aggregationMetrics.clumpiness),
         };
+
+        reflectanceProduct.dispose();
+        featureProduct.dispose();
+
+        return features;
     }
 
 
@@ -227,17 +233,19 @@ public class AlgalBloomFexOperator extends FexOperator {
     private void addCloudMask(Product product) {
         MerisCloudMaskOperator op = new MerisCloudMaskOperator();
         op.setSourceProduct(product);
-        op.setRoiExpr("true");
+        op.setRoiExpr(FEX_VALID_MASK);
         op.setThreshold(9);
         Product cloudProduct = op.getTargetProduct();
 
         ProductUtils.copyBand("cloud_data_ori_or_flag", cloudProduct, product, true);
         ProductUtils.copyMasks(cloudProduct, product);
 
+        /*
         product.addMask(FEX_CLOUD_MASK_1_NAME, FEX_CLOUD_MASK_1_VALUE, "Special MERIS L1B cloud mask for PFA (magic wand)", Color.YELLOW,
                         0.5);
         product.addMask(FEX_CLOUD_MASK_2_NAME, FEX_CLOUD_MASK_2_VALUE, "Special MERIS L1B cloud mask for PFA (Schiller NN)", Color.ORANGE,
                         0.5);
+        */
     }
 
     private Band addMciBand(Product sourceProduct) {
