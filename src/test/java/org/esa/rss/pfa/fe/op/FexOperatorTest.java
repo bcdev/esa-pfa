@@ -4,11 +4,13 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.junit.Test;
 
-import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Norman Fomferra
@@ -81,11 +83,13 @@ public class FexOperatorTest {
         }
 
         @Override
-        protected Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle subsetRegion, Product patchProduct) {
-            return new Feature[]{
+        protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
+            Feature[] bibos = {
                     new Feature(FEATURE_TYPES[0], "bibo"),
                     new Feature(FEATURE_TYPES[1], 3.14),
             };
+            sink.writePatchFeatures(patch, bibos);
+            return true;
         }
     }
 
