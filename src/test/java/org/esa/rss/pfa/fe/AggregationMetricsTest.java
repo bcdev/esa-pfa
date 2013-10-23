@@ -16,6 +16,9 @@ package org.esa.rss.pfa.fe;/*
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -271,7 +274,7 @@ public class AggregationMetricsTest {
     }
 
     @Test
-    public void testCompute200x200() throws Exception {
+    public void testCompute200x200_1() throws Exception {
         final byte[] data = new byte[200 * 200];
         for (int y = 0; y < 200; y++) {
             for (int x = 0; x < 200; x++) {
@@ -303,6 +306,29 @@ public class AggregationMetricsTest {
         assertTrue(am.clumpiness <= 1.0);
 
         System.out.println("am.clumpiness = " + am.clumpiness);
+    }
+
+    @Test
+    public void testCompute200x200_2() throws Exception {
+        final byte[] data = new byte[200 * 200];
+        final Random random = new Random(3287);
+
+        for (int i = 0; i < 1000; i++) {
+            Arrays.fill(data, (byte) 1);
+
+            for (int j = 0; j < i; j++) {
+                final int k = random.nextInt(40000);
+                data[k] = 0;
+            }
+
+            final AggregationMetrics am = AggregationMetrics.compute(200, 200, data);
+
+            assertTrue(am.clumpiness >= -1.0);
+
+            assertTrue(am.clumpiness <= 1.0);
+
+            System.out.println("am.clumpiness = " + am.clumpiness);
+        }
     }
 
 }

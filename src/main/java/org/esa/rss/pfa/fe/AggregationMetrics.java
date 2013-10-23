@@ -144,11 +144,20 @@ class AggregationMetrics {
         } else if (p1 == 1.0) {
             clumpiness = 1.0;
         } else {
-            final double g1 = (double) n11 / (double) (n10 + n11);
+            final int n = (int) Math.floor(Math.sqrt(n1));
+            final int e1;
+            if (n1 == n * n) {
+                e1 = 4 * n;
+            } else if (n1 <= n * (n + 1)) {
+                e1 = 4 * n + 2;
+            } else {
+                e1 = 4 * n + 4;
+            }
+            final double g1 = (double) n11 / (double) (n10 + n11 - e1);
             if (g1 < p1 && p1 < 0.5) {
                 clumpiness = (g1 - p1) / p1;
             } else {
-                clumpiness = (g1 - p1) / (1.0 - p1);
+                clumpiness = Math.min(1.0, (g1 - p1) / (1.0 - p1));
             }
         }
     }
