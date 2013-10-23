@@ -102,9 +102,9 @@ public class AlgalBloomFexOperator extends FexOperator {
             /*03*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
             /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-            /*06*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch", Double.class),
+            /*06*/ new FeatureType("valid_pixel_ratio", "Ratio of valid pixels in patch [0, 1]", Double.class),
             /*07*/ new FeatureType("fractal_index", "Fractal index estimation", Double.class),
-            /*08*/ new FeatureType("clumpiness", "Clumpiness index", Double.class),
+            /*08*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
     };
 
     @Override
@@ -164,7 +164,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         final StxFactory stxFactory = new StxFactory();
         stxFactory.withRoiMask(featureProduct.getMaskGroup().get(FEX_VALID_MASK_NAME));
         final Stx stx = stxFactory.create(mciBand, ProgressMonitor.NULL);
-
         double validPixelRatio = stx.getSampleCount() / (double) numPixelsRequired;
         if (validPixelRatio < minValidPixelRatio) {
             getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio=%f%%", patchX, patchY, validPixelRatio * 100));
