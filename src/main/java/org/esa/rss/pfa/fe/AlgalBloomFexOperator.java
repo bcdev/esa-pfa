@@ -23,6 +23,8 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
@@ -116,6 +118,8 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     @Override
     public void initialize() throws OperatorException {
+
+        removeAllSourceMetadata();
 
         Product coastDistProduct;
         try {
@@ -365,6 +369,22 @@ public class AlgalBloomFexOperator extends FexOperator {
         List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(algalBloomFex1));
         algalBloomFex.addAll(Arrays.asList(args));
         return algalBloomFex.toArray(new String[0]);
+    }
+
+    private void removeAllSourceMetadata() {
+        removeAllMetadata(sourceProduct);
+    }
+
+    private static void removeAllMetadata(Product product) {
+        MetadataElement metadataRoot = product.getMetadataRoot();
+        MetadataElement[] elements = metadataRoot.getElements();
+        for (MetadataElement element : elements) {
+            metadataRoot.removeElement(element);
+        }
+        MetadataAttribute[] attributes = metadataRoot.getAttributes();
+        for (MetadataAttribute attribute : attributes) {
+            metadataRoot.removeAttribute(attribute);
+        }
     }
 
     public static class Spi extends OperatorSpi {
