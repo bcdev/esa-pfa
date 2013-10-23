@@ -233,7 +233,7 @@ public abstract class FexOperator extends Operator implements Output {
         }
     }
 
-    private Rectangle createSubsetRegion(Product sourceProduct, int tileY, int tileX) {
+    protected Rectangle createSubsetRegion(Product sourceProduct, int tileY, int tileX) {
         final int productSizeX = sourceProduct.getSceneRasterWidth();
         final int productSizeY = sourceProduct.getSceneRasterHeight();
         final Rectangle sceneBoundary = new Rectangle(0, 0, productSizeX, productSizeY);
@@ -242,7 +242,7 @@ public abstract class FexOperator extends Operator implements Output {
         return new Rectangle(x, y, patchWidth, patchHeight).intersection(sceneBoundary);
     }
 
-    private Product createSubset(Product sourceProduct, Rectangle subsetRegion) {
+    protected Product createSubset(Product sourceProduct, Rectangle subsetRegion) {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("region", subsetRegion);
         return GPF.createProduct("Subset", parameters, sourceProduct);
