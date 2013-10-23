@@ -50,6 +50,7 @@ public class DefaultFeatureOutputFactory extends FeatureOutputFactory {
                 String path = new File(dirPath, feature.getName() + ".dim").getPath();
                 BeamLogManager.getSystemLogger().info("Writing " + path);
                 ProductIO.writeProduct(patchProduct, path, "BEAM-DIMAP");
+                patchProduct.dispose();
                 return path;
             }
         }

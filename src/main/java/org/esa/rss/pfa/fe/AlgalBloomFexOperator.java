@@ -93,7 +93,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     private transient int coastDistWidth;
     private transient int coastDistHeight;
 
-    public static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
+    private static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
             /*00*/ new FeatureType("patch", "Patch product", Product.class),
             /*01*/ new FeatureType("patch_ql", "Quicklook for patch product", RenderedImage.class),
             /*02*/ new FeatureType("patch_ql_masked", "Masked quicklook for patch product", RenderedImage.class),
@@ -101,12 +101,8 @@ public class AlgalBloomFexOperator extends FexOperator {
             /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
             /*06*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch", Double.class),
-            /*07*/ new FeatureType("connected_pixels", "Ratio of connected pixels in patch", Double.class),
-            /*08*/ new FeatureType("fractal_index", "Fractal index estimation", Double.class),
-            /*09*/ new FeatureType("p11", "p11", Double.class),
-            /*10*/ new FeatureType("n11_n10_n11", "n11 / (n10 + n11)", Double.class),
-            /*11*/ new FeatureType("n11_n10", "n11 / n10", Double.class),
-            /*12*/ new FeatureType("clumpiness", "Clumpiness index", Double.class),
+            /*07*/ new FeatureType("fractal_index", "Fractal index estimation", Double.class),
+            /*08*/ new FeatureType("clumpiness", "Clumpiness index", Double.class),
     };
 
     @Override
@@ -194,19 +190,15 @@ public class AlgalBloomFexOperator extends FexOperator {
         RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID", FEX_VALID_MASK_NAME);
 
         return new Feature[]{
-                new Feature(FEATURE_TYPES[0], featureProduct),
-                new Feature(FEATURE_TYPES[1], images[0]),
-                new Feature(FEATURE_TYPES[2], images[1]),
                 createFeature(FEATURE_TYPES[3], featureProduct),
                 createFeature(FEATURE_TYPES[4], featureProduct),
                 createFeature(FEATURE_TYPES[5], featureProduct),
                 new Feature(FEATURE_TYPES[6], validPixelRatio),
-                new Feature(FEATURE_TYPES[7], connectivityMetric.connectionRatio),
-                new Feature(FEATURE_TYPES[8], connectivityMetric.fractalIndex),
-                new Feature(FEATURE_TYPES[9], aggregationMetrics.p11),
-                new Feature(FEATURE_TYPES[10], (double) aggregationMetrics.n11 / (double) (aggregationMetrics.n10 + aggregationMetrics.n11)),
-                new Feature(FEATURE_TYPES[11], (double) aggregationMetrics.n11 / (double) aggregationMetrics.n10),
-                new Feature(FEATURE_TYPES[12], aggregationMetrics.clumpiness),
+                new Feature(FEATURE_TYPES[7], connectivityMetric.fractalIndex),
+                new Feature(FEATURE_TYPES[8], aggregationMetrics.clumpiness),
+                new Feature(FEATURE_TYPES[1], images[0]),
+                new Feature(FEATURE_TYPES[2], images[1]),
+                new Feature(FEATURE_TYPES[0], featureProduct),
         };
     }
 
