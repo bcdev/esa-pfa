@@ -136,16 +136,16 @@ public abstract class FexOperator extends Operator implements Output {
         featureOutputFactory.configure(outputProperties);
 
         if (overwriteMode) {
-            System.out.println("Warning: FexOp: Overwrite mode is on.");
+            getLogger().warning("FexOperator: Overwrite mode is on.");
         }
         if (skipFeaturesOutput) {
-            System.out.println("Warning: FexOp: Feature output skipped.");
+            getLogger().warning("FexOperator: Feature output skipped.");
         }
         if (skipProductOutput) {
-            System.out.println("Warning: FexOp: Product output skipped.");
+            getLogger().warning("FexOperator: Product output skipped.");
         }
         if (skipQuicklookOutput) {
-            System.out.println("Warning: FexOp: RGB image output skipped.");
+            getLogger().warning("FexOperator: RGB image output skipped.");
         }
 
         setTargetProduct(sourceProduct);
@@ -169,8 +169,6 @@ public abstract class FexOperator extends Operator implements Output {
 
         PatchSinkImpl sink = new PatchSinkImpl(featureOutput);
 
-        double patchSecAvg = 0;
-
         long t0 = System.currentTimeMillis();
         for (int patchY = 0; patchY < patchCountY; patchY++) {
             for (int patchX = 0; patchX < patchCountX; patchX++) {
@@ -190,7 +188,7 @@ public abstract class FexOperator extends Operator implements Output {
                     JAI.getDefaultInstance().getTileCache().flush();
                 }
 
-                patchSecAvg = logProgress(t1, patchCountX, patchCountY, patchX, patchY, patchSecAvg);
+                logProgress(t0, t1, patchCountX, patchCountY, patchX, patchY);
             }
         }
 
@@ -205,16 +203,15 @@ public abstract class FexOperator extends Operator implements Output {
         BeamLogManager.getSystemLogger().info(String.format("Completed %d patches in %.1f sec", patchCount, totalSec));
     }
 
-    private double logProgress(long t0, int patchCountX, int patchCountY, int patchX, int patchY, double patchSecAvg) {
+    private void logProgress(long t0, long t1, int patchCountX, int patchCountY, int patchX, int patchY) {
         int patchCount = patchCountX * patchCountY;
         int patchIndex = patchY * patchCountX + patchX;
         int progress = (int) (100.0 * patchIndex / (patchCount - 1.0) + 0.5);
-        double patchSec = (System.currentTimeMillis() - t0) / 1000.0;
-        patchSecAvg = 0.5 * (patchSecAvg + patchSec);
-        double totalSec = (patchCount - (patchIndex + 1)) * patchSecAvg;
+        long t2 = System.currentTimeMillis();
+        double patchSec = (t2 - t1) / 1000.0;
+        double totalSec = patchCount / (patchIndex + 1.0) * (t2 - t0) / 1000.0;
         BeamLogManager.getSystemLogger().info(String.format("Completed patch %d of %d patches (%d%% done) in %.1f sec. Still %.1f sec left to completion.",
                                                             patchIndex + 1, patchCount, progress, patchSec, totalSec));
-        return patchSecAvg;
     }
 
     private void initFeatureOutputFactory() {
@@ -289,7 +286,7 @@ public abstract class FexOperator extends Operator implements Output {
             this.featureOutput = featureOutput;
         }
 
-        public void writePatchFeatures(Patch patch,Feature... features) throws IOException {
+        public void writePatchFeatures(Patch patch, Feature... features) throws IOException {
             featureOutput.writePatchFeatures(patch.getPatchX(), patch.getPatchY(), patch.getPatchProduct(), features);
         }
     }
