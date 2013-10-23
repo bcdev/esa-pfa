@@ -45,7 +45,6 @@ import org.esa.rss.pfa.fe.op.FeatureType;
 import org.esa.rss.pfa.fe.op.FexOperator;
 
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -84,12 +83,14 @@ public class AlgalBloomFexOperator extends FexOperator {
     public static final String FEX_CLOUD_MASK_2_NAME = "fex_cloud_2";
     public static final String FEX_CLOUD_MASK_2_VALUE = "cl_wat_3_val > 1.8";
 
-    public static final String FEX_VALID_MASK_NAME = "fex_roi";
+    public static final String FEX_ROI_MASK_NAME = "fex_roi";
 
     public static final String FEX_COAST_DIST_PRODUCT_PATH = "auxdata/coast_dist_2880.dim";
 
     @Parameter(defaultValue = "0.2")
     private double minValidPixelRatio;
+    @Parameter(defaultValue = "0.0")
+    private double minClumpiness;
 
     private transient float[] coastDistData;
     private transient int coastDistWidth;
@@ -103,7 +104,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
             /*06*/ new FeatureType("valid_pixel_ratio", "Ratio of valid pixels in patch [0, 1]", Double.class),
-            /*07*/ new FeatureType("fractal_index", "Fractal index estimation", Double.class),
+            /*07*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
             /*08*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
     };
 
@@ -136,9 +137,12 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     @Override
-    protected Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle subsetRegion, Product patchProduct) {
+    protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
+        int patchX = patch.getPatchX();
+        int patchY = patch.getPatchY();
+        Product patchProduct = patch.getPatchProduct();
         if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
-            return null;
+            return false;
         }
 
         int numPixelsRequired = patchWidth * patchHeight;
@@ -147,7 +151,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         double patchPixelRatio = numPixelsTotal / (double) numPixelsRequired;
         if (patchPixelRatio < minValidPixelRatio) {
             getLogger().warning(String.format("Rejected patch x%dy%d, patchPixelRatio=%f%%", patchX, patchY, patchPixelRatio * 100));
-            return null;
+            return false;
         }
 
         final Product featureProduct = createCorrectedProduct(patchProduct);
@@ -157,19 +161,24 @@ public class AlgalBloomFexOperator extends FexOperator {
                 ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
             }
         }
-        addCloudMask(featureProduct);
+        Product cloudProduct = addCloudMask(featureProduct);
         addValidMask(featureProduct);
-        final Band mciBand = addMciBand(featureProduct);
-
-        final StxFactory stxFactory = new StxFactory();
-        stxFactory.withRoiMask(featureProduct.getMaskGroup().get(FEX_VALID_MASK_NAME));
-        final Stx stx = stxFactory.create(mciBand, ProgressMonitor.NULL);
-        double validPixelRatio = stx.getSampleCount() / (double) numPixelsRequired;
-        if (validPixelRatio < minValidPixelRatio) {
-            getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio=%f%%", patchX, patchY, validPixelRatio * 100));
-            return null;
+        Mask mask = featureProduct.getMaskGroup().get(FEX_ROI_MASK_NAME);
+        ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(mask);
+        double validPixelRatio = connectivityMetric.insideCount / (double) numPixelsRequired;
+        if (validPixelRatio <= minValidPixelRatio) {
+            getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio = %f%%", patchX, patchY, validPixelRatio * 100));
+            disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+            return false;
+        }
+        AggregationMetrics aggregationMetrics = AggregationMetrics.compute(mask);
+        if (aggregationMetrics.clumpiness < minClumpiness) {
+            getLogger().warning(String.format("Rejected patch x%dy%d, clumpiness = %f", patchX, patchY, aggregationMetrics.clumpiness));
+            disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+            return false;
         }
 
+        addMciBand(featureProduct);
         addFlhBand(featureProduct);
 
         // todo - dirty code from NF, clean up
@@ -185,24 +194,31 @@ public class AlgalBloomFexOperator extends FexOperator {
                 });
         coastDistBand.setSourceImage(coastDistImage);
 
+        RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID", FEX_ROI_MASK_NAME);
 
-        Mask mask = featureProduct.getMaskGroup().get(FEX_VALID_MASK_NAME);
-        AggregationMetrics aggregationMetrics = AggregationMetrics.compute(mask);
-        ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(mask);
-
-        RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID", FEX_VALID_MASK_NAME);
-
-        return new Feature[]{
+        Feature[] features = {
+                new Feature(FEATURE_TYPES[0], featureProduct),
+                new Feature(FEATURE_TYPES[1], images[0]),
+                new Feature(FEATURE_TYPES[2], images[1]),
                 createFeature(FEATURE_TYPES[3], featureProduct),
                 createFeature(FEATURE_TYPES[4], featureProduct),
                 createFeature(FEATURE_TYPES[5], featureProduct),
                 new Feature(FEATURE_TYPES[6], validPixelRatio),
                 new Feature(FEATURE_TYPES[7], connectivityMetric.fractalIndex),
                 new Feature(FEATURE_TYPES[8], aggregationMetrics.clumpiness),
-                new Feature(FEATURE_TYPES[1], images[0]),
-                new Feature(FEATURE_TYPES[2], images[1]),
-                new Feature(FEATURE_TYPES[0], featureProduct),
         };
+
+        sink.writePatchFeatures(patch, features);
+
+        disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+
+        return true;
+    }
+
+    private void disposeProducts(Product ... products) {
+        for (Product product : products) {
+            product.dispose();
+        }
     }
 
 
@@ -217,10 +233,10 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     private void addValidMask(Product featureProduct) {
         final String expression = String.format("(%s) AND NOT (%s)", FEX_VALID_MASK, "cloud_mask");
-        featureProduct.addMask(FEX_VALID_MASK_NAME, expression, "ROI for pixels used for the feature extraction", Color.green, 0.5);
+        featureProduct.addMask(FEX_ROI_MASK_NAME, expression, "ROI for pixels used for the feature extraction", Color.green, 0.5);
     }
 
-    private void addCloudMask(Product product) {
+    private Product addCloudMask(Product product) {
         MerisCloudMaskOperator op = new MerisCloudMaskOperator();
         op.setSourceProduct(product);
         op.setRoiExpr(FEX_VALID_MASK);
@@ -236,6 +252,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         product.addMask(FEX_CLOUD_MASK_2_NAME, FEX_CLOUD_MASK_2_VALUE, "Special MERIS L1B cloud mask for PFA (Schiller NN)", Color.ORANGE,
                         0.5);
         */
+        return cloudProduct;
     }
 
     private Band addMciBand(Product sourceProduct) {
@@ -256,7 +273,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                                                              l1.getName(),
                                                              l3.getName(),
                                                              l1.getName(), factor));
-        mci.setValidPixelExpression(FEX_VALID_MASK_NAME);
+        mci.setValidPixelExpression(FEX_ROI_MASK_NAME);
         return mci;
     }
 
@@ -278,7 +295,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                                                              l1.getName(),
                                                              l3.getName(),
                                                              l1.getName(), factor));
-        flh.setValidPixelExpression(FEX_VALID_MASK_NAME);
+        flh.setValidPixelExpression(FEX_ROI_MASK_NAME);
     }
 
     private Product createCorrectedProduct(Product sourceProduct) {
@@ -293,7 +310,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     private Feature createFeature(FeatureType featureType, Product product) {
         final StxFactory stxFactory = new StxFactory();
-        stxFactory.withRoiMask(product.getMaskGroup().get(FEX_VALID_MASK_NAME));
+        stxFactory.withRoiMask(product.getMaskGroup().get(FEX_ROI_MASK_NAME));
         final Stx stx = stxFactory.create(product.getBand(featureType.getName()), ProgressMonitor.NULL);
         return new Feature(featureType, null,
                            stx.getMean(),

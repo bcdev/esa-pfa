@@ -117,7 +117,7 @@ public abstract class FexOperator extends Operator implements Output {
 
     protected abstract FeatureType[] getFeatureTypes();
 
-    protected abstract Feature[] extractPatchFeatures(int patchX, int patchY, Rectangle patchRegion, Product patchProduct);
+    protected abstract boolean processPatch(Patch patch, PatchSink sink) throws IOException;
 
     @Override
     public void initialize() throws OperatorException {
@@ -167,6 +167,8 @@ public abstract class FexOperator extends Operator implements Output {
         FeatureType[] featureTypes = getFeatureTypes();
         featureOutput.initialize(getSourceProduct(), featureTypes);
 
+        PatchSinkImpl sink = new PatchSinkImpl(featureOutput);
+
         double patchSecAvg = 0;
 
         long t0 = System.currentTimeMillis();
@@ -178,11 +180,8 @@ public abstract class FexOperator extends Operator implements Output {
                 Product patchProduct = createSubset(sourceProduct, patchRegion);
                 patchProduct.setName("patch");
 
-                Feature[] features = extractPatchFeatures(patchX, patchY, patchRegion, patchProduct);
-                if (features != null) {
-                    featureOutput.writePatchFeatures(patchX, patchY, patchProduct, features);
-                    disposeProducts(features);
-                }
+                Patch patch = new Patch(patchX, patchY, patchRegion, patchProduct);
+                processPatch(patch, sink);
 
                 patchProduct.dispose();
 
@@ -198,15 +197,6 @@ public abstract class FexOperator extends Operator implements Output {
         featureOutput.close();
 
         logCompletion(t0, patchCountX, patchCountY);
-    }
-
-    private void disposeProducts(Feature[] features) {
-        for (Feature feature : features) {
-            if (feature.getValue() instanceof Product) {
-                Product product = (Product) feature.getValue();
-                product.dispose();
-            }
-        }
     }
 
     private void logCompletion(long t0, int patchCountX, int patchCountY) {
@@ -254,5 +244,53 @@ public abstract class FexOperator extends Operator implements Output {
         parameters.put("region", subsetRegion);
         parameters.put("copyMetadata", false);
         return GPF.createProduct("Subset", parameters, sourceProduct);
+    }
+
+    public static final class Patch {
+        final int patchX;
+        final int patchY;
+        final Rectangle patchRegion;
+        final Product patchProduct;
+
+
+        public Patch(int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
+            this.patchX = patchX;
+            this.patchY = patchY;
+            this.patchRegion = patchRegion;
+            this.patchProduct = patchProduct;
+        }
+
+        public int getPatchX() {
+            return patchX;
+        }
+
+        public int getPatchY() {
+            return patchY;
+        }
+
+        public Rectangle getPatchRegion() {
+            return patchRegion;
+        }
+
+        public Product getPatchProduct() {
+            return patchProduct;
+        }
+    }
+
+    public interface PatchSink {
+
+        void writePatchFeatures(Patch patch, Feature... features) throws IOException;
+    }
+
+    public class PatchSinkImpl implements PatchSink {
+        private final FeatureOutput featureOutput;
+
+        public PatchSinkImpl(FeatureOutput featureOutput) {
+            this.featureOutput = featureOutput;
+        }
+
+        public void writePatchFeatures(Patch patch,Feature... features) throws IOException {
+            featureOutput.writePatchFeatures(patch.getPatchX(), patch.getPatchY(), patch.getPatchProduct(), features);
+        }
     }
 }
