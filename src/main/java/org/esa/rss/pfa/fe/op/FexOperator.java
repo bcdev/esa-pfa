@@ -24,6 +24,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
@@ -61,6 +62,9 @@ public abstract class FexOperator extends Operator implements Output {
 
     @Parameter(description = "The path where features will be extracted to")
     protected String targetPath;
+
+    @Parameter(defaultValue = "false", description = "Disposes all global image caches after a patch has been completed")
+    protected boolean disposeGlobalCaches;
 
     @Parameter(defaultValue = "false")
     protected boolean overwriteMode;
@@ -182,7 +186,10 @@ public abstract class FexOperator extends Operator implements Output {
 
                 patchProduct.dispose();
 
-                JAI.getDefaultInstance().getTileCache().flush();
+                if (disposeGlobalCaches) {
+                    ImageManager.getInstance().dispose();
+                    JAI.getDefaultInstance().getTileCache().flush();
+                }
 
                 patchSecAvg = logProgress(t1, patchCountX, patchCountY, patchX, patchY, patchSecAvg);
             }
@@ -245,6 +252,7 @@ public abstract class FexOperator extends Operator implements Output {
     private Product createSubset(Product sourceProduct, Rectangle subsetRegion) {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("region", subsetRegion);
+        parameters.put("copyMetadata", false);
         return GPF.createProduct("Subset", parameters, sourceProduct);
     }
 }
