@@ -95,6 +95,9 @@ public class AlgalBloomFexOperator extends FexOperator {
     private double minValidPixelRatio;
     @Parameter(defaultValue = "0.0")
     private double minClumpiness;
+    @Parameter(defaultValue = "true")
+    private boolean useMerisCloudMask;
+
 
     private transient float[] coastDistData;
     private transient int coastDistWidth;
@@ -119,7 +122,6 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     @Override
     public void initialize() throws OperatorException {
-
         removeAllSourceMetadata();
 
         Product coastDistProduct;
@@ -243,7 +245,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     private Product addMasks(Product product) {
         final Product cloudProduct;
-        if (true) {
+        if (useMerisCloudMask) {
             final Operator op = createCloudMaskOperator(product);
             cloudProduct = op.getTargetProduct();
 
