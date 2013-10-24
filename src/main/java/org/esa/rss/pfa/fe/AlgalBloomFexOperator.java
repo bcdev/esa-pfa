@@ -70,27 +70,25 @@ public class AlgalBloomFexOperator extends FexOperator {
         final String filePath = args[0];
         final File file = new File(filePath);
 
-        if (file.exists()) {
-            System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
-            System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
-            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-            if (file.isFile()) {
-                runGPT(args);
-            } else if (file.isDirectory()) {
-                final File[] sourceFiles = file.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(".N1");
-                    }
-                });
-                if (sourceFiles != null) {
-                    for (final File sourceFile : sourceFiles) {
-                        args[0] = sourceFile.getPath();
-                        runGPT(args);
-                    }
+        if (file.isDirectory()) {
+            final File[] sourceFiles = file.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".N1");
+                }
+            });
+            if (sourceFiles != null) {
+                for (final File sourceFile : sourceFiles) {
+                    args[0] = sourceFile.getPath();
+                    runGPT(args);
                 }
             }
+        } else {
+            runGPT(args);
         }
     }
 
