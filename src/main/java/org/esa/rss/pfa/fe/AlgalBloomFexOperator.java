@@ -49,6 +49,8 @@ import org.esa.rss.pfa.fe.op.FexOperator;
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,9 +67,34 @@ import java.util.List;
 public class AlgalBloomFexOperator extends FexOperator {
 
     public static void main(String[] args) {
-        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
-        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        final String filePath = args[0];
+        final File file = new File(filePath);
+
+        if (file.exists()) {
+            System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
+            System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
+            if (file.isFile()) {
+                runGPT(args);
+            } else if (file.isDirectory()) {
+                final File[] sourceFiles = file.listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith(".N1");
+                    }
+                });
+                if (sourceFiles != null) {
+                    for (final File sourceFile : sourceFiles) {
+                        args[0] = sourceFile.getPath();
+                        runGPT(args);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void runGPT(String[] args) {
         try {
             GPT.main(appendArgs("AlgalBloomFex", args));
         } catch (Exception e) {
@@ -415,8 +442,8 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
 
-    private static String[] appendArgs(String algalBloomFex1, String[] args) {
-        List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(algalBloomFex1));
+    private static String[] appendArgs(String operatorName, String[] args) {
+        List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(operatorName));
         algalBloomFex.addAll(Arrays.asList(args));
         return algalBloomFex.toArray(new String[algalBloomFex.size()]);
     }
