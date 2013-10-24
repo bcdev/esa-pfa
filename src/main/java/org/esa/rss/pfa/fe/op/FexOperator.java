@@ -286,6 +286,7 @@ public abstract class FexOperator extends Operator implements Output {
             this.featureOutput = featureOutput;
         }
 
+        @Override
         public void writePatchFeatures(Patch patch, Feature... features) throws IOException {
             featureOutput.writePatchFeatures(patch.getPatchX(), patch.getPatchY(), patch.getPatchProduct(), features);
         }

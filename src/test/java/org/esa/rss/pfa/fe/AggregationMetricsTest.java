@@ -313,12 +313,31 @@ public class AggregationMetricsTest {
         final byte[] data = new byte[200 * 200];
         final Random random = new Random(3287);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 1; i < 1000; i++) {
             Arrays.fill(data, (byte) 1);
 
             for (int j = 0; j < i; j++) {
                 final int k = random.nextInt(40000);
                 data[k] = 0;
+            }
+
+            final AggregationMetrics am = AggregationMetrics.compute(200, 200, data);
+
+            assertTrue(am.clumpiness >= -0.1);
+
+            assertTrue(am.clumpiness <= 0.1);
+        }
+    }
+
+    @Test
+    public void testCompute200x200_3() throws Exception {
+        final byte[] data = new byte[200 * 200];
+
+        for (int i = 1; i < 1000; i++) {
+            Arrays.fill(data, (byte) 1);
+
+            for (int j = 0; j < i; j++) {
+                data[j] = 0;
             }
 
             final AggregationMetrics am = AggregationMetrics.compute(200, 200, data);

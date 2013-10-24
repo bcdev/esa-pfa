@@ -144,8 +144,9 @@ class AggregationMetrics {
         } else if (p1 == 1.0) {
             clumpiness = 1.0;
         } else {
+            /* rq-20131024 - might be useful - do not delete yet
             final int n = (int) Math.floor(Math.sqrt(n1));
-            final int e1;
+            final int e1 = 0;
             if (n1 == n * n) {
                 e1 = 4 * n;
             } else if (n1 <= n * (n + 1)) {
@@ -153,7 +154,8 @@ class AggregationMetrics {
             } else {
                 e1 = 4 * n + 4;
             }
-            final double g1 = (double) n11 / (double) (n10 + n11 - e1);
+            */
+            final double g1 = (double) n11 / (double) (n10 + n11);
             if (g1 < p1 && p1 < 0.5) {
                 clumpiness = (g1 - p1) / p1;
             } else {
