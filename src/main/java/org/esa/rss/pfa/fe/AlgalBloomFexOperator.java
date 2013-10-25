@@ -30,7 +30,6 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -105,7 +104,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN)";
 
     public static final String FEX_CLOUD_MASK_1_NAME = "fex_cloud_1";
-    public static final String FEX_CLOUD_MASK_1_VALUE = "inrange(1.0,radiance_2/radiance_1,radiance_3/radiance_1,radiance_4/radiance_1,radiance_5/radiance_1,radiance_6/radiance_1,radiance_7/radiance_1,radiance_8/radiance_1,radiance_9/radiance_1,radiance_10/radiance_1,radiance_11/radiance_1,radiance_12/radiance_1,radiance_13/radiance_1,radiance_14/radiance_1,radiance_15/radiance_1,0.9825,0.8912440298255327,0.7053624619190219,0.632554865136358,0.4575615968608662,0.2179392690391927,0.16292546567267474,0.14507751149298348,0.11298530962868607,0.07717095822527878,0.026874729262769237,0.0644775478429025,0.032459522893688454,0.02857828581108522,0.019437950982025554,1.0175,1.1763689248192413,1.273366916408814,1.2648073865199438,1.203150647878767,1.131659556515563,1.119413895149373,1.0961100428051727,0.9982435054213645,1.1191481235570606,0.5293549869787241,1.0707186507909972,0.9215112851384355,0.8887876651578702,0.6442855617909731)";
+    public static final String FEX_CLOUD_MASK_1_VALUE = "l1_flags.BRIGHT";
 
     public static final String FEX_CLOUD_MASK_2_NAME = "fex_cloud_2";
     public static final String FEX_CLOUD_MASK_2_VALUE = "cl_wat_3_val > 1.8";
@@ -122,6 +121,8 @@ public class AlgalBloomFexOperator extends FexOperator {
     private double minClumpiness;
     @Parameter(defaultValue = "true")
     private boolean useMerisCloudMask;
+    @Parameter(defaultValue = "1.005", description = "Cloud correction factor for MCI/FLH computation")
+    private double cloudCorrectionFactor;
 
 
     private transient float[] coastDistData;
@@ -135,7 +136,7 @@ public class AlgalBloomFexOperator extends FexOperator {
             /*03*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
             /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
             /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-            /*06*/ new FeatureType("valid_pixel_ratio", "Ratio of valid pixels in patch [0, 1]", Double.class),
+            /*06*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
             /*07*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
             /*08*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
     };
@@ -187,12 +188,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         }
 
         final Product featureProduct = createCorrectedProduct(patchProduct);
-        final Product reflectanceProduct = createReflectanceProduct(featureProduct);
-        for (final String bandName : reflectanceProduct.getBandNames()) {
-            if (bandName.startsWith("reflec")) {
-                ProductUtils.copyBand(bandName, reflectanceProduct, featureProduct, true);
-            }
-        }
         final Product cloudProduct = addMasks(featureProduct);
         final Mask roiMask = featureProduct.getMaskGroup().get(FEX_ROI_MASK_NAME);
         final ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(roiMask);
@@ -201,7 +196,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         if (validPixelRatio <= minValidPixelRatio) {
             getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio = %f%%", patchX, patchY,
                                               validPixelRatio * 100));
-            disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+            disposeProducts(featureProduct, cloudProduct);
             return false;
         }
 
@@ -209,25 +204,13 @@ public class AlgalBloomFexOperator extends FexOperator {
         final double clumpiness = aggregationMetrics.clumpiness;
         if (validPixelRatio < 0.5 && clumpiness < minClumpiness) {
             getLogger().warning(String.format("Rejected patch x%dy%d, clumpiness = %f", patchX, patchY, clumpiness));
-            disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+            disposeProducts(featureProduct, cloudProduct);
             return false;
         }
 
         addMciBand(featureProduct);
         addFlhBand(featureProduct);
-
-        // todo - dirty code from NF, clean up
-        final Band coastDistBand = featureProduct.addBand("coast_dist", ProductData.TYPE_FLOAT32);
-        final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
-                new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
-                    @Override
-                    protected RenderedImage createImage(int level) {
-                        return new WorldDataOpImage(featureProduct.getGeoCoding(), coastDistBand,
-                                                    ResolutionLevel.create(getModel(), level),
-                                                    coastDistWidth, coastDistHeight, coastDistData);
-                    }
-                });
-        coastDistBand.setSourceImage(coastDistImage);
+        addCoastDistBand(featureProduct);
 
         final RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID",
                                                                   FEX_ROI_MASK_NAME);
@@ -246,7 +229,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         sink.writePatchFeatures(patch, features);
 
-        disposeProducts(featureProduct, reflectanceProduct, cloudProduct);
+        disposeProducts(featureProduct, cloudProduct);
 
         return true;
     }
@@ -255,16 +238,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         for (Product product : products) {
             product.dispose();
         }
-    }
-
-
-    private Product createReflectanceProduct(Product sourceProduct) {
-        final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
-        radiometryParameters.put("doCalibration", false);
-        radiometryParameters.put("doSmile", false);
-        radiometryParameters.put("doEqualization", false);
-        radiometryParameters.put("doRadToRefl", true);
-        return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
     }
 
     private Product addMasks(Product product) {
@@ -316,63 +289,74 @@ public class AlgalBloomFexOperator extends FexOperator {
         return op;
     }
 
-    private Band addMciBand(Product sourceProduct) {
-        final Band l1 = sourceProduct.getBand("radiance_8");
-        final Band l2 = sourceProduct.getBand("radiance_9");
-        final Band l3 = sourceProduct.getBand("radiance_10");
+    private Band addMciBand(Product product) {
+        final Band l1 = product.getBand("reflec_8");
+        final Band l2 = product.getBand("reflec_9");
+        final Band l3 = product.getBand("reflec_10");
 
         final double lambda1 = l1.getSpectralWavelength();
         final double lambda2 = l2.getSpectralWavelength();
         final double lambda3 = l3.getSpectralWavelength();
         final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
-        final double cloudCorrectionFactor = 1.005;
 
-        final Band mci = sourceProduct.addBand("mci",
-                                               String.format("%s - %s * (%s + (%s - %s) * %s)",
-                                                             l2.getName(),
-                                                             cloudCorrectionFactor,
-                                                             l1.getName(),
-                                                             l3.getName(),
-                                                             l1.getName(), factor));
+        final Band mci = product.addBand("mci",
+                                         String.format("%s - %s * (%s + (%s - %s) * %s)",
+                                                       l2.getName(),
+                                                       cloudCorrectionFactor,
+                                                       l1.getName(),
+                                                       l3.getName(),
+                                                       l1.getName(), factor));
         mci.setValidPixelExpression(FEX_ROI_MASK_NAME);
         return mci;
     }
 
-    private void addFlhBand(Product sourceProduct) {
-        final Band l1 = sourceProduct.getBand("reflec_7");
-        final Band l2 = sourceProduct.getBand("reflec_8");
-        final Band l3 = sourceProduct.getBand("reflec_9");
+    private void addFlhBand(Product product) {
+        final Band l1 = product.getBand("reflec_7");
+        final Band l2 = product.getBand("reflec_8");
+        final Band l3 = product.getBand("reflec_9");
 
         final double lambda1 = l1.getSpectralWavelength();
         final double lambda2 = l2.getSpectralWavelength();
         final double lambda3 = l3.getSpectralWavelength();
         final double factor = (lambda2 - lambda1) / (lambda3 - lambda1);
-        final double cloudCorrectionFactor = 1.005;
 
-        final Band flh = sourceProduct.addBand("flh",
-                                               String.format("%s - %s * (%s + (%s - %s) * %s)",
-                                                             l2.getName(),
-                                                             cloudCorrectionFactor,
-                                                             l1.getName(),
-                                                             l3.getName(),
-                                                             l1.getName(), factor));
+        final Band flh = product.addBand("flh",
+                                         String.format("%s - %s * (%s + (%s - %s) * %s)",
+                                                       l2.getName(),
+                                                       cloudCorrectionFactor,
+                                                       l1.getName(),
+                                                       l3.getName(),
+                                                       l1.getName(), factor));
         flh.setValidPixelExpression(FEX_ROI_MASK_NAME);
     }
 
-    private Product createCorrectedProduct(Product sourceProduct) {
+    private void addCoastDistBand(final Product product) {
+        final Band coastDistBand = product.addBand("coast_dist", ProductData.TYPE_FLOAT32);
+        final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
+                new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
+                    @Override
+                    protected RenderedImage createImage(int level) {
+                        return new WorldDataOpImage(product.getGeoCoding(), coastDistBand,
+                                                    ResolutionLevel.create(getModel(), level),
+                                                    coastDistWidth, coastDistHeight, coastDistData);
+                    }
+                });
+        coastDistBand.setSourceImage(coastDistImage);
+        coastDistBand.setValidPixelExpression(FEX_ROI_MASK_NAME);
+    }
+
+    private Product createCorrectedProduct(Product product) {
         final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
         radiometryParameters.put("doCalibration", false);
         radiometryParameters.put("doSmile", true);
         radiometryParameters.put("doEqualization", true);
         radiometryParameters.put("reproVersion", ReprocessingVersion.REPROCESSING_3);
-        radiometryParameters.put("doRadToRefl", false);
-        return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, sourceProduct);
+        radiometryParameters.put("doRadToRefl", true);
+        return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, product);
     }
 
     private Feature createFeature(FeatureType featureType, Product product) {
-        final StxFactory stxFactory = new StxFactory();
-        stxFactory.withRoiMask(product.getMaskGroup().get(FEX_ROI_MASK_NAME));
-        final Stx stx = stxFactory.create(product.getBand(featureType.getName()), ProgressMonitor.NULL);
+        final Stx stx = product.getBand(featureType.getName()).getStx(true, ProgressMonitor.NULL);
         return new Feature(featureType, null,
                            stx.getMean(),
                            stx.getMedian(),
@@ -392,6 +376,8 @@ public class AlgalBloomFexOperator extends FexOperator {
         double minB = -1.5;
         double maxB = -0.5;
 
+        double gamma = 1.2;
+
         Band r = product.addBand("virtual_red",
                                  "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)");
         Band g = product.addBand("virtual_green",
@@ -401,7 +387,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         RenderedImage[] images = new RenderedImage[validMasks.length];
         for (int i = 0; i < validMasks.length; i++) {
-            images[i] = getRenderedImageDDD(validMasks[i], minR, maxR, 1.2, minG, maxG, 1.2, minB, maxB, 1.5, r, g, b);
+            images[i] = createRenderedImage(validMasks[i], minR, maxR, gamma, minG, maxG, gamma, minB, maxB, gamma, r, g, b);
         }
 
         product.removeBand(r);
@@ -415,10 +401,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         return images;
     }
 
-    private RenderedImage getRenderedImageDDD(String expressionA, double minR, double maxR, double gammaR, double minG,
-                                              double maxG, double gammaG, double minB, double maxB, double gammaB,
+    private RenderedImage createRenderedImage(String validPixelExpr,
+                                              double minR, double maxR, double gammaR,
+                                              double minG, double maxG, double gammaG,
+                                              double minB, double maxB, double gammaB,
                                               Band r, Band g, Band b) {
-        r.setValidPixelExpression(expressionA);
+        r.setValidPixelExpression(validPixelExpr);
         r.setNoDataValue(Double.NaN);
         r.setNoDataValueUsed(true);
 
