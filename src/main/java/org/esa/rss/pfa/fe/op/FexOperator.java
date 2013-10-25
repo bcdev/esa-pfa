@@ -210,7 +210,7 @@ public abstract class FexOperator extends Operator implements Output {
         long t2 = System.currentTimeMillis();
         double patchSec = (t2 - t1) / 1000.0;
         double patchSecAvg = (t2 - t0) / 1000.0 / (patchIndex + 1.0);
-        double totalSec = patchSecAvg * patchCount / (patchIndex + 1.0);
+        double totalSec = patchSecAvg * (patchCount - patchIndex - 1);
         BeamLogManager.getSystemLogger().info(String.format("Completed patch %d of %d patches (%d%% done) in %.1f sec. Still %.1f sec left to completion.",
                                                             patchIndex + 1, patchCount, progress, patchSec, totalSec));
     }
