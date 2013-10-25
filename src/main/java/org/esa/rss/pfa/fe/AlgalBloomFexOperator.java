@@ -194,7 +194,6 @@ public class AlgalBloomFexOperator extends FexOperator {
             }
         }
         final Product cloudProduct = addMasks(featureProduct);
-        addRoiMask(featureProduct, FEX_CLOUD_MASK_3_NAME);
         final Mask roiMask = featureProduct.getMaskGroup().get(FEX_ROI_MASK_NAME);
         final ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(roiMask);
 
