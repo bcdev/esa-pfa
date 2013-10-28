@@ -9,7 +9,7 @@ import java.util.Random;
 /**
  * @author Norman Fomferra
  */
-public class ConnectivityMetric {
+public class ConnectivityMetrics {
 
     int connectionCount;
     double connectionRatio;
@@ -21,19 +21,19 @@ public class ConnectivityMetric {
     double maxSegmentLengthMean;
     double maxSegmentLengthSigma;
 
-    private ConnectivityMetric() {
+    private ConnectivityMetrics() {
     }
 
-    public static ConnectivityMetric compute(Mask mask) {
-        ConnectivityMetric connectivityMetric = new ConnectivityMetric();
-        connectivityMetric.run(mask);
-        return connectivityMetric;
+    public static ConnectivityMetrics compute(Mask mask) {
+        ConnectivityMetrics connectivityMetrics = new ConnectivityMetrics();
+        connectivityMetrics.run(mask);
+        return connectivityMetrics;
     }
 
-    public static ConnectivityMetric compute(int width, int height, byte[] data) {
-        ConnectivityMetric connectivityMetric = new ConnectivityMetric();
-        connectivityMetric.run(width, height, data);
-        return connectivityMetric;
+    public static ConnectivityMetrics compute(int width, int height, byte[] data) {
+        ConnectivityMetrics connectivityMetrics = new ConnectivityMetrics();
+        connectivityMetrics.run(width, height, data);
+        return connectivityMetrics;
     }
 
     private void run(Mask mask) {

@@ -190,9 +190,9 @@ public class AlgalBloomFexOperator extends FexOperator {
         final Product featureProduct = createCorrectedProduct(patchProduct);
         final Product cloudProduct = addMasks(featureProduct);
         final Mask roiMask = featureProduct.getMaskGroup().get(FEX_ROI_MASK_NAME);
-        final ConnectivityMetric connectivityMetric = ConnectivityMetric.compute(roiMask);
+        final ConnectivityMetrics connectivityMetrics = ConnectivityMetrics.compute(roiMask);
 
-        final double validPixelRatio = connectivityMetric.insideCount / (double) numPixelsRequired;
+        final double validPixelRatio = connectivityMetrics.insideCount / (double) numPixelsRequired;
         if (validPixelRatio <= minValidPixelRatio) {
             getLogger().warning(String.format("Rejected patch x%dy%d, validPixelRatio = %f%%", patchX, patchY,
                                               validPixelRatio * 100));
@@ -223,7 +223,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createFeature(FEATURE_TYPES[4], featureProduct),
                 createFeature(FEATURE_TYPES[5], featureProduct),
                 new Feature(FEATURE_TYPES[6], validPixelRatio),
-                new Feature(FEATURE_TYPES[7], connectivityMetric.fractalIndex),
+                new Feature(FEATURE_TYPES[7], connectivityMetrics.fractalIndex),
                 new Feature(FEATURE_TYPES[8], clumpiness),
         };
 

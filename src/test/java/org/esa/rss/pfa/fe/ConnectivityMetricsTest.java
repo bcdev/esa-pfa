@@ -7,10 +7,10 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Norman Fomferra
  */
-public class ConnectivityMetricTest {
+public class ConnectivityMetricsTest {
     @Test
     public void testCompute2x3_noneSet() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(3, 2, new byte[]{
                 0, 0, 0,
                 0, 0, 0,
         });
@@ -26,7 +26,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute2x3_allSet() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(3, 2, new byte[]{
                 1, 1, 1,
                 1, 1, 1,
         });
@@ -42,7 +42,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute2x3_noConn() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(3, 2, new byte[]{
                 1, 0, 1,
                 0, 1, 0,
         });
@@ -58,7 +58,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute2x3_someConn() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(3, 2, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(3, 2, new byte[]{
                 1, 1, 1,
                 0, 1, 0,
         });
@@ -74,7 +74,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute4x4() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(4, 4, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(4, 4, new byte[]{
                 1, 1, 1, 1,
                 1, 1, 1, 1,
                 1, 1, 0, 0,
@@ -92,7 +92,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute5x5() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(5, 5, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(5, 5, new byte[]{
                 1, 0, 1, 1, 1,
                 1, 1, 0, 1, 1,
                 1, 0, 1, 0, 1,
@@ -107,7 +107,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute5x5_2() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(5, 5, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(5, 5, new byte[]{
                 0, 1, 1, 1, 0,
                 1, 1, 1, 1, 1,
                 1, 1, 1, 1, 1,
@@ -122,7 +122,7 @@ public class ConnectivityMetricTest {
 
     @Test
     public void testCompute5x5_3() throws Exception {
-        ConnectivityMetric cm = ConnectivityMetric.compute(5, 5, new byte[]{
+        ConnectivityMetrics cm = ConnectivityMetrics.compute(5, 5, new byte[]{
                 1, 1, 0, 0, 0,
                 1, 1, 1, 1, 0,
                 0, 1, 1, 1, 0,
