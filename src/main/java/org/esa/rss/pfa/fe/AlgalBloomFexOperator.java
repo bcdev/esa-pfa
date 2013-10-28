@@ -22,6 +22,7 @@ import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
@@ -29,6 +30,7 @@ import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -131,10 +133,10 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     private static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
             /*00*/ new FeatureType("patch", "Patch product", Product.class),
-            /*01*/ new FeatureType("patch_ql", "Quicklook for patch product", RenderedImage.class),
-            /*02*/ new FeatureType("patch_ql_masked", "Masked quicklook for patch product", RenderedImage.class),
-            /*03*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
+            /*01*/ new FeatureType("rgb_ql", "RGB quicklook for TOA reflectances", RenderedImage.class),
+            /*02*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH", RenderedImage.class),
             /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
+            /*03*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
             /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
             /*06*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
             /*07*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
@@ -212,13 +214,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         addFlhBand(featureProduct);
         addCoastDistBand(featureProduct);
 
-        final RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID",
-                                                                  FEX_ROI_MASK_NAME);
+        final RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID");
 
         Feature[] features = {
                 new Feature(FEATURE_TYPES[0], featureProduct),
                 new Feature(FEATURE_TYPES[1], images[0]),
-                new Feature(FEATURE_TYPES[2], images[1]),
+                new Feature(FEATURE_TYPES[2], createColoredBandImage(featureProduct.getBand("flh"), 0.0, 0.0025)),
                 createFeature(FEATURE_TYPES[3], featureProduct),
                 createFeature(FEATURE_TYPES[4], featureProduct),
                 createFeature(FEATURE_TYPES[5], featureProduct),
@@ -232,6 +233,10 @@ public class AlgalBloomFexOperator extends FexOperator {
         disposeProducts(featureProduct, cloudProduct);
 
         return true;
+    }
+
+    private RenderedImage createColoredBandImage(RasterDataNode band, double minSample, double maxSample) {
+        return ImageManager.getInstance().createColoredBandImage(new RasterDataNode[] {band}, new ImageInfo(new ColorPaletteDef(minSample, maxSample)), 0);
     }
 
     private void disposeProducts(Product... products) {
