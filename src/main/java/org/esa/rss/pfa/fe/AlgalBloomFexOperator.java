@@ -16,7 +16,6 @@
 
 package org.esa.rss.pfa.fe;
 
-import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
@@ -31,7 +30,6 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -221,9 +219,9 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(FEATURE_TYPES[0], featureProduct),
                 new Feature(FEATURE_TYPES[1], images[0]),
                 new Feature(FEATURE_TYPES[2], createColoredBandImage(featureProduct.getBand("flh"), 0.0, 0.0025)),
-                createFeature(FEATURE_TYPES[3], featureProduct),
-                createFeature(FEATURE_TYPES[4], featureProduct),
-                createFeature(FEATURE_TYPES[5], featureProduct),
+                createStxFeature(FEATURE_TYPES[3], featureProduct),
+                createStxFeature(FEATURE_TYPES[4], featureProduct),
+                createStxFeature(FEATURE_TYPES[5], featureProduct),
                 new Feature(FEATURE_TYPES[6], validPixelRatio),
                 new Feature(FEATURE_TYPES[7], connectivityMetrics.fractalIndex),
                 new Feature(FEATURE_TYPES[8], clumpiness),
@@ -358,17 +356,6 @@ public class AlgalBloomFexOperator extends FexOperator {
         radiometryParameters.put("reproVersion", ReprocessingVersion.REPROCESSING_3);
         radiometryParameters.put("doRadToRefl", true);
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, product);
-    }
-
-    private Feature createFeature(FeatureType featureType, Product product) {
-        final Stx stx = product.getBand(featureType.getName()).getStx(true, ProgressMonitor.NULL);
-        return new Feature(featureType, null,
-                           stx.getMean(),
-                           stx.getMedian(),
-                           stx.getMinimum(),
-                           stx.getMaximum(),
-                           stx.getStandardDeviation(),
-                           stx.getSampleCount());
     }
 
     private RenderedImage[] createReflectanceRgbImages(Product product, String... validMasks) {
