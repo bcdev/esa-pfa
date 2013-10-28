@@ -33,7 +33,6 @@ import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
@@ -121,10 +120,12 @@ public class AlgalBloomFexOperator extends FexOperator {
     private double minValidPixelRatio;
     @Parameter(defaultValue = "0.0")
     private double minClumpiness;
-    @Parameter(defaultValue = "true")
-    private boolean useMerisCloudMask;
     @Parameter(defaultValue = "1.005", description = "Cloud correction factor for MCI/FLH computation")
     private double cloudCorrectionFactor;
+    @Parameter(defaultValue = "true")
+    private boolean useFrontsCloudMask;
+    @Parameter(defaultValue = "8", description = "Number of successful cloudiness tests for Fronts cloud mask")
+    private int frontsCloudMaskThreshold;
 
 
     private transient float[] coastDistData;
@@ -247,9 +248,8 @@ public class AlgalBloomFexOperator extends FexOperator {
 
     private Product addMasks(Product product) {
         final Product cloudProduct;
-        if (useMerisCloudMask) {
-            final Operator op = createCloudMaskOperator(product);
-            cloudProduct = op.getTargetProduct();
+        if (useFrontsCloudMask) {
+            cloudProduct = createFrontsCloudMaskProduct(product);
 
             ProductUtils.copyBand("cloud_data_ori_or_flag", cloudProduct, product, true);
             ProductUtils.copyMasks(cloudProduct, product);
@@ -286,12 +286,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         return ccNnHsOp;
     }
 
-    private MerisCloudMaskOperator createCloudMaskOperator(Product product) {
-        final MerisCloudMaskOperator op = new MerisCloudMaskOperator();
+    private Product createFrontsCloudMaskProduct(Product product) {
+        final FrontsCloudMaskOperator op = new FrontsCloudMaskOperator();
         op.setSourceProduct(product);
         op.setRoiExpr(FEX_VALID_MASK);
-        op.setThreshold(9);
-        return op;
+        op.setThreshold(frontsCloudMaskThreshold);
+        return op.getTargetProduct();
     }
 
     private Band addMciBand(Product product) {

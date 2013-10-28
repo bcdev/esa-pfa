@@ -13,8 +13,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.jai.ResolutionLevel;
-import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.Color;
@@ -23,12 +21,13 @@ import java.util.Arrays;
 import java.util.Map;
 
 /**
- * A cloud mask algorithm developed by G.Kirches and M.Paperin in the frame of the Fronts project with German BSH.
+ * An effective cloud mask algorithm developed by G.Kirches and M.Paperin in the frame of the Fronts project funded by German BSH.
  *
  * @author Norman Fomferra
  */
-@OperatorMetadata(alias = "Meris.Fronts.CloudMask", authors = "G.Kirches, M.Paperin (Algorithm), N.Fomferra, R.Quast (Implementation)")
-public class MerisCloudMaskOperator extends Operator {
+@OperatorMetadata(alias = "Meris.Fronts.CloudMask",
+                  authors = "G.Kirches, M.Paperin (Algorithm), N.Fomferra, R.Quast (Implementation)")
+public class FrontsCloudMaskOperator extends Operator {
     @SourceProduct
     private Product sourceProduct;
     @TargetProduct
@@ -164,7 +163,7 @@ public class MerisCloudMaskOperator extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisCloudMaskOperator.class);
+            super(FrontsCloudMaskOperator.class);
         }
     }
 }

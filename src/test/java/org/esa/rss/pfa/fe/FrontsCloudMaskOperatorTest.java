@@ -17,7 +17,7 @@ import static junit.framework.Assert.assertNotNull;
 /**
  * @author Norman Fomferra
  */
-public class MerisCloudMaskOperatorTest {
+public class FrontsCloudMaskOperatorTest {
     @Test
     public void testIt() throws Exception {
 
@@ -56,7 +56,7 @@ public class MerisCloudMaskOperatorTest {
                 0.015999883,
         });
 
-        MerisCloudMaskOperator operator = new MerisCloudMaskOperator();
+        FrontsCloudMaskOperator operator = new FrontsCloudMaskOperator();
         operator.setSourceProduct(sourceProduct);
         operator.setRoiExpr("TRUE");
         operator.setThreshold(11);

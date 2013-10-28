@@ -1,2 +1,2 @@
 org.esa.rss.pfa.fe.AlgalBloomFexOperator$Spi
-org.esa.rss.pfa.fe.MerisCloudMaskOperator$Spi
+org.esa.rss.pfa.fe.FrontsCloudMaskOperator$Spi
