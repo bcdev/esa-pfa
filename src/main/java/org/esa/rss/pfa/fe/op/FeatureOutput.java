@@ -8,7 +8,7 @@ import java.io.IOException;
 * @author Norman Fomferra
 */
 public interface FeatureOutput {
-    void initialize(Product sourceProduct, FeatureType... featureTypes) throws IOException;
+    void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException;
     void writePatchFeatures(int patchX, int patchY, Product product, Feature... features) throws IOException;
     void close()throws IOException;
 }

@@ -23,15 +23,22 @@ public class DefaultFeatureOutput implements FeatureOutput {
 
     public static final String PATCH_ID_PATTERN = "x%02dy%02d";
     public static final String METADATA_FILE_NAME = "fex-metadata.txt";
+    public static final String OVERVIEW_HTML_FILE_NAME = "fex-overview.html";
+    public static final String OVERVIEW_JS_FILE_NAME = "fex-overview.js";
     public static final String OVERVIEW_XML_FILE_NAME = "fex-overview.xml";
     public static final String OVERVIEW_XSL_FILE_NAME = "fex-overview.xsl";
     public static final String OVERVIEW_CSS_FILE_NAME = "fex-overview.css";
     public static final String PRODUCT_DIR_NAME_EXTENSION = ".fex";
 
     private final File productTargetDir;
-    private Writer overviewWriter;
+    private Writer xmlWriter;
     private List<KmlWriter> kmlWriters;
     private final boolean overwriteMode;
+    private Writer htmlWriter;
+    private Product sourceProduct;
+    private String[] labelNames;
+    private FeatureType[] featureTypes;
+    private int patchIndex;
 
     public DefaultFeatureOutput(FeatureOutputFactory featureOutputFactory, String productName) throws IOException {
 
@@ -98,25 +105,60 @@ public class DefaultFeatureOutput implements FeatureOutput {
         }
     }
 
-    private void writeFeatureTypeXml(FeatureType[] featureTypes) throws IOException {
+    private void writeFeatureTypeXml() throws IOException {
         for (FeatureType featureType : featureTypes) {
             if (featureType.hasAttributes()) {
                 AttributeType[] attributeTypes = featureType.getAttributeTypes();
-                overviewWriter.write(String.format("<featureType name=\"%s\">\n", featureType.getName()));
+                xmlWriter.write(String.format("<featureType name=\"%s\">\n", featureType.getName()));
                 for (AttributeType attributeType : attributeTypes) {
-                    overviewWriter.write(String.format("\t<attributeType name=\"%s\" valueType=\"%s\"/>\n", attributeType.getName(), attributeType.getValueType().getSimpleName()));
+                    xmlWriter.write(String.format("\t<attributeType name=\"%s\" valueType=\"%s\"/>\n", attributeType.getName(), attributeType.getValueType().getSimpleName()));
                 }
-                overviewWriter.write(String.format("</featureType>\n"));
+                xmlWriter.write(String.format("</featureType>\n"));
             } else {
-                overviewWriter.write(String.format("<featureType name=\"%s\" valueType=\"%s\"/>\n", featureType.getName(), featureType.getValueType().getSimpleName()));
+                xmlWriter.write(String.format("<featureType name=\"%s\" valueType=\"%s\"/>\n", featureType.getName(), featureType.getValueType().getSimpleName()));
             }
         }
 
     }
 
+    private void writeFeatureTypeHtml() throws IOException {
+        htmlWriter.write("<table id=\"ftTable\" class=\"ftTable\">\n");
+        htmlWriter.write("<tr class=\"ftRow\">\n" +
+                                 "\t<th class=\"ftHead\">Name</th>\n" +
+                                 "\t<th class=\"ftHead\">Type</th>\n" +
+                                 "\t<th class=\"ftHead\">Description</th>\n" +
+                                 "</tr>\n");
+        for (FeatureType featureType : featureTypes) {
+            htmlWriter.write("<tr class=\"ftRow\">\n");
+            htmlWriter.write(String.format("" +
+                                                   "\t<td class=\"ftName\">%s</td>\n" +
+                                                   "\t<td class=\"ftType\">%s</td>\n" +
+                                                   "\t<td class=\"ftDescription\">%s</td>\n",
+                                           featureType.getName(),
+                                           featureType.getValueType().getSimpleName(),
+                                           featureType.getDescription()));
+
+            htmlWriter.write("</tr>\n");
+        }
+        htmlWriter.write("</table>\n");
+    }
+
+    private void writeLabelNamesXml() throws IOException {
+        if (labelNames != null && labelNames.length > 0) {
+            xmlWriter.write("<labels>\n");
+            for (String labelName : labelNames) {
+                xmlWriter.write(String.format("\t<label name=\"%s\"/>\n", labelName));
+            }
+            xmlWriter.write("</labels>\n");
+        }
+    }
 
     @Override
-    public void initialize(Product sourceProduct, FeatureType... featureTypes) throws IOException {
+    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+        this.sourceProduct = sourceProduct;
+        this.labelNames = labelNames;
+        this.featureTypes = featureTypes;
+
         Writer metadataWriter = new FileWriter(new File(productTargetDir, METADATA_FILE_NAME));
         try {
             writeFeatureTypes(featureTypes, metadataWriter);
@@ -135,14 +177,54 @@ public class DefaultFeatureOutput implements FeatureOutput {
             }
         }
 
+        copyResource(getClass(), OVERVIEW_JS_FILE_NAME, productTargetDir);
         copyResource(getClass(), OVERVIEW_XSL_FILE_NAME, productTargetDir);
         copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, productTargetDir);
 
-        overviewWriter = new FileWriter(new File(productTargetDir, OVERVIEW_XML_FILE_NAME));
-        overviewWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        overviewWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
-        overviewWriter.write("<featureExtraction source=\"" + sourceProduct.getName() + "\">\n");
-        writeFeatureTypeXml(featureTypes);
+        openXmlWriter();
+        openHtmlWriter();
+    }
+
+    private void openXmlWriter() throws IOException {
+        xmlWriter = new FileWriter(new File(productTargetDir, OVERVIEW_XML_FILE_NAME));
+        xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        xmlWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
+        xmlWriter.write("<featureExtraction source=\"" + sourceProduct.getName() + "\">\n");
+        writeFeatureTypeXml();
+        writeLabelNamesXml();
+    }
+
+    private void openHtmlWriter() throws IOException {
+        htmlWriter = new FileWriter(new File(productTargetDir, OVERVIEW_HTML_FILE_NAME));
+        htmlWriter.write("<!DOCTYPE HTML>\n");
+        htmlWriter.write("<html>\n");
+
+        htmlWriter.write("<head>\n");
+        htmlWriter.write("\t<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">\n");
+        htmlWriter.write(String.format("\t<title>%s</title>\n", sourceProduct.getName()));
+        htmlWriter.write(String.format("\t<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"/>\n", OVERVIEW_CSS_FILE_NAME));
+        htmlWriter.write(String.format("\t<script src=\"%s\" type=\"text/javascript\"></script>\n", OVERVIEW_JS_FILE_NAME));
+        htmlWriter.write("</head>\n");
+        htmlWriter.write("<body>\n");
+
+        htmlWriter.write("<p class=\"title\">Feature Types</p>\n");
+        writeFeatureTypeHtml();
+
+        htmlWriter.write("<p class=\"title\">Features</p>\n");
+        htmlWriter.write("<form>\n");
+        htmlWriter.write("<table id=\"fTable\" class=\"fTable\">\n");
+
+        htmlWriter.write(String.format("<tr class=\"fRow\">\n"));
+        htmlWriter.write(String.format("\t<th class=\"ftHead\">patch</th>\n"));
+        for (FeatureType featureType : featureTypes) {
+            if (!isProductFeatureType(featureType)) {
+                htmlWriter.write(String.format("\t<th class=\"ftHead\">%s</th>\n", featureType.getName()));
+            }
+        }
+        if (labelNames != null) {
+            htmlWriter.write(String.format("\t<th class=\"ftHead\">label</th>\n"));
+        }
+        htmlWriter.write(String.format("</tr>\n"));
     }
 
     private static void copyResource(Class<? extends DefaultFeatureOutput> aClass, String resourceName, File targetDir) throws IOException {
@@ -168,7 +250,6 @@ public class DefaultFeatureOutput implements FeatureOutput {
     @Override
     public void writePatchFeatures(int patchX, int patchY, Product patchProduct, Feature... features) throws IOException {
         String patchId = String.format(PATCH_ID_PATTERN, patchX, patchY);
-
 
         final File patchTargetDir = new File(productTargetDir, patchId);
         if (!patchTargetDir.exists()) {
@@ -215,8 +296,11 @@ public class DefaultFeatureOutput implements FeatureOutput {
         // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
         //
         writePatchXml(patchId, patchX, patchY, features);
+        writePatchHtml(patchId, patchX, patchY, features);
         //
         //////////////////////////////////
+
+        patchIndex++;
     }
 
     private void writeFeatureProperties(Feature feature, Writer writer) throws IOException {
@@ -237,43 +321,43 @@ public class DefaultFeatureOutput implements FeatureOutput {
     }
 
     private void writeProductFeatureXml(Feature feature, String productPath) throws IOException {
-        overviewWriter.write(String.format("\t<feature name=\"%s\" type=\"raw\">%s</feature>\n", feature.getName(), productPath));
+        xmlWriter.write(String.format("\t<feature name=\"%s\" type=\"raw\">%s</feature>\n", feature.getName(), productPath));
     }
 
     private void writeImageFeatureXml(Feature feature, String imagePath) throws IOException {
-        overviewWriter.write(String.format("\t<feature name=\"%s\" type=\"img\">%s</feature>\n", feature.getName(), imagePath));
+        xmlWriter.write(String.format("\t<feature name=\"%s\" type=\"img\">%s</feature>\n", feature.getName(), imagePath));
     }
 
     private void writeAttributedFeatureXml(Feature feature) throws IOException {
         if (feature.hasAttributes()) {
             Object[] attributeValues = feature.getAttributeValues();
-            overviewWriter.write(String.format("\t<feature name=\"%s\">\n", feature.getName()));
+            xmlWriter.write(String.format("\t<feature name=\"%s\">\n", feature.getName()));
             for (int i = 0; i < attributeValues.length; i++) {
                 Object value = attributeValues[i];
                 String tagName = feature.getFeatureType().getAttributeTypes()[i].getName();
                 if (value instanceof Double || value instanceof Float) {
-                    overviewWriter.write(String.format("\t\t<%s>%.4f</%s>\n", tagName, value, tagName));
+                    xmlWriter.write(String.format("\t\t<%s>%.5f</%s>\n", tagName, value, tagName));
                 } else if (value != null) {
-                    overviewWriter.write(String.format("\t\t<%s>%s</%s>\n", tagName, value, tagName));
+                    xmlWriter.write(String.format("\t\t<%s>%s</%s>\n", tagName, value, tagName));
                 } else {
-                    overviewWriter.write(String.format("\t\t<%s/>\n", tagName));
+                    xmlWriter.write(String.format("\t\t<%s/>\n", tagName));
                 }
             }
-            overviewWriter.write(String.format("\t</feature>\n"));
+            xmlWriter.write(String.format("\t</feature>\n"));
         } else {
             Object value = feature.getValue();
             if (value instanceof Double || value instanceof Float) {
-                overviewWriter.write(String.format("\t<feature name=\"%s\">%.4f</feature>\n", feature.getName(), value));
+                xmlWriter.write(String.format("\t<feature name=\"%s\">%.5f</feature>\n", feature.getName(), value));
             } else if (value != null) {
-                overviewWriter.write(String.format("\t<feature name=\"%s\">%s</feature>\n", feature.getName(), value));
+                xmlWriter.write(String.format("\t<feature name=\"%s\">%s</feature>\n", feature.getName(), value));
             } else {
-                overviewWriter.write(String.format("\t<feature name=\"%s\"/>\n", feature.getName()));
+                xmlWriter.write(String.format("\t<feature name=\"%s\"/>\n", feature.getName()));
             }
         }
     }
 
     private void writePatchXml(String patchId, int patchX, int patchY, Feature[] features) throws IOException {
-        overviewWriter.write(String.format("<patch id=\"%s\" patchX=\"%s\" patchY=\"%s\">\n", patchId, patchX, patchY));
+        xmlWriter.write(String.format("<patch id=\"%s\" patchX=\"%s\" patchY=\"%s\">\n", patchId, patchX, patchY));
         for (Feature feature : features) {
             if (isImageFeatureType(feature.getFeatureType())) {
                 writeImageFeatureXml(feature, patchId + "/" + feature.getName() + ".png");
@@ -283,16 +367,96 @@ public class DefaultFeatureOutput implements FeatureOutput {
                 writeAttributedFeatureXml(feature);
             }
         }
-        overviewWriter.write("</patch>\n");
+        xmlWriter.write("</patch>\n");
     }
 
+    private void writePatchHtml(String patchId, int patchX, int patchY, Feature[] features) throws IOException {
+        htmlWriter.write(String.format("<tr class=\"fRow\">\n"));
+        htmlWriter.write(String.format("\t<td class=\"fValue\">%s</td>\n", patchId));
+        for (Feature feature : features) {
+            if (isImageFeatureType(feature.getFeatureType())) {
+                writeImageFeatureHtml(feature, patchId + "/" + feature.getName() + ".png");
+            } else if (isProductFeatureType(feature.getFeatureType())) {
+                // ignore
+            } else {
+                writeAttributedFeatureHtml(feature);
+            }
+        }
+        writeLabelSelector(patchId);
+        htmlWriter.write(String.format("</tr>\n"));
+    }
+
+    private void writeLabelSelector(String patchId) throws IOException {
+        htmlWriter.write("\t<td class=\"fValue\">\n");
+        htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\">\n", patchIndex, patchId));
+        for (int i = 0; i < labelNames.length; i++) {
+            String labelName = labelNames[i];
+            htmlWriter.write(String.format("\t<option value=\"%d\">%s</option>\n", i, labelName));
+        }
+        htmlWriter.write("\t</select>\n");
+        htmlWriter.write("\t</td>\n");
+    }
+
+    private void writeImageFeatureHtml(Feature feature, String imagePath) throws IOException {
+        htmlWriter.write(String.format("\t<td class=\"fImage\"><img src=\"%s\" alt=\"%s\"/></td>\n", imagePath, feature.getName()));
+    }
+
+    private void writeAttributedFeatureHtml(Feature feature) throws IOException {
+        if (feature.hasAttributes()) {
+            htmlWriter.write(String.format("\t<td class=\"fValue\">\n"));
+            Object[] attributeValues = feature.getAttributeValues();
+            htmlWriter.write(String.format("\t<table>\n"));
+            for (int i = 0; i < attributeValues.length; i++) {
+                Object value = attributeValues[i];
+                String attrName = feature.getFeatureType().getAttributeTypes()[i].getName();
+                htmlWriter.write(String.format("\t\t<tr class=\"fValue\">\n"));
+                htmlWriter.write(String.format("\t\t\t<td class=\"fAttrName\">%s<td>\n", attrName));
+                htmlWriter.write(String.format("\t\t\t<td class=\"fAttrValue\">"));
+                writeValueHtml(value);
+                htmlWriter.write(String.format("</td>\n"));
+                htmlWriter.write(String.format("\t\t</tr>\n"));
+            }
+            htmlWriter.write(String.format("\t</table>\n"));
+            htmlWriter.write(String.format("\t</td>\n"));
+        } else {
+            Object value = feature.getValue();
+            htmlWriter.write(String.format("\t<td class=\"fValue\">"));
+            writeValueHtml(value);
+            htmlWriter.write(String.format("</td>\n"));
+        }
+    }
+
+    private void writeValueHtml(Object value) throws IOException {
+        if (value instanceof Float) {
+            htmlWriter.write(String.format("%.5f", (Float) value));
+        } else if (value instanceof Double) {
+            htmlWriter.write(String.format("%.5f", (Double) value));
+        } else if (value != null) {
+            htmlWriter.write(value.toString());
+        }
+    }
 
     @Override
     public void close() throws IOException {
-        overviewWriter.write("</featureExtraction>\n");
-        overviewWriter.close();
+        closeXmlWriter();
+        closeHtmlWriter();
         for (KmlWriter kmlWriter : kmlWriters) {
             kmlWriter.close();
         }
+        sourceProduct = null;
+    }
+
+    private void closeXmlWriter() throws IOException {
+        xmlWriter.write("</featureExtraction>\n");
+        xmlWriter.close();
+    }
+
+    private void closeHtmlWriter() throws IOException {
+        htmlWriter.write("</table>\n");
+        htmlWriter.write("<div><input type=\"button\" value=\"Show Labels\" onclick=\"fex_openCsv(window.document); return false\"></div>\n");
+        htmlWriter.write("</form>\n");
+        htmlWriter.write("</body>\n");
+        htmlWriter.write("</html>\n");
+        htmlWriter.close();
     }
 }

@@ -41,7 +41,7 @@
     </xsl:template>
 
     <xsl:template match="featureType">
-        <th class="feature_name">
+        <th class="fName">
             <xsl:value-of select="@name"/>
         </th>
     </xsl:template>
@@ -49,7 +49,7 @@
     <xsl:template match="feature">
         <xsl:choose>
             <xsl:when test="@type = 'img'">
-                <td class="image_cell">
+                <td class="fImage">
                     <img>
                         <xsl:attribute name="src">
                             <xsl:value-of select="."/>
@@ -58,7 +58,7 @@
                 </td>
             </xsl:when>
             <xsl:when test="@type = 'raw'">
-                <td class = "product_cell">
+                <td class = "fProduct">
                     <a>
                         <xsl:attribute name="href">
                             <xsl:value-of select="."/>
@@ -68,10 +68,10 @@
                 </td>
             </xsl:when>
             <xsl:otherwise>
-                <td class = "value_cell">
+                <td class = "fValue">
                     <xsl:choose>
                         <xsl:when test="count(./*) = 0">
-                            <p class="value">
+                            <p class="fValue">
                                 <xsl:value-of select="."/>
                             </p>
                         </xsl:when>
@@ -79,13 +79,13 @@
                             <table>
                                 <xsl:for-each select="./*">
                                     <tr>
-                                        <td class="attribute_name">
+                                        <td class="fAttrName">
                                             <emp>
                                                 <xsl:value-of select="local-name()"/>
                                             </emp>
                                             :
                                         </td>
-                                        <td class="value">
+                                        <td class="fAttrValue">
                                             <xsl:value-of select="."/>
                                         </td>
                                     </tr>

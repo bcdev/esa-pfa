@@ -64,6 +64,11 @@ import java.util.List;
 @OperatorMetadata(alias = "AlgalBloomFex", version = "1.1")
 public class AlgalBloomFexOperator extends FexOperator {
 
+    private double minSampleFlh;
+    private double maxSampleFlh;
+    private double minSampleMci;
+    private double maxSampleMci;
+
     public static void main(String[] args) {
         final String filePath = args[0];
         final File file = new File(filePath);
@@ -130,26 +135,48 @@ public class AlgalBloomFexOperator extends FexOperator {
     private transient int coastDistWidth;
     private transient int coastDistHeight;
 
-    private static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
-            /*00*/ new FeatureType("patch", "Patch product", Product.class),
-            /*01*/ new FeatureType("rgb_ql", "RGB quicklook for TOA reflectances", RenderedImage.class),
-            /*02*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH", RenderedImage.class),
-            /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
-            /*03*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
-            /*05*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-            /*06*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
-            /*07*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
-            /*08*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
-    };
+    private FeatureType[] featureTypes;
 
     @Override
     protected FeatureType[] getFeatureTypes() {
-        return FEATURE_TYPES;
+        if (featureTypes == null) {
+            featureTypes = new FeatureType[]{
+                        /*00*/ new FeatureType("patch", "Patch product", Product.class),
+                        /*01*/ new FeatureType("rgb_ql", "RGB quicklook for TOA reflectances", RenderedImage.class),
+                        /*02*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
+                        /*03*/ new FeatureType("mci_ql", "Grey-scale quicklook for MCI [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
+                        /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
+                        /*05*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
+                        /*06*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
+                        /*07*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
+                        /*08*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
+                        /*09*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
+            };
+        }
+        return featureTypes;
+    }
+
+    @Override
+    protected String[] getLabelNames() {
+        return new String[]{
+                /*0*/ "* Not a Bloom *",
+                /*1*/ "Cyanobacteria",
+                /*2*/ "Cocolithophores",
+                /*3*/ "Sargassum",
+                /*4*/ "Case 1 Bloom",
+                /*5*/ "Coastal Bloom",
+        };
     }
 
     @Override
     public void initialize() throws OperatorException {
-        removeAllSourceMetadata();
+//        removeAllSourceMetadata();
+
+        minSampleFlh = 0.0;
+        maxSampleFlh = 0.0025;
+
+        minSampleMci = -0.004;
+        maxSampleMci = 0.0;
 
         Product coastDistProduct;
         try {
@@ -216,15 +243,16 @@ public class AlgalBloomFexOperator extends FexOperator {
         final RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID");
 
         Feature[] features = {
-                new Feature(FEATURE_TYPES[0], featureProduct),
-                new Feature(FEATURE_TYPES[1], images[0]),
-                new Feature(FEATURE_TYPES[2], createColoredBandImage(featureProduct.getBand("flh"), 0.0, 0.0025)),
-                createStxFeature(FEATURE_TYPES[3], featureProduct),
-                createStxFeature(FEATURE_TYPES[4], featureProduct),
-                createStxFeature(FEATURE_TYPES[5], featureProduct),
-                new Feature(FEATURE_TYPES[6], validPixelRatio),
-                new Feature(FEATURE_TYPES[7], connectivityMetrics.fractalIndex),
-                new Feature(FEATURE_TYPES[8], clumpiness),
+                /*00*/ new Feature(featureTypes[0], featureProduct),
+                /*01*/ new Feature(featureTypes[1], images[0]),
+                /*02*/ new Feature(featureTypes[2], createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)),
+                /*03*/ new Feature(featureTypes[3], createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)),
+                /*04*/ createStxFeature(featureTypes[4], featureProduct),
+                /*05*/ createStxFeature(featureTypes[5], featureProduct),
+                /*06*/ createStxFeature(featureTypes[6], featureProduct),
+                /*07*/ new Feature(featureTypes[7], validPixelRatio),
+                /*08*/ new Feature(featureTypes[8], connectivityMetrics.fractalIndex),
+                /*09*/ new Feature(featureTypes[9], clumpiness),
         };
 
         sink.writePatchFeatures(patch, features);
@@ -235,7 +263,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private RenderedImage createColoredBandImage(RasterDataNode band, double minSample, double maxSample) {
-        return ImageManager.getInstance().createColoredBandImage(new RasterDataNode[] {band}, new ImageInfo(new ColorPaletteDef(minSample, maxSample)), 0);
+        return ImageManager.getInstance().createColoredBandImage(new RasterDataNode[]{band}, new ImageInfo(new ColorPaletteDef(minSample, maxSample)), 0);
     }
 
     private void disposeProducts(Product... products) {

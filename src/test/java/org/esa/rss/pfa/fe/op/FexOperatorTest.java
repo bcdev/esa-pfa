@@ -83,6 +83,11 @@ public class FexOperatorTest {
         }
 
         @Override
+        protected String[] getLabelNames() {
+            return null;
+        }
+
+        @Override
         protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
             Feature[] bibos = {
                     new Feature(FEATURE_TYPES[0], "bibo"),
@@ -112,7 +117,7 @@ public class FexOperatorTest {
         boolean closed;
 
         @Override
-        public void initialize(Product sourceProduct, FeatureType... featureTypes) throws IOException {
+        public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
             initialized = true;
         }
 

@@ -1,29 +1,65 @@
 body {
-    font: "Helvetica";
+    font-family: "Calibri", sans-serif;
+    font-size: 13px;
 }
 
-p {
-    font-size: 16px;
+table, tr, th {
+    border: 1px solid green;
 }
 
-.feature_name {
+th {
+    background-color: green;
+    color: white;
+}
+
+.title {
+    font-size: 18px;
+    font-style: italic;
+}
+
+.ftHead {
+}
+
+.fLabel {
+}
+
+.fTable {
+    border: 0.5px solid grey;
+}
+
+.fRow {
+    border: 0.5px solid grey;
+}
+
+.fName {
+    font-family: "Courier New", monospace;
     color: darkblue;
 }
 
-.attribute_name {
+.ftName {
     color: darkblue;
 }
 
-.value {
-    font: "Monospaced";
+.fAttrName {
+    color: darkblue;
 }
 
-.image_cell {
-    background-color:DarkSlateGray;
+.fImage {
+    background-color: DarkSlateGray;
 }
 
-.product_cell {
+.fProduct {
 }
 
-.value_cell {
+.fValue {
+    font-family: "Courier New", monospace;
 }
+
+.fAttrName {
+    font-family: "Calibri", sans-serif;
+}
+
+.fAttrValue {
+    font-family: "Courier New", monospace;
+}
+

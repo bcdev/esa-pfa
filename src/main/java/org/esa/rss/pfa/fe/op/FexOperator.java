@@ -50,10 +50,9 @@ public abstract class FexOperator extends Operator implements Output {
             new AttributeType("cvar", "Coefficient of variation of valid feature pixels", Double.class),
             new AttributeType("min", "Minimim value of valid feature pixels", Double.class),
             new AttributeType("max", "Maximum value of valid feature pixels", Double.class),
-            new AttributeType("median", "Median value of valid feature pixels (estimation from 512-bin histogram)", Double.class),
-            new AttributeType("p10", "The thresholds such that 10% of the sample values are below the threshold", Double.class),
-            new AttributeType("p90", "The thresholds such that 90% of the sample values are below the threshold", Double.class),
-            new AttributeType("entropy", "The histogram entropy defined to be the negation of the sum of the products of the probability associated with each bin with the base-2 log of the probability.", Double.class),
+            new AttributeType("p10", "The threshold such that 10% of the sample values are below the threshold", Double.class),
+            new AttributeType("p50", "The threshold such that 50% of the sample values are below the threshold (=median)", Double.class),
+            new AttributeType("p90", "The threshold such that 90% of the sample values are below the threshold", Double.class),
             new AttributeType("count", "Sample count (number of valid feature pixels)", Integer.class),
     };
     public static final int DEFAULT_PATCH_SIZE = 200;
@@ -137,14 +136,15 @@ public abstract class FexOperator extends Operator implements Output {
                            stx.getStandardDeviation() / stx.getMean(),
                            stx.getMinimum(),
                            stx.getMaximum(),
-                           stx.getMedian(),
                            stx.getHistogram().getPTileThreshold(0.1)[0],
+                           stx.getHistogram().getPTileThreshold(0.5)[0],
                            stx.getHistogram().getPTileThreshold(0.9)[0],
-                           stx.getHistogram().getEntropy()[0],
                            stx.getSampleCount());
     }
 
     protected abstract FeatureType[] getFeatureTypes();
+
+    protected abstract String[] getLabelNames();
 
     protected abstract boolean processPatch(Patch patch, PatchSink sink) throws IOException;
 
@@ -194,7 +194,7 @@ public abstract class FexOperator extends Operator implements Output {
     private void run(int patchCountX, int patchCountY) throws IOException {
         FeatureOutput featureOutput = featureOutputFactory.createFeatureOutput(sourceProduct);
         FeatureType[] featureTypes = getFeatureTypes();
-        featureOutput.initialize(getSourceProduct(), featureTypes);
+        featureOutput.initialize(getSourceProduct(), getLabelNames(), featureTypes);
 
         PatchSinkImpl sink = new PatchSinkImpl(featureOutput);
 
