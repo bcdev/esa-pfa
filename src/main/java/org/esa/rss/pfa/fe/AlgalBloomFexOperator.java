@@ -165,6 +165,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 /*3*/ "Sargassum",
                 /*4*/ "Case 1 Bloom",
                 /*5*/ "Coastal Bloom",
+                /*6*/ "Suspended Matter",
         };
     }
 
