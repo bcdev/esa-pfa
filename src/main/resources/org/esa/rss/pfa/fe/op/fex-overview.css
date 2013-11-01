@@ -3,6 +3,10 @@ body {
     font-size: 13px;
 }
 
+select {
+    height: 180px;
+}
+
 table, tr, th {
     border: 1px solid green;
 }
