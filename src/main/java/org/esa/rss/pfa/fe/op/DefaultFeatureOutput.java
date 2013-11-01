@@ -388,7 +388,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
 
     private void writeLabelSelector(String patchId) throws IOException {
         htmlWriter.write("\t<td class=\"fValue\">\n");
-        htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\">\n", patchIndex, patchId));
+        htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\" multiple>\n", patchIndex, patchId));
         for (int i = 0; i < labelNames.length; i++) {
             String labelName = labelNames[i];
             htmlWriter.write(String.format("\t<option value=\"%d\">%s</option>\n", i, labelName));
