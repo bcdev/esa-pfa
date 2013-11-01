@@ -16,6 +16,7 @@
 
 package org.esa.rss.pfa.fe;
 
+import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
@@ -68,6 +69,9 @@ public class AlgalBloomFexOperator extends FexOperator {
     private double maxSampleFlh;
     private double minSampleMci;
     private double maxSampleMci;
+    public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
+    public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
+    public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
 
     public static void main(String[] args) {
         final String filePath = args[0];
@@ -142,15 +146,20 @@ public class AlgalBloomFexOperator extends FexOperator {
         if (featureTypes == null) {
             featureTypes = new FeatureType[]{
                         /*00*/ new FeatureType("patch", "Patch product", Product.class),
-                        /*01*/ new FeatureType("rgb_ql", "RGB quicklook for TOA reflectances", RenderedImage.class),
-                        /*02*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
-                        /*03*/ new FeatureType("mci_ql", "Grey-scale quicklook for MCI [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
-                        /*04*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
-                        /*05*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
-                        /*06*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-                        /*07*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
-                        /*08*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
-                        /*09*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
+                        /*01*/ new FeatureType("rgb1_ql", "RGB quicklook for TOA reflectances (fixed range)", RenderedImage.class),
+                        /*02*/ new FeatureType("rgb2_ql", "RGB quicklook for TOA reflectances (dynamic range, ROI only)", RenderedImage.class),
+                        /*03*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
+                        /*04*/ new FeatureType("mci_ql", "Grey-scale quicklook for MCI [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
+                        /*05*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
+                        /*06*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
+                        /*07*/ new FeatureType("red", "Red channel ("+R_EXPR+")", STX_ATTRIBUTE_TYPES),
+                        /*08*/ new FeatureType("green", "Green channel ("+G_EXPR+")", STX_ATTRIBUTE_TYPES),
+                        /*09*/ new FeatureType("blue", "Blue channel ("+B_EXPR+")", STX_ATTRIBUTE_TYPES),
+                        /*10*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
+                        /*11*/ new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
+                        /*12*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
+                        /*13*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
+                        /*14*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
             };
         }
         return featureTypes;
@@ -240,20 +249,26 @@ public class AlgalBloomFexOperator extends FexOperator {
         addMciBand(featureProduct);
         addFlhBand(featureProduct);
         addCoastDistBand(featureProduct);
+        addTriStimulusBands(featureProduct);
 
-        final RenderedImage[] images = createReflectanceRgbImages(featureProduct, "NOT l1_flags.INVALID");
+        double highFlhGradientPixelRatio = 1;
 
         Feature[] features = {
-                /*00*/ new Feature(featureTypes[0], featureProduct),
-                /*01*/ new Feature(featureTypes[1], images[0]),
-                /*02*/ new Feature(featureTypes[2], createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)),
-                /*03*/ new Feature(featureTypes[3], createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)),
-                /*04*/ createStxFeature(featureTypes[4], featureProduct),
-                /*05*/ createStxFeature(featureTypes[5], featureProduct),
-                /*06*/ createStxFeature(featureTypes[6], featureProduct),
-                /*07*/ new Feature(featureTypes[7], validPixelRatio),
-                /*08*/ new Feature(featureTypes[8], connectivityMetrics.fractalIndex),
-                /*09*/ new Feature(featureTypes[9], clumpiness),
+                new Feature(featureTypes[0], featureProduct),
+                new Feature(featureTypes[1], createFixedRangeUnmaskedRgbImage(featureProduct)),
+                new Feature(featureTypes[2], createDynamicRangeMaskedRgbImage(featureProduct)),
+                new Feature(featureTypes[3], createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)),
+                new Feature(featureTypes[4], createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)),
+                createStxFeature(featureTypes[5], featureProduct),
+                createStxFeature(featureTypes[6], featureProduct),
+                createStxFeature(featureTypes[7], featureProduct),
+                createStxFeature(featureTypes[8], featureProduct),
+                createStxFeature(featureTypes[9], featureProduct),
+                createStxFeature(featureTypes[10], featureProduct),
+                new Feature(featureTypes[11], highFlhGradientPixelRatio),
+                new Feature(featureTypes[12], validPixelRatio),
+                new Feature(featureTypes[13], connectivityMetrics.fractalIndex),
+                new Feature(featureTypes[14], clumpiness),
         };
 
         sink.writePatchFeatures(patch, features);
@@ -362,6 +377,27 @@ public class AlgalBloomFexOperator extends FexOperator {
         flh.setValidPixelExpression(FEX_ROI_MASK_NAME);
     }
 
+    private void addTriStimulusBands(Product product) {
+
+        Band r = product.addBand("vis_red", R_EXPR);
+        Band g = product.addBand("vis_green", G_EXPR);
+        Band b = product.addBand("vis_blue", B_EXPR);
+        applyValidPixelExpr("NOT l1_flags.INVALID", r, g, b);
+
+        Band mr = product.addBand("red", R_EXPR);
+        Band mg = product.addBand("green", G_EXPR);
+        Band mb = product.addBand("blue", B_EXPR);
+        applyValidPixelExpr(FEX_ROI_MASK_NAME, mr, mg, mb);
+    }
+
+    private void applyValidPixelExpr(String validPixelExpr, RasterDataNode... nodes) {
+        for (RasterDataNode node : nodes) {
+            node.setValidPixelExpression(validPixelExpr);
+            node.setNoDataValue(Double.NaN);
+            node.setNoDataValueUsed(true);
+        }
+    }
+
     private void addCoastDistBand(final Product product) {
         final Band coastDistBand = product.addBand("coast_dist", ProductData.TYPE_FLOAT32);
         final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
@@ -387,7 +423,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         return GPF.createProduct("Meris.CorrectRadiometry", radiometryParameters, product);
     }
 
-    private RenderedImage[] createReflectanceRgbImages(Product product, String... validMasks) {
+    private RenderedImage createFixedRangeUnmaskedRgbImage(Product product) {
         double minR = -2.0;
         double maxR = -1.0;
 
@@ -399,54 +435,39 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         double gamma = 1.2;
 
-        Band r = product.addBand("virtual_red",
-                                 "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)");
-        Band g = product.addBand("virtual_green",
-                                 "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)");
-        Band b = product.addBand("virtual_blue",
-                                 "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)");
-
-        RenderedImage[] images = new RenderedImage[validMasks.length];
-        for (int i = 0; i < validMasks.length; i++) {
-            images[i] = createRenderedImage(validMasks[i], minR, maxR, gamma, minG, maxG, gamma, minB, maxB, gamma, r, g, b);
-        }
-
-        product.removeBand(r);
-        product.removeBand(g);
-        product.removeBand(b);
-
-        r.dispose();
-        g.dispose();
-        b.dispose();
-
-        return images;
-    }
-
-    private RenderedImage createRenderedImage(String validPixelExpr,
-                                              double minR, double maxR, double gammaR,
-                                              double minG, double maxG, double gammaG,
-                                              double minB, double maxB, double gammaB,
-                                              Band r, Band g, Band b) {
-        r.setValidPixelExpression(validPixelExpr);
-        r.setNoDataValue(Double.NaN);
-        r.setNoDataValueUsed(true);
+        Band r = product.getBand("vis_red");
+        Band g = product.getBand("vis_green");
+        Band b = product.getBand("vis_blue");
 
         RGBChannelDef rgbChannelDef = new RGBChannelDef(new String[]{r.getName(), g.getName(), b.getName()});
         rgbChannelDef.setMinDisplaySample(0, minR);
         rgbChannelDef.setMaxDisplaySample(0, maxR);
-        rgbChannelDef.setGamma(0, gammaR);
+        rgbChannelDef.setGamma(0, gamma);
 
         rgbChannelDef.setMinDisplaySample(1, minG);
         rgbChannelDef.setMaxDisplaySample(1, maxG);
-        rgbChannelDef.setGamma(1, gammaG);
+        rgbChannelDef.setGamma(1, gamma);
 
         rgbChannelDef.setMinDisplaySample(2, minB);
         rgbChannelDef.setMaxDisplaySample(2, maxB);
-        rgbChannelDef.setGamma(2, gammaB);
+        rgbChannelDef.setGamma(2, gamma);
 
         return ImageManager.getInstance().createColoredBandImage(new Band[]{r, g, b}, new ImageInfo(rgbChannelDef), 0);
     }
 
+    private RenderedImage createDynamicRangeMaskedRgbImage(Product product) {
+
+        Band r = product.getBand("red");
+        Band g = product.getBand("green");
+        Band b = product.getBand("blue");
+
+        Band[] bands = {r, g, b};
+        for (Band band : bands) {
+            band.getImageInfo(ProgressMonitor.NULL);
+        }
+        ImageInfo imageInfo = ImageManager.getInstance().getImageInfo(bands);
+        return ImageManager.getInstance().createColoredBandImage(bands, imageInfo, 0);
+    }
 
     private static String[] appendArgs(String operatorName, String[] args) {
         List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(operatorName));
