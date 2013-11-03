@@ -21,16 +21,7 @@ import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RGBChannelDef;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -133,6 +124,8 @@ public class AlgalBloomFexOperator extends FexOperator {
     private boolean useFrontsCloudMask;
     @Parameter(defaultValue = "8", description = "Number of successful cloudiness tests for Fronts cloud mask")
     private int frontsCloudMaskThreshold;
+    @Parameter(defaultValue = "0.00005", description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
+    private double flhGradientThreshold;
 
 
     private transient float[] coastDistData;
@@ -250,8 +243,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         addFlhBand(featureProduct);
         addCoastDistBand(featureProduct);
         addTriStimulusBands(featureProduct);
-
-        double highFlhGradientPixelRatio = 1;
+        addFlhGradientBands(featureProduct);
 
         Feature[] features = {
                 new Feature(featureTypes[0], featureProduct),
@@ -265,7 +257,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 createStxFeature(featureTypes[8], featureProduct),
                 createStxFeature(featureTypes[9], featureProduct),
                 createStxFeature(featureTypes[10], featureProduct),
-                new Feature(featureTypes[11], highFlhGradientPixelRatio),
+                new Feature(featureTypes[11], computeFlhHighGradientPixelRatio(featureProduct)),
                 new Feature(featureTypes[12], validPixelRatio),
                 new Feature(featureTypes[13], connectivityMetrics.fractalIndex),
                 new Feature(featureTypes[14], clumpiness),
@@ -276,6 +268,19 @@ public class AlgalBloomFexOperator extends FexOperator {
         disposeProducts(featureProduct, cloudProduct);
 
         return true;
+    }
+
+    private double computeFlhHighGradientPixelRatio(Product featureProduct) {
+        StxFactory stxFactory = new StxFactory();
+        stxFactory.withRoiMask(featureProduct.getMaskGroup().get("flh_high_gradient"));
+        Stx stx = stxFactory.create(featureProduct.getBand("flh"), ProgressMonitor.NULL);
+        return (double) stx.getSampleCount();
+    }
+
+    private void addFlhGradientBands(Product featureProduct) {
+        featureProduct.addBand(new ConvolutionFilterBand("flh_average", featureProduct.getBand("flh"), new Kernel(3,3, 1.0/9.0, new double[]{1,1,1,1,1,1,1,1,1})));
+        featureProduct.addBand(new ConvolutionFilterBand("flh_gradient", featureProduct.getBand("flh_average"), new Kernel(3,3, 1.0/9.0, new double[]{-1,-2,-1,0,0,0,1,2,1})));
+        featureProduct.addMask("flh_high_gradient", "abs(flh_gradient) > " + flhGradientThreshold, "", Color.RED, 0.5);
     }
 
     private RenderedImage createColoredBandImage(RasterDataNode band, double minSample, double maxSample) {
