@@ -56,6 +56,7 @@ public class DefaultPatchWriter implements PatchWriter {
 
         patchWriters = new PatchWriter[]{
                 new PropertiesPatchWriter(productTargetDir),
+                new CsvPatchWriter(productTargetDir),
                 new HtmlPatchWriter(productTargetDir),
                 new XmlPatchWriter(productTargetDir),
                 new KmlPatchWriter(productTargetDir),
