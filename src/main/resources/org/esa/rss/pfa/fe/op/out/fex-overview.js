@@ -9,6 +9,7 @@ function fex_openCsv(doc) {
     newDoc.writeln("<html>");
     newDoc.writeln("<head>");
     newDoc.writeln("<title>Result from " + doc.title + "</title>");
+    newDoc.writeln("<link rel=\"stylesheet\" type=\"text/css\" href=\"fex-overview.css\"/>");
     newDoc.writeln("</head>");
     newDoc.writeln("<body>");
     newDoc.writeln("<table>");
