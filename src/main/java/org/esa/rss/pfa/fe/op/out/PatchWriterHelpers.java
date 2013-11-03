@@ -10,16 +10,20 @@ import java.io.*;
  * @author Norman Fomferra
  */
 class PatchWriterHelpers {
+
     public static void copyResource(Class<?> aClass, String resourceName, File targetDir) throws IOException {
-        InputStream xslIs = aClass.getResourceAsStream(resourceName);
-        OutputStream xslOs = new FileOutputStream(new File(targetDir, resourceName));
-        byte[] bytes = new byte[16 * 1024];
-        int len;
-        while ((len = xslIs.read(bytes)) > 0) {
-            xslOs.write(bytes, 0, len);
+        try (InputStream is = aClass.getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new IllegalArgumentException(String.format("resource not found: class %s: resource %s", aClass.getName(), resourceName));
+            }
+            try (OutputStream os = new FileOutputStream(new File(targetDir, resourceName))) {
+                byte[] bytes = new byte[16 * 1024];
+                int len;
+                while ((len = is.read(bytes)) > 0) {
+                    os.write(bytes, 0, len);
+                }
+            }
         }
-        xslOs.close();
-        xslIs.close();
     }
 
     public static boolean isImageFeatureType(FeatureType featureType) {

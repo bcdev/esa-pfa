@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Writes a single HTML file "fex-metadata.html" for each product.
+ *
  * @author Norman Fomferra
  */
 public class HtmlPatchWriter implements PatchWriter {
@@ -22,7 +24,6 @@ public class HtmlPatchWriter implements PatchWriter {
 
     private final File productTargetDir;
     private Writer htmlWriter;
-    private Product sourceProduct;
     private String[] labelNames;
     private FeatureType[] featureTypes;
     private int patchIndex;
@@ -31,51 +32,8 @@ public class HtmlPatchWriter implements PatchWriter {
         this.productTargetDir = productTargetDir;
     }
 
-    public static void writeFeatureType(FeatureType featureType, int i, Writer writer) throws IOException {
-        writer.write("#\n");
-        writer.write(String.format("# Feature '%s'%n", featureType.getName()));
-        writer.write("#\n");
-        writer.write(String.format("featureTypes.%d.name = %s%n", i, featureType.getName()));
-        writer.write(String.format("featureTypes.%d.description = %s%n", i, featureType.getDescription()));
-        if (featureType.hasAttributes()) {
-            AttributeType[] attributeTypes = featureType.getAttributeTypes();
-            writer.write(String.format("featureTypes.%d.attributeTypes.length = %s%n", i, attributeTypes.length));
-            for (int j = 0; j < attributeTypes.length; j++) {
-                AttributeType attributeType = attributeTypes[j];
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.name = %s%n", i, j, attributeType.getName()));
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.description = %s%n", i, j, attributeType.getDescription()));
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.valueType = %s%n", i, j, attributeType.getValueType().getSimpleName()));
-            }
-        } else {
-            writer.write(String.format("featureTypes.%d.valueType = %s%n", i, featureType.getValueType().getSimpleName()));
-        }
-    }
-
-    private void writeFeatureTypeHtml() throws IOException {
-        htmlWriter.write("<table id=\"ftTable\" class=\"ftTable\">\n");
-        htmlWriter.write("<tr class=\"ftRow\">\n" +
-                                 "\t<th class=\"ftHead\">Name</th>\n" +
-                                 "\t<th class=\"ftHead\">Type</th>\n" +
-                                 "\t<th class=\"ftHead\">Description</th>\n" +
-                                 "</tr>\n");
-        for (FeatureType featureType : featureTypes) {
-            htmlWriter.write("<tr class=\"ftRow\">\n");
-            htmlWriter.write(String.format("" +
-                                                   "\t<td class=\"ftName\">%s</td>\n" +
-                                                   "\t<td class=\"ftType\">%s</td>\n" +
-                                                   "\t<td class=\"ftDescription\">%s</td>\n",
-                                           featureType.getName(),
-                                           featureType.getValueType().getSimpleName(),
-                                           featureType.getDescription()));
-
-            htmlWriter.write("</tr>\n");
-        }
-        htmlWriter.write("</table>\n");
-    }
-
     @Override
     public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
-        this.sourceProduct = sourceProduct;
         this.labelNames = labelNames;
         this.featureTypes = featureTypes;
 
@@ -88,7 +46,7 @@ public class HtmlPatchWriter implements PatchWriter {
 
         htmlWriter.write("<head>\n");
         htmlWriter.write("\t<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">\n");
-        htmlWriter.write(String.format("\t<title>%s</title>\n", this.sourceProduct.getName()));
+        htmlWriter.write(String.format("\t<title>%s</title>\n", sourceProduct.getName()));
         htmlWriter.write(String.format("\t<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"/>\n", OVERVIEW_CSS_FILE_NAME));
         htmlWriter.write(String.format("\t<script src=\"%s\" type=\"text/javascript\"></script>\n", OVERVIEW_JS_FILE_NAME));
         htmlWriter.write("</head>\n");
@@ -114,7 +72,6 @@ public class HtmlPatchWriter implements PatchWriter {
         htmlWriter.write(String.format("</tr>\n"));
     }
 
-
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
 
@@ -133,6 +90,38 @@ public class HtmlPatchWriter implements PatchWriter {
         htmlWriter.write(String.format("</tr>\n"));
 
         patchIndex++;
+    }
+
+    @Override
+    public void close() throws IOException {
+        htmlWriter.write("</table>\n");
+        htmlWriter.write("<div><input type=\"button\" value=\"Show Labels\" onclick=\"fex_openCsv(window.document); return false\"></div>\n");
+        htmlWriter.write("</form>\n");
+        htmlWriter.write("</body>\n");
+        htmlWriter.write("</html>\n");
+        htmlWriter.close();
+    }
+
+    private void writeFeatureTypeHtml() throws IOException {
+        htmlWriter.write("<table id=\"ftTable\" class=\"ftTable\">\n");
+        htmlWriter.write("<tr class=\"ftRow\">\n" +
+                                 "\t<th class=\"ftHead\">Name</th>\n" +
+                                 "\t<th class=\"ftHead\">Type</th>\n" +
+                                 "\t<th class=\"ftHead\">Description</th>\n" +
+                                 "</tr>\n");
+        for (FeatureType featureType : featureTypes) {
+            htmlWriter.write("<tr class=\"ftRow\">\n");
+            htmlWriter.write(String.format("" +
+                                                   "\t<td class=\"ftName\">%s</td>\n" +
+                                                   "\t<td class=\"ftType\">%s</td>\n" +
+                                                   "\t<td class=\"ftDescription\">%s</td>\n",
+                                           featureType.getName(),
+                                           featureType.getValueType().getSimpleName(),
+                                           featureType.getDescription()));
+
+            htmlWriter.write("</tr>\n");
+        }
+        htmlWriter.write("</table>\n");
     }
 
     private void writeLabelSelector(String patchId) throws IOException {
@@ -183,16 +172,6 @@ public class HtmlPatchWriter implements PatchWriter {
         } else if (value != null) {
             htmlWriter.write(value.toString());
         }
-    }
-
-    @Override
-    public void close() throws IOException {
-        htmlWriter.write("</table>\n");
-        htmlWriter.write("<div><input type=\"button\" value=\"Show Labels\" onclick=\"fex_openCsv(window.document); return false\"></div>\n");
-        htmlWriter.write("</form>\n");
-        htmlWriter.write("</body>\n");
-        htmlWriter.write("</html>\n");
-        htmlWriter.close();
     }
 
 }

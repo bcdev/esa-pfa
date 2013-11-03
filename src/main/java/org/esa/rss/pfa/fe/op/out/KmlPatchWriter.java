@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Writes a KML file "&lt;name&gt;-overview.kml" for each product and for each feature with name &lt;name&gt; of type RenderedImage.
+ *
  * @author Norman Fomferra
  */
 public class KmlPatchWriter implements PatchWriter {
@@ -32,7 +34,7 @@ public class KmlPatchWriter implements PatchWriter {
         kmlWriters = new ArrayList<>();
         for (FeatureType featureType : featureTypes) {
             if (PatchWriterHelpers.isImageFeatureType(featureType)) {
-                KmlWriter kmlWriter = new KmlWriter(new FileWriter(new File(productTargetDir, featureType.getName() + "_overview.kml")),
+                KmlWriter kmlWriter = new KmlWriter(new FileWriter(new File(productTargetDir, featureType.getName() + "-overview.kml")),
                                                     sourceProduct.getName(),
                                                     "RGB tiles from reflectances of " + sourceProduct.getName());
                 kmlWriters.add(kmlWriter);

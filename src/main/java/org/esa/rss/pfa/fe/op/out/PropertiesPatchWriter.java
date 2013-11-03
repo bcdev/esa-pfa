@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Writes a single Java properties file "fex-metadata.txt" and for each patch a "features.txt" into the patch directory of a product.
+ *
  * @author Norman Fomferra
  */
 public class PropertiesPatchWriter implements PatchWriter {
@@ -56,9 +58,9 @@ public class PropertiesPatchWriter implements PatchWriter {
     }
 
     public static void writeFeatureType(FeatureType featureType, int i, Writer writer) throws IOException {
-        writer.write("#\n");
+        writer.write(String.format("#%n"));
         writer.write(String.format("# Feature '%s'%n", featureType.getName()));
-        writer.write("#\n");
+        writer.write(String.format("#%n"));
         writer.write(String.format("featureTypes.%d.name = %s%n", i, featureType.getName()));
         writer.write(String.format("featureTypes.%d.description = %s%n", i, featureType.getDescription()));
         if (featureType.hasAttributes()) {
@@ -78,17 +80,29 @@ public class PropertiesPatchWriter implements PatchWriter {
 
     private void writeFeatureProperties(Feature feature, Writer writer) throws IOException {
         if (feature.hasAttributes()) {
+            AttributeType[] attributeTypes = feature.getFeatureType().getAttributeTypes();
             Object[] attributeValues = feature.getAttributeValues();
             for (int i = 0; i < attributeValues.length; i++) {
-                Object attributeValue = attributeValues[i];
-                writer.write(String.format("%s.%s = %s%n",
-                                           feature.getFeatureType().getName(),
-                                           feature.getFeatureType().getAttributeTypes()[i].getName(),
-                                           attributeValue));
+                if (isSupportedType(attributeTypes[i].getValueType())) {
+                    Object attributeValue = attributeValues[i];
+                    writer.write(String.format("%s.%s = %s%n",
+                                               feature.getFeatureType().getName(),
+                                               attributeTypes[i].getName(),
+                                               attributeValue));
+                }
             }
         } else {
-            writer.write(String.format("%s = %s%n",
-                                       feature.getFeatureType().getName(), feature.getValue()));
+            if (isSupportedType(feature.getFeatureType().getValueType())) {
+                writer.write(String.format("%s = %s%n",
+                                           feature.getFeatureType().getName(), feature.getValue()));
+            }
         }
+    }
+
+    private static boolean isSupportedType(Class<?> valueType) {
+        return Number.class.isAssignableFrom(valueType)
+                || Boolean.class.isAssignableFrom(valueType)
+                || Character.class.isAssignableFrom(valueType)
+                || String.class.isAssignableFrom(valueType);
     }
 }

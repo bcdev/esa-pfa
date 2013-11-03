@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Writes a single XML file "fex-metadata.xml" for each product.
+ *
  * @author Norman Fomferra
  */
 public class XmlPatchWriter implements PatchWriter {
