@@ -56,6 +56,7 @@ public abstract class FexOperator extends Operator implements Output {
             new AttributeType("p10", "The threshold such that 10% of the sample values are below the threshold", Double.class),
             new AttributeType("p50", "The threshold such that 50% of the sample values are below the threshold (=median)", Double.class),
             new AttributeType("p90", "The threshold such that 90% of the sample values are below the threshold", Double.class),
+            new AttributeType("skewness", "A measure of the extent to which the histogram \"leans\" to one side of the mean. The skewness value can be positive or negative, or even undefined.", Double.class),
             new AttributeType("count", "Sample count (number of valid feature pixels)", Integer.class),
     };
     public static final int DEFAULT_PATCH_SIZE = 200;
@@ -132,16 +133,22 @@ public abstract class FexOperator extends Operator implements Output {
     protected Feature createStxFeature(FeatureType featureType, RasterDataNode rasterDataNode) {
         Guardian.assertSame("invalid feature type", featureType.getAttributeTypes(), STX_ATTRIBUTE_TYPES);
         final Stx stx = rasterDataNode.getStx(true, ProgressMonitor.NULL);
+        double p10 = stx.getHistogram().getPTileThreshold(0.1)[0];
+        double p50 = stx.getHistogram().getPTileThreshold(0.5)[0];
+        double p90 = stx.getHistogram().getPTileThreshold(0.9)[0];
+        double mean = stx.getMean();
+        double skewness = (p90 - 2 * p50 + p10) / (p90 - p10);
         return new Feature(featureType,
                            null,
-                           stx.getMean(),
+                           mean,
                            stx.getStandardDeviation(),
-                           stx.getStandardDeviation() / stx.getMean(),
+                           stx.getStandardDeviation() / mean,
                            stx.getMinimum(),
                            stx.getMaximum(),
-                           stx.getHistogram().getPTileThreshold(0.1)[0],
-                           stx.getHistogram().getPTileThreshold(0.5)[0],
-                           stx.getHistogram().getPTileThreshold(0.9)[0],
+                           p10,
+                           p50,
+                           p90,
+                           skewness,
                            stx.getSampleCount());
     }
 
