@@ -272,7 +272,9 @@ public class AlgalBloomFexOperator extends FexOperator {
         StxFactory stxFactory = new StxFactory();
         stxFactory.withRoiMask(featureProduct.getMaskGroup().get("flh_high_gradient"));
         Stx stx = stxFactory.create(featureProduct.getBand("flh"), ProgressMonitor.NULL);
-        return (double) stx.getSampleCount();
+        double maxRatio = 0.5;
+        double value = (double) stx.getSampleCount() / (maxRatio * patchWidth * patchHeight);
+        return value >= 1.0 ? 1.0 : value;
     }
 
     private void addFlhGradientBands(Product featureProduct) {
