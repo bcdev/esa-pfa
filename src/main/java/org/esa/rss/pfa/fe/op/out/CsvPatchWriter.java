@@ -80,7 +80,6 @@ public class CsvPatchWriter implements PatchWriter {
 
     private void startRow() {
         columnIndex = 0;
-        rowIndex = 0;
     }
 
     private void endRow() throws IOException {
