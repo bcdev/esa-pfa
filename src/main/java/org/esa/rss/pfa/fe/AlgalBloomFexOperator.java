@@ -33,6 +33,7 @@ import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.ProductUtils;
 import org.esa.rss.pfa.fe.op.*;
+import org.esa.rss.pfa.fe.op.out.PatchOutput;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;

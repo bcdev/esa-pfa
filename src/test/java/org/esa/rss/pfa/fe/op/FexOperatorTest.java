@@ -2,6 +2,9 @@ package org.esa.rss.pfa.fe.op;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.rss.pfa.fe.op.out.PatchOutput;
+import org.esa.rss.pfa.fe.op.out.PatchWriter;
+import org.esa.rss.pfa.fe.op.out.PatchWriterFactory;
 import org.junit.Test;
 
 import java.io.IOException;

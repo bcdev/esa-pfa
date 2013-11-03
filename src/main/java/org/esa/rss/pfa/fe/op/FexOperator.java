@@ -30,6 +30,9 @@ import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.esa.rss.pfa.fe.op.out.PatchOutput;
+import org.esa.rss.pfa.fe.op.out.PatchWriter;
+import org.esa.rss.pfa.fe.op.out.PatchWriterFactory;
 
 import javax.media.jai.JAI;
 import java.awt.*;
@@ -84,7 +87,7 @@ public abstract class FexOperator extends Operator implements Output {
     @Parameter(defaultValue = "false")
     protected boolean skipProductOutput;
 
-    @Parameter(defaultValue = "org.esa.rss.pfa.fe.op.DefaultPatchWriterFactory")
+    @Parameter(defaultValue = "org.esa.rss.pfa.fe.op.out.DefaultPatchWriterFactory")
     private String featureOutputFactoryClassName;
 
     private transient PatchWriterFactory patchWriterFactory;

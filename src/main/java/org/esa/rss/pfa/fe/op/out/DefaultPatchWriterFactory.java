@@ -1,10 +1,12 @@
-package org.esa.rss.pfa.fe.op;
+package org.esa.rss.pfa.fe.op.out;
 
 import com.bc.ceres.core.ExtensionFactory;
 import com.bc.ceres.core.ExtensionManager;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.esa.rss.pfa.fe.op.Feature;
+import org.esa.rss.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;

@@ -14,18 +14,18 @@ public final class Patch {
     private final int patchY;
     private final Rectangle patchRegion;
     private final Product patchProduct;
-    private final String patchId;
+    private final String patchName;
 
     public Patch(int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
         this.patchX = patchX;
         this.patchY = patchY;
-        this.patchId = String.format("x%02dy%02d", patchX, patchY);
+        this.patchName = String.format("x%02dy%02d", patchX, patchY);
         this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
     }
 
-    public String getPatchId() {
-        return patchId;
+    public String getPatchName() {
+        return patchName;
     }
 
     public int getPatchX() {

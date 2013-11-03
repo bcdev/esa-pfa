@@ -1,4 +1,4 @@
-package org.esa.rss.pfa.fe.op;
+package org.esa.rss.pfa.fe.op.out;
 
 import org.esa.beam.framework.datamodel.Product;
 
