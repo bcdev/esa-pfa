@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * @author Norman Fomferra
  */
-public abstract class FeatureOutputFactory {
+public abstract class PatchWriterFactory {
 
     public static final String PROPERTY_TARGET_PATH = "targetPath";
     public static final String PROPERTY_OVERWRITE_MODE = "overwriteMode";
@@ -57,5 +57,5 @@ public abstract class FeatureOutputFactory {
         return s != null ? Boolean.parseBoolean(s) : defaultValue;
     }
 
-    public abstract FeatureOutput createFeatureOutput(Product sourceProduct) throws IOException;
+    public abstract PatchWriter createFeatureOutput(Product sourceProduct) throws IOException;
 }

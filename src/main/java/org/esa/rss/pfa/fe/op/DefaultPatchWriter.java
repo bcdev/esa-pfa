@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op;
 
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
@@ -19,9 +20,8 @@ import java.util.List;
 /**
  * @author Norman Fomferra
  */
-public class DefaultFeatureOutput implements FeatureOutput {
+public class DefaultPatchWriter implements PatchWriter {
 
-    public static final String PATCH_ID_PATTERN = "x%02dy%02d";
     public static final String METADATA_FILE_NAME = "fex-metadata.txt";
     public static final String OVERVIEW_HTML_FILE_NAME = "fex-overview.html";
     public static final String OVERVIEW_JS_FILE_NAME = "fex-overview.js";
@@ -40,16 +40,16 @@ public class DefaultFeatureOutput implements FeatureOutput {
     private FeatureType[] featureTypes;
     private int patchIndex;
 
-    public DefaultFeatureOutput(FeatureOutputFactory featureOutputFactory, String productName) throws IOException {
+    public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, String productName) throws IOException {
 
-        String targetPath = featureOutputFactory.getTargetPath();
+        String targetPath = patchWriterFactory.getTargetPath();
         if (targetPath == null) {
             targetPath = ".";
         }
 
         File targetDir = new File(targetPath).getAbsoluteFile();
 
-        overwriteMode = featureOutputFactory.isOverwriteMode();
+        overwriteMode = patchWriterFactory.isOverwriteMode();
         if (targetDir.exists()) {
             if (!overwriteMode) {
                 String[] contents = targetDir.list();
@@ -67,7 +67,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
             }
         }
 
-        File productTargetDir = new File(targetDir, productName + DefaultFeatureOutput.PRODUCT_DIR_NAME_EXTENSION);
+        File productTargetDir = new File(targetDir, productName + DefaultPatchWriter.PRODUCT_DIR_NAME_EXTENSION);
         if (!productTargetDir.exists()) {
             if (!productTargetDir.mkdir()) {
                 throw new IOException(String.format("Failed to create directory '%s'", productTargetDir));
@@ -166,7 +166,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
             metadataWriter.close();
         }
 
-        // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
+        // todo: this is sloppy code: let the feature writer do this, pass the PatchWriter context into FeatureOutput.writeFeature(...)
         kmlWriters = new ArrayList<KmlWriter>();
         for (FeatureType featureType : featureTypes) {
             if (isImageFeatureType(featureType)) {
@@ -227,7 +227,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
         htmlWriter.write(String.format("</tr>\n"));
     }
 
-    private static void copyResource(Class<? extends DefaultFeatureOutput> aClass, String resourceName, File targetDir) throws IOException {
+    private static void copyResource(Class<? extends DefaultPatchWriter> aClass, String resourceName, File targetDir) throws IOException {
         InputStream xslIs = aClass.getResourceAsStream(resourceName);
         OutputStream xslOs = new FileOutputStream(new File(targetDir, resourceName));
         byte[] bytes = new byte[16 * 1024];
@@ -248,8 +248,10 @@ public class DefaultFeatureOutput implements FeatureOutput {
     }
 
     @Override
-    public void writePatchFeatures(int patchX, int patchY, Product patchProduct, Feature... features) throws IOException {
-        String patchId = String.format(PATCH_ID_PATTERN, patchX, patchY);
+    public void writePatch(Patch patch, Feature... features) throws IOException {
+        int patchX = patch.getPatchX();
+        int patchY = patch.getPatchY();
+        String patchId = patch.getPatchId();
 
         final File patchTargetDir = new File(productTargetDir, patchId);
         if (!patchTargetDir.exists()) {
@@ -258,27 +260,30 @@ public class DefaultFeatureOutput implements FeatureOutput {
             }
         }
 
+        Product patchProduct = patch.getPatchProduct();
+        GeoCoding geoCoding = patchProduct.getGeoCoding();
+
         File file = new File(patchTargetDir, "features.txt");
         Writer writer = new FileWriter(file);
         try {
             int kmlWriterIndex = 0;
             for (Feature feature : features) {
 
-                FeatureWriter featureWriter = feature.getExtension(FeatureWriter.class);
+                FeatureOutput featureOutput = feature.getExtension(FeatureOutput.class);
 
-                if (featureWriter != null) {
-                    featureWriter.writeFeature(feature, patchTargetDir.getPath());
+                if (featureOutput != null) {
+                    featureOutput.writeFeature(patch, feature, patchTargetDir.getPath());
 
-                    // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
+                    // todo: this is sloppy code: let the feature writer do this, pass the PatchWriter context into FeatureOutput.writeFeature(...)
                     if (isImageFeatureType(feature.getFeatureType())) {
                         float w = patchProduct.getSceneRasterWidth();
                         float h = patchProduct.getSceneRasterHeight();
                         // quadPositions: counter clockwise lon,lat coordinates starting at lower-left
                         GeoPos[] quadPositions = new GeoPos[]{
-                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(0, h), null),
-                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(w, h), null),
-                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(w, 0), null),
-                                patchProduct.getGeoCoding().getGeoPos(new PixelPos(0, 0), null),
+                                geoCoding.getGeoPos(new PixelPos(0, h), null),
+                                geoCoding.getGeoPos(new PixelPos(w, h), null),
+                                geoCoding.getGeoPos(new PixelPos(w, 0), null),
+                                geoCoding.getGeoPos(new PixelPos(0, 0), null),
                         };
                         String imagePath = patchId + "/" + feature.getName() + ".png";
                         kmlWriters.get(kmlWriterIndex).writeGroundOverlayEx(patchId, quadPositions, imagePath);
@@ -293,7 +298,7 @@ public class DefaultFeatureOutput implements FeatureOutput {
         }
 
         //////////////////////////////////
-        // todo: this is sloppy code: let the feature writer do this, pass the FeatureOutput context into FeatureWriter.writeFeature(...)
+        // todo: this is sloppy code: let the feature writer do this, pass the PatchWriter context into FeatureOutput.writeFeature(...)
         //
         writePatchXml(patchId, patchX, patchY, features);
         writePatchHtml(patchId, patchX, patchY, features);

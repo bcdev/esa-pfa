@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * Output features into patches
  */
-@OperatorMetadata(alias = "FeatureWriter",
+@OperatorMetadata(alias = "FeatureOutput",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2013 by Array Systems Computing Inc.",
         description = "Writes a features into patches.",

@@ -32,9 +32,7 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.ProductUtils;
-import org.esa.rss.pfa.fe.op.Feature;
-import org.esa.rss.pfa.fe.op.FeatureType;
-import org.esa.rss.pfa.fe.op.FexOperator;
+import org.esa.rss.pfa.fe.op.*;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
@@ -200,7 +198,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     @Override
-    protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
+    protected boolean processPatch(Patch patch, PatchOutput patchOutput) throws IOException {
         int patchX = patch.getPatchX();
         int patchY = patch.getPatchY();
         Product patchProduct = patch.getPatchProduct();
@@ -263,7 +261,7 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(featureTypes[14], clumpiness),
         };
 
-        sink.writePatchFeatures(patch, features);
+        patchOutput.writePatch(patch, features);
 
         disposeProducts(featureProduct, cloudProduct);
 

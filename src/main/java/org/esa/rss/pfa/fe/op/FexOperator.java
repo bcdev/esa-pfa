@@ -32,7 +32,7 @@ import org.esa.beam.util.Guardian;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -84,10 +84,10 @@ public abstract class FexOperator extends Operator implements Output {
     @Parameter(defaultValue = "false")
     protected boolean skipProductOutput;
 
-    @Parameter(defaultValue = "org.esa.rss.pfa.fe.op.DefaultFeatureOutputFactory")
+    @Parameter(defaultValue = "org.esa.rss.pfa.fe.op.DefaultPatchWriterFactory")
     private String featureOutputFactoryClassName;
 
-    private transient FeatureOutputFactory featureOutputFactory;
+    private transient PatchWriterFactory patchWriterFactory;
 
     public void setTargetPath(String targetPath) {
         this.targetPath = targetPath;
@@ -117,8 +117,8 @@ public abstract class FexOperator extends Operator implements Output {
         this.patchHeight = patchHeight;
     }
 
-    public void setFeatureOutputFactory(FeatureOutputFactory featureOutputFactory) {
-        this.featureOutputFactory = featureOutputFactory;
+    public void setPatchWriterFactory(PatchWriterFactory patchWriterFactory) {
+        this.patchWriterFactory = patchWriterFactory;
     }
 
     protected Feature createStxFeature(FeatureType featureType, Product product) {
@@ -146,23 +146,23 @@ public abstract class FexOperator extends Operator implements Output {
 
     protected abstract String[] getLabelNames();
 
-    protected abstract boolean processPatch(Patch patch, PatchSink sink) throws IOException;
+    protected abstract boolean processPatch(Patch patch, PatchOutput sink) throws IOException;
 
     @Override
     public void initialize() throws OperatorException {
 
-        if (featureOutputFactory == null) {
+        if (patchWriterFactory == null) {
             initFeatureOutputFactory();
         }
 
-        // todo - nf20131010 - make 'outputProperties' an operator parameter so that we can have FeatureOutputFactory-specific properties (e.g. from Hadoop job requests)
+        // todo - nf20131010 - make 'outputProperties' an operator parameter so that we can have PatchWriterFactory-specific properties (e.g. from Hadoop job requests)
         HashMap<String, String> outputProperties = new HashMap<String, String>();
-        outputProperties.put(FeatureOutputFactory.PROPERTY_TARGET_PATH, targetPath);
-        outputProperties.put(FeatureOutputFactory.PROPERTY_OVERWRITE_MODE, overwriteMode + "");
-        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput + "");
-        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput + "");
-        outputProperties.put(FeatureOutputFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput + "");
-        featureOutputFactory.configure(outputProperties);
+        outputProperties.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetPath);
+        outputProperties.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode + "");
+        outputProperties.put(PatchWriterFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput + "");
+        outputProperties.put(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput + "");
+        outputProperties.put(PatchWriterFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput + "");
+        patchWriterFactory.configure(outputProperties);
 
         if (overwriteMode) {
             getLogger().warning("FexOperator: Overwrite mode is on.");
@@ -192,36 +192,35 @@ public abstract class FexOperator extends Operator implements Output {
     }
 
     private void run(int patchCountX, int patchCountY) throws IOException {
-        FeatureOutput featureOutput = featureOutputFactory.createFeatureOutput(sourceProduct);
-        FeatureType[] featureTypes = getFeatureTypes();
-        featureOutput.initialize(getSourceProduct(), getLabelNames(), featureTypes);
+        final FeatureType[] featureTypes = getFeatureTypes();
+        final long t0 = System.currentTimeMillis();
+        try (
+                PatchWriter patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct)
+        ) {
+            patchWriter.initialize(getSourceProduct(), getLabelNames(), featureTypes);
 
-        PatchSinkImpl sink = new PatchSinkImpl(featureOutput);
+            for (int patchY = 0; patchY < patchCountY; patchY++) {
+                for (int patchX = 0; patchX < patchCountX; patchX++) {
+                    final long t1 = System.currentTimeMillis();
 
-        long t0 = System.currentTimeMillis();
-        for (int patchY = 0; patchY < patchCountY; patchY++) {
-            for (int patchX = 0; patchX < patchCountX; patchX++) {
-                long t1 = System.currentTimeMillis();
+                    Rectangle patchRegion = createSubsetRegion(sourceProduct, patchY, patchX);
+                    Product patchProduct = createSubset(sourceProduct, patchRegion);
+                    patchProduct.setName("patch");
 
-                Rectangle patchRegion = createSubsetRegion(sourceProduct, patchY, patchX);
-                Product patchProduct = createSubset(sourceProduct, patchRegion);
-                patchProduct.setName("patch");
+                    Patch patch = new Patch(patchX, patchY, patchRegion, patchProduct);
+                    processPatch(patch, patchWriter);
 
-                Patch patch = new Patch(patchX, patchY, patchRegion, patchProduct);
-                processPatch(patch, sink);
+                    patchProduct.dispose();
 
-                patchProduct.dispose();
+                    if (disposeGlobalCaches) {
+                        ImageManager.getInstance().dispose();
+                        JAI.getDefaultInstance().getTileCache().flush();
+                    }
 
-                if (disposeGlobalCaches) {
-                    ImageManager.getInstance().dispose();
-                    JAI.getDefaultInstance().getTileCache().flush();
+                    logProgress(t0, t1, patchCountX, patchCountY, patchX, patchY);
                 }
-
-                logProgress(t0, t1, patchCountX, patchCountY, patchX, patchY);
             }
         }
-
-        featureOutput.close();
 
         logCompletion(t0, patchCountX, patchCountY);
     }
@@ -247,12 +246,8 @@ public abstract class FexOperator extends Operator implements Output {
     private void initFeatureOutputFactory() {
         try {
             Class<?> featureOutputFactoryClass = getClass().getClassLoader().loadClass(featureOutputFactoryClassName);
-            this.featureOutputFactory = (FeatureOutputFactory) featureOutputFactoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new OperatorException(e);
-        } catch (InstantiationException e) {
-            throw new OperatorException(e);
-        } catch (IllegalAccessException e) {
+            this.patchWriterFactory = (PatchWriterFactory) featureOutputFactoryClass.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new OperatorException(e);
         }
     }
@@ -271,54 +266,5 @@ public abstract class FexOperator extends Operator implements Output {
         parameters.put("region", subsetRegion);
         parameters.put("copyMetadata", false);
         return GPF.createProduct("Subset", parameters, sourceProduct);
-    }
-
-    public static final class Patch {
-        final int patchX;
-        final int patchY;
-        final Rectangle patchRegion;
-        final Product patchProduct;
-
-
-        public Patch(int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
-            this.patchX = patchX;
-            this.patchY = patchY;
-            this.patchRegion = patchRegion;
-            this.patchProduct = patchProduct;
-        }
-
-        public int getPatchX() {
-            return patchX;
-        }
-
-        public int getPatchY() {
-            return patchY;
-        }
-
-        public Rectangle getPatchRegion() {
-            return patchRegion;
-        }
-
-        public Product getPatchProduct() {
-            return patchProduct;
-        }
-    }
-
-    public interface PatchSink {
-
-        void writePatchFeatures(Patch patch, Feature... features) throws IOException;
-    }
-
-    public class PatchSinkImpl implements PatchSink {
-        private final FeatureOutput featureOutput;
-
-        public PatchSinkImpl(FeatureOutput featureOutput) {
-            this.featureOutput = featureOutput;
-        }
-
-        @Override
-        public void writePatchFeatures(Patch patch, Feature... features) throws IOException {
-            featureOutput.writePatchFeatures(patch.getPatchX(), patch.getPatchY(), patch.getPatchProduct(), features);
-        }
     }
 }

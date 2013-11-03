@@ -7,10 +7,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Norman Fomferra
@@ -28,7 +25,7 @@ public class FexOperatorTest {
         sourceProduct.addBand("B1", "1");
         sourceProduct.addBand("B2", "2");
 
-        MyFeatureOutputFactory outputFactory = new MyFeatureOutputFactory();
+        MyPatchWriterFactory outputFactory = new MyPatchWriterFactory();
         assertEquals(null, outputFactory.featureOutput);
 
         FexOperator fexOperator = new MyFexOperator();
@@ -38,7 +35,7 @@ public class FexOperatorTest {
         fexOperator.setPatchWidth(100);
         fexOperator.setPatchHeight(100);
         fexOperator.setSourceProduct(sourceProduct);
-        fexOperator.setFeatureOutputFactory(outputFactory);
+        fexOperator.setPatchWriterFactory(outputFactory);
         Product targetProduct = fexOperator.getTargetProduct();
 
         assertEquals("test", outputFactory.getTargetPath());
@@ -53,21 +50,21 @@ public class FexOperatorTest {
         assertTrue(outputFactory.featureOutput.closed);
         assertEquals(9, outputFactory.featureOutput.patchOutputs.size());
 
-        assertNotNull(outputFactory.featureOutput.patchOutputs.get(0).product);
-        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterWidth());
-        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(0).patch.getPatchProduct());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).patch.getPatchProduct().getSceneRasterWidth());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(0).patch.getPatchProduct().getSceneRasterHeight());
 
-        assertNotNull(outputFactory.featureOutput.patchOutputs.get(2).product);
-        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterWidth());
-        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(2).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(2).patch.getPatchProduct());
+        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(2).patch.getPatchProduct().getSceneRasterWidth());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(2).patch.getPatchProduct().getSceneRasterHeight());
 
-        assertNotNull(outputFactory.featureOutput.patchOutputs.get(6).product);
-        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterWidth());
-        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(6).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(6).patch.getPatchProduct());
+        assertEquals(100, outputFactory.featureOutput.patchOutputs.get(6).patch.getPatchProduct().getSceneRasterWidth());
+        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(6).patch.getPatchProduct().getSceneRasterHeight());
 
-        assertNotNull(outputFactory.featureOutput.patchOutputs.get(8).product);
-        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterWidth());
-        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(8).product.getSceneRasterHeight());
+        assertNotNull(outputFactory.featureOutput.patchOutputs.get(8).patch.getPatchProduct());
+        assertEquals(56, outputFactory.featureOutput.patchOutputs.get(8).patch.getPatchProduct().getSceneRasterWidth());
+        assertEquals(60, outputFactory.featureOutput.patchOutputs.get(8).patch.getPatchProduct().getSceneRasterHeight());
     }
 
 
@@ -88,30 +85,30 @@ public class FexOperatorTest {
         }
 
         @Override
-        protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
+        protected boolean processPatch(Patch patch, PatchOutput sink) throws IOException {
             Feature[] bibos = {
                     new Feature(FEATURE_TYPES[0], "bibo"),
                     new Feature(FEATURE_TYPES[1], 3.14),
             };
-            sink.writePatchFeatures(patch, bibos);
+            sink.writePatch(patch, bibos);
             return true;
         }
     }
 
 
-    public static class MyFeatureOutputFactory extends FeatureOutputFactory {
+    public static class MyPatchWriterFactory extends PatchWriterFactory {
 
-        MyFeatureOutput featureOutput;
+        MyPatchWriter featureOutput;
         String targetPath;
 
         @Override
-        public FeatureOutput createFeatureOutput(Product sourceProduct) {
-            featureOutput = new MyFeatureOutput();
+        public PatchWriter createFeatureOutput(Product sourceProduct) {
+            featureOutput = new MyPatchWriter();
             return featureOutput;
         }
     }
 
-    private static class MyFeatureOutput implements FeatureOutput {
+    private static class MyPatchWriter implements PatchWriter {
         ArrayList<MyPatchOutput> patchOutputs = new ArrayList<MyPatchOutput>();
         boolean initialized;
         boolean closed;
@@ -122,8 +119,8 @@ public class FexOperatorTest {
         }
 
         @Override
-        public void writePatchFeatures(int patchX, int patchY, Product product, Feature... features) throws IOException {
-            MyPatchOutput patchOutput = new MyPatchOutput(product, features);
+        public void writePatch(Patch patch, Feature... features) throws IOException {
+            MyPatchOutput patchOutput = new MyPatchOutput(patch, features);
             patchOutputs.add(patchOutput);
         }
 
@@ -134,11 +131,11 @@ public class FexOperatorTest {
     }
 
     private static class MyPatchOutput {
-        Product product;
+        Patch patch;
         Feature[] features;
 
-        private MyPatchOutput(Product product, Feature[] features) {
-            this.product = product;
+        private MyPatchOutput(Patch patch, Feature[] features) {
+            this.patch = patch;
             this.features = features;
         }
     }

@@ -14,15 +14,15 @@ import java.io.IOException;
 /**
  * @author Norman Fomferra
  */
-public class DefaultFeatureOutputFactory extends FeatureOutputFactory {
+public class DefaultPatchWriterFactory extends PatchWriterFactory {
 
     static {
         ExtensionManager.getInstance().register(Feature.class, new DefaultFeatureWriterFactory());
     }
 
     @Override
-    public FeatureOutput createFeatureOutput(Product sourceProduct) throws IOException {
-        return new DefaultFeatureOutput(this, sourceProduct.getName());
+    public PatchWriter createFeatureOutput(Product sourceProduct) throws IOException {
+        return new DefaultPatchWriter(this, sourceProduct.getName());
     }
 
     private static class DefaultFeatureWriterFactory implements ExtensionFactory {
@@ -31,21 +31,21 @@ public class DefaultFeatureOutputFactory extends FeatureOutputFactory {
             Feature feature = (Feature) object;
             Object value = feature.getValue();
             if (value instanceof Product) {
-                return new ProductFeatureWriter();
+                return new ProductFeatureOutput();
             } else if (value instanceof RenderedImage) {
-                return new RenderedImageFeatureWriter();
+                return new RenderedImageFeatureOutput();
             }
             return null;
         }
 
         @Override
         public Class<?>[] getExtensionTypes() {
-            return new Class<?>[]{FeatureWriter.class};
+            return new Class<?>[]{FeatureOutput.class};
         }
 
-        private static class ProductFeatureWriter implements FeatureWriter {
+        private static class ProductFeatureOutput implements FeatureOutput {
             @Override
-            public String writeFeature(Feature feature, String dirPath) throws IOException {
+            public String writeFeature(Patch patch, Feature feature, String dirPath) throws IOException {
                 Product patchProduct = (Product) feature.getValue();
                 String path = new File(dirPath, feature.getName() + ".dim").getPath();
                 BeamLogManager.getSystemLogger().info("Writing " + path);
@@ -54,9 +54,9 @@ public class DefaultFeatureOutputFactory extends FeatureOutputFactory {
             }
         }
 
-        private static class RenderedImageFeatureWriter implements FeatureWriter {
+        private static class RenderedImageFeatureOutput implements FeatureOutput {
             @Override
-            public String writeFeature(Feature feature, String dirPath) throws IOException {
+            public String writeFeature(Patch patch, Feature feature, String dirPath) throws IOException {
                 RenderedImage image = (RenderedImage) feature.getValue();
                 File output = new File(dirPath, feature.getName() + ".png");
                 BeamLogManager.getSystemLogger().info("Writing " + output);
