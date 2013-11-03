@@ -95,7 +95,7 @@ public class HtmlPatchWriter implements PatchWriter {
     @Override
     public void close() throws IOException {
         htmlWriter.write("</table>\n");
-        htmlWriter.write("<div><input type=\"button\" value=\"Show Labels\" onclick=\"fex_openCsv(window.document); return false\"></div>\n");
+        htmlWriter.write("<div style=\"text-align:right\"><input type=\"button\" value=\"Show Labels\" onclick=\"fex_openCsv(window.document); return false\"></div>\n");
         htmlWriter.write("</form>\n");
         htmlWriter.write("</body>\n");
         htmlWriter.write("</html>\n");
@@ -127,9 +127,9 @@ public class HtmlPatchWriter implements PatchWriter {
     private void writeLabelSelector(String patchId) throws IOException {
         htmlWriter.write("\t<td class=\"fValue\">\n");
         htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\" multiple>\n", patchIndex, patchId));
-        for (int i = 0; i < labelNames.length; i++) {
-            String labelName = labelNames[i];
-            htmlWriter.write(String.format("\t<option value=\"%d\">%s</option>\n", i, labelName));
+        for (String labelName : labelNames) {
+            String value = labelName.toLowerCase().replace("*", "").trim().replace(" ", "_");
+            htmlWriter.write(String.format("\t<option value=\"%s\">%s</option>\n", value, labelName));
         }
         htmlWriter.write("\t</select>\n");
         htmlWriter.write("\t</td>\n");
