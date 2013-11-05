@@ -21,7 +21,20 @@ import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ConvolutionFilterBand;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Kernel;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RGBChannelDef;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.Stx;
+import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -32,7 +45,10 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.ProductUtils;
-import org.esa.rss.pfa.fe.op.*;
+import org.esa.rss.pfa.fe.op.Feature;
+import org.esa.rss.pfa.fe.op.FeatureType;
+import org.esa.rss.pfa.fe.op.FexOperator;
+import org.esa.rss.pfa.fe.op.Patch;
 import org.esa.rss.pfa.fe.op.out.PatchOutput;
 
 import java.awt.Color;
@@ -55,13 +71,14 @@ import java.util.List;
 @OperatorMetadata(alias = "AlgalBloomFex", version = "1.1")
 public class AlgalBloomFexOperator extends FexOperator {
 
+    public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
+    public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
+    public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
+
     private double minSampleFlh;
     private double maxSampleFlh;
     private double minSampleMci;
     private double maxSampleMci;
-    public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
-    public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
-    public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
 
     public static void main(String[] args) {
         final String filePath = args[0];
@@ -144,9 +161,9 @@ public class AlgalBloomFexOperator extends FexOperator {
                         /*04*/ new FeatureType("mci_ql", "Grey-scale quicklook for MCI [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
                         /*05*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
                         /*06*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
-                        /*07*/ new FeatureType("red", "Red channel ("+R_EXPR+")", STX_ATTRIBUTE_TYPES),
-                        /*08*/ new FeatureType("green", "Green channel ("+G_EXPR+")", STX_ATTRIBUTE_TYPES),
-                        /*09*/ new FeatureType("blue", "Blue channel ("+B_EXPR+")", STX_ATTRIBUTE_TYPES),
+                        /*07*/ new FeatureType("red", "Red channel (" + R_EXPR + ")", STX_ATTRIBUTE_TYPES),
+                        /*08*/ new FeatureType("green", "Green channel (" + G_EXPR + ")", STX_ATTRIBUTE_TYPES),
+                        /*09*/ new FeatureType("blue", "Blue channel (" + B_EXPR + ")", STX_ATTRIBUTE_TYPES),
                         /*10*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
                         /*11*/ new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
                         /*12*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
@@ -155,19 +172,6 @@ public class AlgalBloomFexOperator extends FexOperator {
             };
         }
         return featureTypes;
-    }
-
-    @Override
-    protected String[] getLabelNames() {
-        return new String[]{
-                /*0*/ "* Not a Bloom *",
-                /*1*/ "Cyanobacteria",
-                /*2*/ "Cocolithophores",
-                /*3*/ "Sargassum",
-                /*4*/ "Case 1 Bloom",
-                /*5*/ "Coastal Bloom",
-                /*6*/ "Suspended Matter",
-        };
     }
 
     @Override
@@ -194,6 +198,18 @@ public class AlgalBloomFexOperator extends FexOperator {
         coastDistHeight = coastDistProduct.getSceneRasterHeight();
         coastDistData = ((DataBufferFloat) coastDistance.getSourceImage().getData().getDataBuffer()).getData();
         coastDistProduct.dispose();
+
+
+        patchWriterConfig = new HashMap<>();
+        patchWriterConfig.put("html.labelValues", new String[][]{
+                        /*0*/ {"ab_none", "* Not a Bloom *"},
+                        /*1*/ {"ab_cyano","Cyanobacteria"},
+                        /*2*/ {"ab_coco","Cocolithophores"},
+                        /*3*/ {"ab_float","Floating Bloom"},
+                        /*4*/ {"ab_case_1","Case 1 Bloom"},
+                        /*5*/ {"ab_coastal","Coastal Bloom"},
+                        /*6*/ {"ab_susp_mat","Suspended Matter"},
+        });
 
         super.initialize();
     }
@@ -279,8 +295,8 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private void addFlhGradientBands(Product featureProduct) {
-        featureProduct.addBand(new ConvolutionFilterBand("flh_average", featureProduct.getBand("flh"), new Kernel(3,3, 1.0/9.0, new double[]{1,1,1,1,1,1,1,1,1})));
-        featureProduct.addBand(new ConvolutionFilterBand("flh_gradient", featureProduct.getBand("flh_average"), new Kernel(3,3, 1.0/9.0, new double[]{-1,-2,-1,0,0,0,1,2,1})));
+        featureProduct.addBand(new ConvolutionFilterBand("flh_average", featureProduct.getBand("flh"), new Kernel(3, 3, 1.0 / 9.0, new double[]{1, 1, 1, 1, 1, 1, 1, 1, 1})));
+        featureProduct.addBand(new ConvolutionFilterBand("flh_gradient", featureProduct.getBand("flh_average"), new Kernel(3, 3, 1.0 / 9.0, new double[]{-1, -2, -1, 0, 0, 0, 1, 2, 1})));
         featureProduct.addMask("flh_high_gradient", "abs(flh_gradient) > " + flhGradientThreshold, "", Color.RED, 0.5);
     }
 

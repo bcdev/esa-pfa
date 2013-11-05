@@ -1,7 +1,7 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.rss.pfa.fe.op.AttributeType;
 import org.esa.rss.pfa.fe.op.Feature;
 import org.esa.rss.pfa.fe.op.FeatureType;
 import org.esa.rss.pfa.fe.op.Patch;
@@ -14,6 +14,9 @@ import java.io.Writer;
 /**
  * Writes a single HTML file "fex-metadata.html" for each product.
  *
+ * Has an optional configuration value <code>html.labelValues</code> of type <code>String[][]</code>  whose elements are
+ * <code>{labelValue, labelText}</code>.
+ *
  * @author Norman Fomferra
  */
 public class HtmlPatchWriter implements PatchWriter {
@@ -24,7 +27,7 @@ public class HtmlPatchWriter implements PatchWriter {
 
     private final File productTargetDir;
     private Writer htmlWriter;
-    private String[] labelNames;
+    private String[][] labelValues;
     private FeatureType[] featureTypes;
     private int patchIndex;
 
@@ -33,8 +36,8 @@ public class HtmlPatchWriter implements PatchWriter {
     }
 
     @Override
-    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
-        this.labelNames = labelNames;
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
+        this.labelValues = configuration.getValue("html.labelValues");
         this.featureTypes = featureTypes;
 
         PatchWriterHelpers.copyResource(getClass(), OVERVIEW_JS_FILE_NAME, productTargetDir);
@@ -66,7 +69,7 @@ public class HtmlPatchWriter implements PatchWriter {
                 htmlWriter.write(String.format("\t<th class=\"ftHead\">%s</th>\n", featureType.getName()));
             }
         }
-        if (this.labelNames != null) {
+        if (this.labelValues != null) {
             htmlWriter.write(String.format("\t<th class=\"ftHead\">label</th>\n"));
         }
         htmlWriter.write(String.format("</tr>\n"));
@@ -125,14 +128,15 @@ public class HtmlPatchWriter implements PatchWriter {
     }
 
     private void writeLabelSelector(String patchId) throws IOException {
-        htmlWriter.write("\t<td class=\"fValue\">\n");
-        htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\" multiple>\n", patchIndex, patchId));
-        for (String labelName : labelNames) {
-            String value = labelName.toLowerCase().replace("*", "").trim().replace(" ", "_");
-            htmlWriter.write(String.format("\t<option value=\"%s\">%s</option>\n", value, labelName));
+        if (labelValues != null) {
+            htmlWriter.write("\t<td class=\"fValue\">\n");
+            htmlWriter.write(String.format("\t<select id=\"label%s\" name=\"%s\" class=\"fLabel\" multiple>\n", patchIndex, patchId));
+            for (String[] labelDef : labelValues) {
+                htmlWriter.write(String.format("\t<option value=\"%s\">%s</option>\n", labelDef[0], labelDef[1]));
+            }
+            htmlWriter.write("\t</select>\n");
+            htmlWriter.write("\t</td>\n");
         }
-        htmlWriter.write("\t</select>\n");
-        htmlWriter.write("\t</td>\n");
     }
 
     private void writeImageFeatureHtml(Feature feature, String imagePath) throws IOException {

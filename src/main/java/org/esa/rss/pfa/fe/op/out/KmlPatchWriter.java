@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -30,7 +31,7 @@ public class KmlPatchWriter implements PatchWriter {
     }
 
     @Override
-    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
         kmlWriters = new ArrayList<>();
         for (FeatureType featureType : featureTypes) {
             if (PatchWriterHelpers.isImageFeatureType(featureType)) {

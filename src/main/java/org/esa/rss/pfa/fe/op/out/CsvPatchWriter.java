@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.rss.pfa.fe.op.AttributeType;
 import org.esa.rss.pfa.fe.op.Feature;
@@ -31,7 +32,7 @@ public class CsvPatchWriter implements PatchWriter {
     }
 
     @Override
-    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
         csvWriter = new FileWriter(new File(productTargetDir, CSV_FILE_NAME));
 
         startRow();

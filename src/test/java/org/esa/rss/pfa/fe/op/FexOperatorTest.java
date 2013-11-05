@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.rss.pfa.fe.op.out.PatchOutput;
@@ -83,11 +84,6 @@ public class FexOperatorTest {
         }
 
         @Override
-        protected String[] getLabelNames() {
-            return null;
-        }
-
-        @Override
         protected boolean processPatch(Patch patch, PatchOutput sink) throws IOException {
             Feature[] bibos = {
                     new Feature(FEATURE_TYPES[0], "bibo"),
@@ -117,7 +113,7 @@ public class FexOperatorTest {
         boolean closed;
 
         @Override
-        public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+        public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
             initialized = true;
         }
 

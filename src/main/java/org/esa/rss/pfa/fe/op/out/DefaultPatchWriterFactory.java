@@ -19,17 +19,17 @@ import java.io.IOException;
 public class DefaultPatchWriterFactory extends PatchWriterFactory {
 
     static {
-        ExtensionManager.getInstance().register(Feature.class, new DefaultFeatureWriterFactory());
+        ExtensionManager.getInstance().register(Feature.class, new FeatureOutputFactory());
     }
 
     @Override
     public PatchWriter createFeatureOutput(Product sourceProduct) throws IOException {
-        return new DefaultPatchWriter(this, sourceProduct.getName());
+        return new DefaultPatchWriter(this, sourceProduct);
     }
 
-    private static class DefaultFeatureWriterFactory implements ExtensionFactory {
+    private static class FeatureOutputFactory implements ExtensionFactory {
         @Override
-        public Object getExtension(Object object, Class<?> extensionType) {
+        public FeatureOutput getExtension(Object object, Class<?> extensionType) {
             Feature feature = (Feature) object;
             Object value = feature.getValue();
             if (value instanceof Product) {

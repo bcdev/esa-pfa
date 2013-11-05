@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.rss.pfa.fe.op.Feature;
 import org.esa.rss.pfa.fe.op.FeatureType;
@@ -18,7 +19,7 @@ public class DefaultPatchWriter implements PatchWriter {
     private final File productTargetDir;
     private final PatchWriter[] patchWriters;
 
-    public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, String productName) throws IOException {
+    public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, Product product) throws IOException {
 
         String targetPath = patchWriterFactory.getTargetPath();
         if (targetPath == null) {
@@ -45,7 +46,7 @@ public class DefaultPatchWriter implements PatchWriter {
             }
         }
 
-        File productTargetDir = new File(targetDir, productName + PRODUCT_DIR_NAME_EXTENSION);
+        File productTargetDir = new File(targetDir, product.getName() + PRODUCT_DIR_NAME_EXTENSION);
         if (!productTargetDir.exists()) {
             if (!productTargetDir.mkdir()) {
                 throw new IOException(String.format("Failed to create directory '%s'", productTargetDir));
@@ -65,9 +66,9 @@ public class DefaultPatchWriter implements PatchWriter {
 
 
     @Override
-    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
         for (PatchWriter patchWriter : patchWriters) {
-            patchWriter.initialize(sourceProduct, labelNames, featureTypes);
+            patchWriter.initialize(configuration, sourceProduct, featureTypes);
         }
     }
 

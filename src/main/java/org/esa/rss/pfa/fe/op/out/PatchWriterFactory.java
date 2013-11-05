@@ -1,5 +1,7 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -7,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A factory for PatchWriters.
  * @author Norman Fomferra
  */
 public abstract class PatchWriterFactory {
@@ -17,14 +20,14 @@ public abstract class PatchWriterFactory {
     public static final String PROPERTY_SKIP_PRODUCT_OUTPUT = "skipProductOutput";
     public static final String PROPERTY_SKIP_QUICKLOOK_OUTPUT = "skipQuicklookOutput";
 
-    private Map<String, String> properties;
+    private PropertySet configuration;
 
-    public void configure(Map<String, String> properties) {
-        this.properties = new HashMap<String, String>(properties);
+    public void configure(Map<String, Object> properties) {
+        this.configuration = PropertyContainer.createMapBacked(new HashMap<> (properties));
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public PropertySet getConfiguration() {
+        return configuration;
     }
 
     public String getTargetPath() {
@@ -48,13 +51,16 @@ public abstract class PatchWriterFactory {
     }
 
     protected String getProperty(String key, String defaultValue) {
-        String s = properties.get(key);
-        return s != null ? s : defaultValue;
+        Object value = configuration.getValue(key);
+        return value instanceof String ? (String) value
+                : defaultValue;
     }
 
     protected boolean getProperty(String key, boolean defaultValue) {
-        String s = properties.get(key);
-        return s != null ? Boolean.parseBoolean(s) : defaultValue;
+        Object value = configuration.getValue(key);
+        return value instanceof Boolean ? (Boolean) value
+                : value instanceof String ? Boolean.parseBoolean((String) value)
+                : defaultValue;
     }
 
     public abstract PatchWriter createFeatureOutput(Product sourceProduct) throws IOException;

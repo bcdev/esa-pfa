@@ -1,5 +1,6 @@
 package org.esa.rss.pfa.fe.op.out;
 
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.rss.pfa.fe.op.AttributeType;
 import org.esa.rss.pfa.fe.op.Feature;
@@ -25,7 +26,6 @@ public class XmlPatchWriter implements PatchWriter {
     private final File productTargetDir;
     private Writer xmlWriter;
     private Product sourceProduct;
-    private String[] labelNames;
     private FeatureType[] featureTypes;
 
     public XmlPatchWriter(File productTargetDir) throws IOException {
@@ -33,9 +33,8 @@ public class XmlPatchWriter implements PatchWriter {
     }
 
     @Override
-    public void initialize(Product sourceProduct, String[] labelNames, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
         this.sourceProduct = sourceProduct;
-        this.labelNames = labelNames;
         this.featureTypes = featureTypes;
         PatchWriterHelpers.copyResource(getClass(), OVERVIEW_XSL_FILE_NAME, productTargetDir);
         PatchWriterHelpers.copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, productTargetDir);
@@ -45,7 +44,6 @@ public class XmlPatchWriter implements PatchWriter {
         xmlWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
         xmlWriter.write("<featureExtraction source=\"" + this.sourceProduct.getName() + "\">\n");
         writeFeatureTypeXml();
-        writeLabelNamesXml();
     }
 
     @Override
@@ -86,17 +84,6 @@ public class XmlPatchWriter implements PatchWriter {
         }
 
     }
-
-    private void writeLabelNamesXml() throws IOException {
-        if (labelNames != null && labelNames.length > 0) {
-            xmlWriter.write("<labels>\n");
-            for (String labelName : labelNames) {
-                xmlWriter.write(String.format("\t<label name=\"%s\"/>\n", labelName));
-            }
-            xmlWriter.write("</labels>\n");
-        }
-    }
-
 
     private void writeProductFeatureXml(Feature feature, String productPath) throws IOException {
         xmlWriter.write(String.format("\t<feature name=\"%s\" type=\"raw\">%s</feature>\n", feature.getName(), productPath));
