@@ -162,6 +162,8 @@ public abstract class FexOperator extends Operator implements Output {
     @Override
     public void initialize() throws OperatorException {
 
+        getLogger().warning("Processing source product " + sourceProduct.getFileLocation());
+
         if (patchWriterFactory == null) {
             initPatchWriterFactory();
         }
