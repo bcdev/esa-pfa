@@ -200,7 +200,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         coastDistProduct.dispose();
 
 
-        patchWriterConfig = new HashMap<>();
+        patchWriterConfig = new HashMap<String, Object>();
         patchWriterConfig.put("html.labelValues", new String[][]{
                         /*0*/ {"ab_none", "* Not a Bloom *"},
                         /*1*/ {"ab_cyano","Cyanobacteria"},

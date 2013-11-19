@@ -30,8 +30,11 @@ public class PropertiesPatchWriter implements PatchWriter {
 
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        try (Writer writer = new FileWriter(new File(productTargetDir, METADATA_FILE_NAME))) {
+        final Writer writer = new FileWriter(new File(productTargetDir, METADATA_FILE_NAME));
+        try {
             writeFeatureTypes(featureTypes, writer);
+        } finally {
+            writer.close();
         }
     }
 
@@ -39,10 +42,14 @@ public class PropertiesPatchWriter implements PatchWriter {
     public void writePatch(Patch patch, Feature... features) throws IOException {
         final File patchTargetDir = new File(productTargetDir, patch.getPatchName());
         final File file = new File(patchTargetDir, FEATURES_FILE_NAME);
-        try (Writer writer = new FileWriter(file)) {
+
+        final Writer writer = new FileWriter(file);
+        try {
             for (Feature feature : features) {
                 writeFeatureProperties(feature, writer);
             }
+        } finally {
+            writer.close();
         }
     }
 

@@ -23,7 +23,7 @@ public abstract class PatchWriterFactory {
     private PropertySet configuration;
 
     public void configure(Map<String, Object> properties) {
-        this.configuration = PropertyContainer.createMapBacked(new HashMap<> (properties));
+        this.configuration = PropertyContainer.createMapBacked(new HashMap<String, Object>(properties));
     }
 
     public PropertySet getConfiguration() {

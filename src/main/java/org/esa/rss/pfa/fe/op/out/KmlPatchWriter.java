@@ -32,7 +32,7 @@ public class KmlPatchWriter implements PatchWriter {
 
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        kmlWriters = new ArrayList<>();
+        kmlWriters = new ArrayList<KmlWriter>();
         for (FeatureType featureType : featureTypes) {
             if (PatchWriterHelpers.isImageFeatureType(featureType)) {
                 KmlWriter kmlWriter = new KmlWriter(new FileWriter(new File(productTargetDir, featureType.getName() + "-overview.kml")),

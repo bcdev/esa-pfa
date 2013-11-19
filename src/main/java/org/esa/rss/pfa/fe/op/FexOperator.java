@@ -170,7 +170,7 @@ public abstract class FexOperator extends Operator implements Output {
 
         // todo - nf20131010 - make 'outputProperties' an operator parameter so that we can have PatchWriterFactory-specific properties (e.g. from Hadoop job requests)
         if (patchWriterConfig == null) {
-            patchWriterConfig = new HashMap<>();
+            patchWriterConfig = new HashMap<String, Object>();
         }
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetPath);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode);
@@ -209,7 +209,8 @@ public abstract class FexOperator extends Operator implements Output {
     private void run(int patchCountX, int patchCountY) throws IOException {
         final FeatureType[] featureTypes = getFeatureTypes();
         final long t0 = System.currentTimeMillis();
-        try (PatchWriter patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct)) {
+        final PatchWriter patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct);
+        try {
             patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), featureTypes);
 
             for (int patchY = 0; patchY < patchCountY; patchY++) {
@@ -233,6 +234,8 @@ public abstract class FexOperator extends Operator implements Output {
                     logProgress(t0, t1, patchCountX, patchCountY, patchX, patchY);
                 }
             }
+        } finally {
+            patchWriter.close();
         }
 
         logCompletion(t0, patchCountX, patchCountY);
@@ -260,7 +263,11 @@ public abstract class FexOperator extends Operator implements Output {
         try {
             Class<?> featureOutputFactoryClass = getClass().getClassLoader().loadClass(patchWriterFactoryClassName);
             this.patchWriterFactory = (PatchWriterFactory) featureOutputFactoryClass.newInstance();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        } catch (ClassNotFoundException e) {
+            throw new OperatorException(e);
+        } catch (InstantiationException e) {
+            throw new OperatorException(e);
+        } catch (IllegalAccessException e) {
             throw new OperatorException(e);
         }
     }
