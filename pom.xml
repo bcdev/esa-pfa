@@ -117,6 +117,18 @@
             <artifactId>clibwrapper-jiio</artifactId>
             <version>1.2-20090918</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.mahout</groupId>
+            <artifactId>mahout-core</artifactId>
+            <version>0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.mahout</groupId>
+            <artifactId>mahout-examples</artifactId>
+            <version>0.8</version>
+        </dependency>
+
     </dependencies>
 
 
