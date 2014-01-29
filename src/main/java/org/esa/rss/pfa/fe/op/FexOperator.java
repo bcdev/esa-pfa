@@ -209,8 +209,7 @@ public abstract class FexOperator extends Operator implements Output {
     private void run(int patchCountX, int patchCountY) throws IOException {
         final FeatureType[] featureTypes = getFeatureTypes();
         final long t0 = System.currentTimeMillis();
-        final PatchWriter patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct);
-        try {
+        try (PatchWriter patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct)) {
             patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), featureTypes);
 
             for (int patchY = 0; patchY < patchCountY; patchY++) {
@@ -234,8 +233,6 @@ public abstract class FexOperator extends Operator implements Output {
                     logProgress(t0, t1, patchCountX, patchCountY, patchX, patchY);
                 }
             }
-        } finally {
-            patchWriter.close();
         }
 
         logCompletion(t0, patchCountX, patchCountY);
@@ -263,11 +260,7 @@ public abstract class FexOperator extends Operator implements Output {
         try {
             Class<?> featureOutputFactoryClass = getClass().getClassLoader().loadClass(patchWriterFactoryClassName);
             this.patchWriterFactory = (PatchWriterFactory) featureOutputFactoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new OperatorException(e);
-        } catch (InstantiationException e) {
-            throw new OperatorException(e);
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new OperatorException(e);
         }
     }

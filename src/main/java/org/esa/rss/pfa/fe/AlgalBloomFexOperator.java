@@ -200,7 +200,7 @@ public class AlgalBloomFexOperator extends FexOperator {
         coastDistProduct.dispose();
 
 
-        patchWriterConfig = new HashMap<String, Object>();
+        patchWriterConfig = new HashMap<>();
         patchWriterConfig.put("html.labelValues", new String[][]{
                         /*0*/ {"ab_none", "* Not a Bloom *"},
                         /*1*/ {"ab_cyano","Cyanobacteria"},
@@ -436,7 +436,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private Product createCorrectedProduct(Product product) {
-        final HashMap<String, Object> radiometryParameters = new HashMap<String, Object>();
+        final HashMap<String, Object> radiometryParameters = new HashMap<>();
         radiometryParameters.put("doCalibration", false);
         radiometryParameters.put("doSmile", true);
         radiometryParameters.put("doEqualization", true);
@@ -492,7 +492,7 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private static String[] appendArgs(String operatorName, String[] args) {
-        List<String> algalBloomFex = new ArrayList<String>(Arrays.asList(operatorName));
+        List<String> algalBloomFex = new ArrayList<>(Arrays.asList(operatorName));
         algalBloomFex.addAll(Arrays.asList(args));
         return algalBloomFex.toArray(new String[algalBloomFex.size()]);
     }
