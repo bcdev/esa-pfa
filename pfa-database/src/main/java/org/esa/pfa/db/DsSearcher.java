@@ -59,18 +59,18 @@ public class DsSearcher {
         File dsDir = new File(dsPath);
         dsDescriptor = DatasetDescriptor.read(new File(dsDir, "ds-descriptor.xml"));
 
-        StandardQueryParser parser = new StandardQueryParser();
+        StandardQueryParser parser = new StandardQueryParser(DsIndexer.ANALYZER);
         parser.setNumericConfigMap(getNumericConfigMap(dsDescriptor));
 
         try (Directory indexDirectory = new MMapDirectory(new File(dsDir, "lucene-index"))) {
             try (IndexReader indexReader = DirectoryReader.open(indexDirectory)) {
                 IndexSearcher indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.threadCount));
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                BufferedReader queryReader = new BufferedReader(new InputStreamReader(System.in));
                 String queryExpr;
                 do {
                     System.out.print(">>> ");
                     System.out.flush();
-                    queryExpr = reader.readLine();
+                    queryExpr = queryReader.readLine();
                 } while (queryExpr != null && processQuery(indexSearcher, parser, queryExpr));
             }
         }
@@ -98,7 +98,7 @@ public class DsSearcher {
             Query query = parser.parse(queryExpr, "product");
 
             long t1 = System.currentTimeMillis();
-            TopDocs topDocs = indexSearcher.search(query, null, this.maxHitCount);
+            TopDocs topDocs = indexSearcher.search(query, this.maxHitCount);
             long t2 = System.currentTimeMillis();
 
             if (topDocs.totalHits == 0) {
@@ -113,7 +113,7 @@ public class DsSearcher {
                     String productName = doc.getValues("product")[0];
                     String patchX = doc.getValues("px")[0];
                     String patchY = doc.getValues("py")[0];
-                    System.out.printf("[%3d]: product = %s, px = %s, py = %s%n", i + 1, productName, patchX, patchY);
+                    System.out.printf("[%4d]: product:\"%s\", px:%s, py:%s\n", i + 1, productName, patchX, patchY);
                 }
             }
         } catch (RuntimeException | Error e) {
@@ -155,12 +155,14 @@ public class DsSearcher {
 
     private Map<String, NumericConfig> getNumericConfigMap(DatasetDescriptor dsDescriptor) {
         Map<String, NumericConfig> numericConfigMap = new HashMap<>();
+        numericConfigMap.put("id", longNumericConfig);
+        numericConfigMap.put("px", intNumericConfig);
+        numericConfigMap.put("py", intNumericConfig);
         FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
         for (FeatureType featureType : featureTypes) {
             if (featureType.hasAttributes()) {
                 AttributeType[] attributeTypes = featureType.getAttributeTypes();
                 for (AttributeType attributeType : attributeTypes) {
-
                     NumericConfig numericConfig = getNumericConfig(attributeType);
                     if (numericConfig != null) {
                         numericConfigMap.put(featureType.getName() + "." + attributeType.getName(), numericConfig);

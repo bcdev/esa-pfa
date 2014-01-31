@@ -3,6 +3,7 @@ package org.esa.pfa.db;
 import com.bc.ceres.core.Assert;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexWriter;
@@ -28,16 +29,19 @@ import java.util.*;
  */
 public class DsIndexer {
 
+    public static final Analyzer ANALYZER = new SimpleAnalyzer(Version.LUCENE_46);
+
     private static FieldType storedIntType;
     private static FieldType storedLongType;
     private static FieldType storedFloatType;
     private static FieldType unstoredFloatType;
-    private static Map<Class<?>, IndexableFieldFactory> indexableFieldFactoryMap = new HashMap<>();
 
+    private static Map<Class<?>, IndexableFieldFactory> indexableFieldFactoryMap = new HashMap<>();
     private IndexWriter indexWriter;
     private boolean verbose;
     private long docID;
-    private List<IndexableFieldRiser> indexableFieldRisers;
+
+    private List<FeatureFieldFactory> featureFieldFactories;
 
     static {
         initIndexableFieldFactories();
@@ -55,11 +59,11 @@ public class DsIndexer {
         IndexableField createIndexableField(String fieldName, String fieldValue, Field.Store fieldStore);
     }
 
-    private class IndexableFieldRiser {
+    private class FeatureFieldFactory {
         final String fieldName;
         final IndexableFieldFactory indexableFieldFactory;
 
-        public IndexableFieldRiser(String fieldName, IndexableFieldFactory indexableFieldFactory) {
+        public FeatureFieldFactory(String fieldName, IndexableFieldFactory indexableFieldFactory) {
             Assert.notNull(fieldName, "fieldName");
             Assert.notNull(indexableFieldFactory, "indexableFieldFactory");
             this.fieldName = fieldName;
@@ -70,8 +74,8 @@ public class DsIndexer {
             return fieldName;
         }
 
-        public IndexableFieldFactory getIndexableFieldFactory() {
-            return indexableFieldFactory;
+        public IndexableField createIndexableField(String fieldValue, Field.Store fieldStore) {
+            return indexableFieldFactory.createIndexableField(fieldName, fieldValue, fieldStore);
         }
     }
 
@@ -84,28 +88,27 @@ public class DsIndexer {
         DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dsDir, "ds-descriptor.xml"));
 
 
-        indexableFieldRisers = new ArrayList<>();
+        featureFieldFactories = new ArrayList<>();
         FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
         for (FeatureType featureType : featureTypes) {
             if (featureType.hasAttributes()) {
                 AttributeType[] attributeTypes = featureType.getAttributeTypes();
                 for (AttributeType attributeType : attributeTypes) {
-                    IndexableFieldRiser indexableFieldRiser = getIndexableFieldRiser(featureType.getName() + "." + attributeType.getName(), attributeType);
-                    if (indexableFieldRiser != null) {
-                        indexableFieldRisers.add(indexableFieldRiser);
+                    FeatureFieldFactory featureFieldFactory = getIndexableFieldRiser(featureType.getName() + "." + attributeType.getName(), attributeType);
+                    if (featureFieldFactory != null) {
+                        featureFieldFactories.add(featureFieldFactory);
                     }
                 }
             } else {
-                IndexableFieldRiser indexableFieldRiser = getIndexableFieldRiser(featureType.getName(), featureType);
-                if (indexableFieldRiser != null) {
-                    indexableFieldRisers.add(indexableFieldRiser);
+                FeatureFieldFactory featureFieldFactory = getIndexableFieldRiser(featureType.getName(), featureType);
+                if (featureFieldFactory != null) {
+                    featureFieldFactories.add(featureFieldFactory);
                 }
             }
         }
 
 
-        Analyzer analyzer = new KeywordAnalyzer();
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, ANALYZER);
         config.setRAMBufferSizeMB(16);
         if (verbose) {
             config.setInfoStream(System.out);
@@ -190,39 +193,39 @@ public class DsIndexer {
 
     private void addPatchToIndex(String productName, int patchX, int patchY, File featureFile) throws IOException {
 
-        Document doc = new Document();
-        // ID value is stored in the index.
-        doc.add(new LongField("id", docID, storedLongType));
-        doc.add(new TextField("product", productName, Field.Store.YES));
-        doc.add(new IntField("px", patchX, storedIntType));
-        doc.add(new IntField("py", patchY, storedIntType));
-
         Properties featureValues = new Properties();
         try (FileReader reader = new FileReader(featureFile)) {
             featureValues.load(reader);
         }
 
-        for (IndexableFieldRiser indexableFieldRiser : indexableFieldRisers) {
-            String fieldValue = featureValues.getProperty(indexableFieldRiser.getFieldName());
+        Document doc = new Document();
+        doc.add(new LongField("id", docID, storedLongType));
+        doc.add(new TextField("product", productName, Field.Store.YES));
+        doc.add(new IntField("px", patchX, storedIntType));
+        doc.add(new IntField("py", patchY, storedIntType));
+
+        for (FeatureFieldFactory featureFieldFactory : featureFieldFactories) {
+            String fieldName = featureFieldFactory.getFieldName();
+            String fieldValue = featureValues.getProperty(fieldName);
             if (fieldValue != null) {
-                IndexableFieldFactory indexableFieldFactory = indexableFieldRiser.getIndexableFieldFactory();
-                doc.add(indexableFieldFactory.createIndexableField(indexableFieldRiser.getFieldName(), fieldValue, Field.Store.YES));
+                IndexableField indexableField = featureFieldFactory.createIndexableField(fieldValue, Field.Store.YES);
+                doc.add(indexableField);
             }
         }
 
         indexWriter.addDocument(doc);
-        System.out.printf("added to index: id=%d, product=%s, px=%d, py=%d\n", docID, productName, patchX, patchY);
+        System.out.printf("added to index: product:\"%s\", px:%d, py:%d\n", productName, patchX, patchY);
         docID++;
     }
 
 
-    private IndexableFieldRiser getIndexableFieldRiser(String fieldName, AttributeType attributeType) {
+    private FeatureFieldFactory getIndexableFieldRiser(String fieldName, AttributeType attributeType) {
         Class<?> valueType = attributeType.getValueType();
         IndexableFieldFactory indexableFieldFactory = indexableFieldFactoryMap.get(valueType);
         if (indexableFieldFactory == null) {
             return null;
         }
-        return new IndexableFieldRiser(fieldName, indexableFieldFactory);
+        return new FeatureFieldFactory(fieldName, indexableFieldFactory);
     }
 
 
