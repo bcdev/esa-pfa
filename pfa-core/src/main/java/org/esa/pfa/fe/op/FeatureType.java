@@ -12,7 +12,7 @@ public class FeatureType extends AttributeType {
     }
 
     public FeatureType(String name, String description, AttributeType... attributeTypes) {
-        super(name, description, Void.class);
+        super(name, description, Void.TYPE);
         this.attributeTypes = attributeTypes;
     }
 
