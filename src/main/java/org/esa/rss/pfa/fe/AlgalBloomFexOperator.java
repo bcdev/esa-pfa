@@ -21,20 +21,7 @@ import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import org.esa.beam.classif.CcNnHsOp;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ConvolutionFilterBand;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.Kernel;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RGBChannelDef;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.datamodel.StxFactory;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -51,7 +38,7 @@ import org.esa.rss.pfa.fe.op.FexOperator;
 import org.esa.rss.pfa.fe.op.Patch;
 import org.esa.rss.pfa.fe.op.out.PatchOutput;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -75,10 +62,15 @@ public class AlgalBloomFexOperator extends FexOperator {
     public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
     public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
 
+    String OC4_R = "log10(max(max(reflec_2, reflec_3), reflec_4) / reflec_5)";
+    String OC4_CHL = "exp10(0.366 - 3.067*R + 1.930*pow(R,2) + 0.649 *pow(R,3)  - 1.532 *pow(R,4))";
+
     private double minSampleFlh;
     private double maxSampleFlh;
     private double minSampleMci;
     private double maxSampleMci;
+    private double minSampleChl;
+    private double maxSampleChl;
 
     public static void main(String[] args) {
         final String filePath = args[0];
@@ -157,18 +149,20 @@ public class AlgalBloomFexOperator extends FexOperator {
                         /*00*/ new FeatureType("patch", "Patch product", Product.class),
                         /*01*/ new FeatureType("rgb1_ql", "RGB quicklook for TOA reflectances (fixed range)", RenderedImage.class),
                         /*02*/ new FeatureType("rgb2_ql", "RGB quicklook for TOA reflectances (dynamic range, ROI only)", RenderedImage.class),
-                        /*03*/ new FeatureType("flh_ql", "Grey-scale quicklook for FLH [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
-                        /*04*/ new FeatureType("mci_ql", "Grey-scale quicklook for MCI [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
-                        /*05*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
-                        /*06*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
-                        /*07*/ new FeatureType("red", "Red channel (" + R_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*08*/ new FeatureType("green", "Green channel (" + G_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*09*/ new FeatureType("blue", "Blue channel (" + B_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*10*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-                        /*11*/ new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
-                        /*12*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
-                        /*13*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
-                        /*14*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
+                        /*03*/ new FeatureType("flh_ql", "Grey-scale quicklook for 'flh' [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
+                        /*04*/ new FeatureType("mci_ql", "Grey-scale quicklook for 'mci' [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
+                        /*05*/ new FeatureType("chl_ql", "Grey-scale quicklook for 'chl' [" + minSampleChl + ", " + maxSampleChl + "]", RenderedImage.class),
+                        /*06*/ new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
+                        /*07*/ new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
+                        /*08*/ new FeatureType("chl", "Chlorophyll Concentration", STX_ATTRIBUTE_TYPES),
+                        /*09*/ new FeatureType("red", "Red channel (" + R_EXPR + ")", STX_ATTRIBUTE_TYPES),
+                        /*10*/ new FeatureType("green", "Green channel (" + G_EXPR + ")", STX_ATTRIBUTE_TYPES),
+                        /*11*/ new FeatureType("blue", "Blue channel (" + B_EXPR + ")", STX_ATTRIBUTE_TYPES),
+                        /*12*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
+                        /*13*/ new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
+                        /*14*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
+                        /*15*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
+                        /*16*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
             };
         }
         return featureTypes;
@@ -183,6 +177,9 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         minSampleMci = -0.004;
         maxSampleMci = 0.0;
+
+        minSampleChl = 0.0;
+        maxSampleChl = 0.75;
 
         Product coastDistProduct;
         try {
@@ -203,12 +200,12 @@ public class AlgalBloomFexOperator extends FexOperator {
         patchWriterConfig = new HashMap<>();
         patchWriterConfig.put("html.labelValues", new String[][]{
                         /*0*/ {"ab_none", "* Not a Bloom *"},
-                        /*1*/ {"ab_cyano","Cyanobacteria"},
-                        /*2*/ {"ab_coco","Cocolithophores"},
-                        /*3*/ {"ab_float","Floating Bloom"},
-                        /*4*/ {"ab_case_1","Case 1 Bloom"},
-                        /*5*/ {"ab_coastal","Coastal Bloom"},
-                        /*6*/ {"ab_susp_mat","Suspended Matter"},
+                        /*1*/ {"ab_cyano", "Cyanobacteria"},
+                        /*2*/ {"ab_coco", "Cocolithophores"},
+                        /*3*/ {"ab_float", "Floating Bloom"},
+                        /*4*/ {"ab_case_1", "Case 1 Bloom"},
+                        /*5*/ {"ab_coastal", "Coastal Bloom"},
+                        /*6*/ {"ab_susp_mat", "Suspended Matter"},
         });
 
         super.initialize();
@@ -256,6 +253,7 @@ public class AlgalBloomFexOperator extends FexOperator {
 
         addMciBand(featureProduct);
         addFlhBand(featureProduct);
+        addChlBand(featureProduct);
         addCoastDistBand(featureProduct);
         addTriStimulusBands(featureProduct);
         addFlhGradientBands(featureProduct);
@@ -266,16 +264,18 @@ public class AlgalBloomFexOperator extends FexOperator {
                 new Feature(featureTypes[2], createDynamicRangeMaskedRgbImage(featureProduct)),
                 new Feature(featureTypes[3], createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)),
                 new Feature(featureTypes[4], createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)),
-                createStxFeature(featureTypes[5], featureProduct),
+                new Feature(featureTypes[5], createColoredBandImage(featureProduct.getBand("chl"), minSampleChl, maxSampleChl)),
                 createStxFeature(featureTypes[6], featureProduct),
                 createStxFeature(featureTypes[7], featureProduct),
                 createStxFeature(featureTypes[8], featureProduct),
                 createStxFeature(featureTypes[9], featureProduct),
                 createStxFeature(featureTypes[10], featureProduct),
-                new Feature(featureTypes[11], computeFlhHighGradientPixelRatio(featureProduct)),
-                new Feature(featureTypes[12], validPixelRatio),
-                new Feature(featureTypes[13], connectivityMetrics.fractalIndex),
-                new Feature(featureTypes[14], clumpiness),
+                createStxFeature(featureTypes[11], featureProduct),
+                createStxFeature(featureTypes[12], featureProduct),
+                new Feature(featureTypes[13], computeFlhHighGradientPixelRatio(featureProduct)),
+                new Feature(featureTypes[14], validPixelRatio),
+                new Feature(featureTypes[15], connectivityMetrics.fractalIndex),
+                new Feature(featureTypes[16], clumpiness),
         };
 
         patchOutput.writePatch(patch, features);
@@ -397,6 +397,12 @@ public class AlgalBloomFexOperator extends FexOperator {
                                                        l3.getName(),
                                                        l1.getName(), factor));
         flh.setValidPixelExpression(FEX_ROI_MASK_NAME);
+    }
+
+    private void addChlBand(Product product) {
+        Band R = product.addBand("R", OC4_R);
+        Band chl = product.addBand("chl", OC4_CHL);
+        applyValidPixelExpr(FEX_ROI_MASK_NAME, chl);
     }
 
     private void addTriStimulusBands(Product product) {
