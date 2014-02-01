@@ -2,8 +2,8 @@ package org.esa.pfa.db;
 
 import com.bc.ceres.core.Assert;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexWriter;
@@ -16,10 +16,7 @@ import org.apache.lucene.util.Version;
 import org.esa.pfa.fe.op.AttributeType;
 import org.esa.pfa.fe.op.FeatureType;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -29,23 +26,28 @@ import java.util.*;
  */
 public class DsIndexer {
 
-    public static final Analyzer ANALYZER = new SimpleAnalyzer(Version.LUCENE_46);
+    public static final Version LUCENE_VERSION = Version.LUCENE_46;
+    //public static final Analyzer LUCENE_ANALYZER = new SimpleAnalyzer(LUCENE_VERSION);
+    public static final Analyzer LUCENE_ANALYZER = new ProductNameAnalyzer(LUCENE_VERSION);
 
-    private static FieldType storedIntType;
-    private static FieldType storedLongType;
-    private static FieldType storedFloatType;
-    private static FieldType unstoredFloatType;
+    private FieldType storedIntType;
+    private FieldType storedLongType;
+    private FieldType unstoredLongType;
+    private FieldType storedFloatType;
+    private FieldType unstoredFloatType;
+    private FieldType storedDoubleType;
+    private FieldType unstoredDoubleType;
 
-    private static Map<Class<?>, IndexableFieldFactory> indexableFieldFactoryMap = new HashMap<>();
-    private IndexWriter indexWriter;
-    private boolean verbose;
-    private long docID;
-
+    private Map<Class<?>, IndexableFieldFactory> indexableFieldFactoryMap;
     private List<FeatureFieldFactory> featureFieldFactories;
 
-    static {
-        initIndexableFieldFactories();
-    }
+    private IndexWriter indexWriter;
+    private long docID;
+
+    // <options>
+    private boolean verbose = false;
+    private int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
+    // </options>
 
     public static void main(String[] args) {
         try {
@@ -57,6 +59,37 @@ public class DsIndexer {
 
     private interface IndexableFieldFactory {
         IndexableField createIndexableField(String fieldName, String fieldValue, Field.Store fieldStore);
+    }
+
+    private static class ProductNameAnalyzer extends Analyzer {
+
+        private Version version;
+
+        private ProductNameAnalyzer(Version version) {
+            this.version = version;
+        }
+
+        @Override
+        protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+            return new TokenStreamComponents(new ProductNameTokenizer(version, reader));
+        }
+    }
+
+    private static class ProductNameTokenizer extends CharTokenizer {
+
+        public ProductNameTokenizer(Version version, Reader in) {
+            super(version, in);
+        }
+
+        @Override
+        protected int normalize(int c) {
+            return Character.toLowerCase(c);
+        }
+
+        @Override
+        protected boolean isTokenChar(int c) {
+            return Character.isLetter(c) || Character.isDigit(c);
+        }
     }
 
     private class FeatureFieldFactory {
@@ -87,6 +120,7 @@ public class DsIndexer {
         File dsDir = new File(dsPath);
         DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dsDir, "ds-descriptor.xml"));
 
+        initIndexableFieldFactories();
 
         featureFieldFactories = new ArrayList<>();
         FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
@@ -94,13 +128,13 @@ public class DsIndexer {
             if (featureType.hasAttributes()) {
                 AttributeType[] attributeTypes = featureType.getAttributeTypes();
                 for (AttributeType attributeType : attributeTypes) {
-                    FeatureFieldFactory featureFieldFactory = getIndexableFieldRiser(featureType.getName() + "." + attributeType.getName(), attributeType);
+                    FeatureFieldFactory featureFieldFactory = getIndexableFieldFactory(featureType.getName() + "." + attributeType.getName(), attributeType);
                     if (featureFieldFactory != null) {
                         featureFieldFactories.add(featureFieldFactory);
                     }
                 }
             } else {
-                FeatureFieldFactory featureFieldFactory = getIndexableFieldRiser(featureType.getName(), featureType);
+                FeatureFieldFactory featureFieldFactory = getIndexableFieldFactory(featureType.getName(), featureType);
                 if (featureFieldFactory != null) {
                     featureFieldFactories.add(featureFieldFactory);
                 }
@@ -108,7 +142,7 @@ public class DsIndexer {
         }
 
 
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, ANALYZER);
+        IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, LUCENE_ANALYZER);
         config.setRAMBufferSizeMB(16);
         if (verbose) {
             config.setInfoStream(System.out);
@@ -199,10 +233,18 @@ public class DsIndexer {
         }
 
         Document doc = new Document();
-        doc.add(new LongField("id", docID, storedLongType));
         doc.add(new TextField("product", productName, Field.Store.YES));
+        doc.add(new LongField("id", docID, storedLongType));
+        doc.add(new IntField("no", (int)docID, storedIntType));
         doc.add(new IntField("px", patchX, storedIntType));
         doc.add(new IntField("py", patchY, storedIntType));
+        // 'rnd' is for selecting random subsets
+        doc.add(new DoubleField("rnd", Math.random(), storedDoubleType));
+        //doc.add(new DoubleField("rnd", Math.random(), unstoredDoubleType));
+        // todo - put useful values into 'lat', 'lon', 'time'
+        doc.add(new FloatField("lat", -90 + 180 * (float) Math.random(), unstoredFloatType));
+        doc.add(new FloatField("lon", -180 + 360 * (float) Math.random(), unstoredFloatType));
+        //doc.add(new LongField("time", docID, unstoredLongType));
 
         for (FeatureFieldFactory featureFieldFactory : featureFieldFactories) {
             String fieldName = featureFieldFactory.getFieldName();
@@ -214,12 +256,12 @@ public class DsIndexer {
         }
 
         indexWriter.addDocument(doc);
-        System.out.printf("added to index: product:\"%s\", px:%d, py:%d\n", productName, patchX, patchY);
+        System.out.printf("[%5d]: product:\"%s\", px:%d, py:%d\n", docID, productName, patchX, patchY);
         docID++;
     }
 
 
-    private FeatureFieldFactory getIndexableFieldRiser(String fieldName, AttributeType attributeType) {
+    private FeatureFieldFactory getIndexableFieldFactory(String fieldName, AttributeType attributeType) {
         Class<?> valueType = attributeType.getValueType();
         IndexableFieldFactory indexableFieldFactory = indexableFieldFactoryMap.get(valueType);
         if (indexableFieldFactory == null) {
@@ -229,11 +271,16 @@ public class DsIndexer {
     }
 
 
-    private static void initIndexableFieldFactories() {
-        storedIntType = createNumericFieldType(FieldType.NumericType.INT, Field.Store.YES, NumericUtils.PRECISION_STEP_DEFAULT);
-        storedLongType = createNumericFieldType(FieldType.NumericType.LONG, Field.Store.YES, NumericUtils.PRECISION_STEP_DEFAULT);
-        storedFloatType = createNumericFieldType(FieldType.NumericType.FLOAT, Field.Store.YES, NumericUtils.PRECISION_STEP_DEFAULT);
-        unstoredFloatType = createNumericFieldType(FieldType.NumericType.FLOAT, Field.Store.NO, NumericUtils.PRECISION_STEP_DEFAULT);
+    private void initIndexableFieldFactories() {
+        storedIntType = createNumericFieldType(FieldType.NumericType.INT, Field.Store.YES, precisionStep);
+        storedLongType = createNumericFieldType(FieldType.NumericType.LONG, Field.Store.YES, precisionStep);
+        unstoredLongType = createNumericFieldType(FieldType.NumericType.LONG, Field.Store.NO, precisionStep);
+        storedFloatType = createNumericFieldType(FieldType.NumericType.FLOAT, Field.Store.YES, precisionStep);
+        unstoredFloatType = createNumericFieldType(FieldType.NumericType.FLOAT, Field.Store.NO, precisionStep);
+        storedDoubleType = createNumericFieldType(FieldType.NumericType.DOUBLE, Field.Store.YES, precisionStep);
+        unstoredDoubleType = createNumericFieldType(FieldType.NumericType.DOUBLE, Field.Store.NO, precisionStep);
+
+        indexableFieldFactoryMap = new HashMap<>();
 
         IndexableFieldFactory intIndexableFieldFactory = new IndexableFieldFactory() {
             @Override
