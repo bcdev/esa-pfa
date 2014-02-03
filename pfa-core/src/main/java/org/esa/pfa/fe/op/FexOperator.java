@@ -70,7 +70,7 @@ public abstract class FexOperator extends Operator implements Output {
     @Parameter(defaultValue = DEFAULT_PATCH_SIZE + "")
     protected int patchHeight;
 
-    @Parameter(description = "The path where features will be extracted to", notNull = true)
+    @Parameter(description = "The path where features will be extracted to", notNull = true, notEmpty = true)
     protected String targetPath;
 
     @Parameter(defaultValue = "false", description = "Disposes all global image caches after a patch has been completed")
@@ -162,6 +162,10 @@ public abstract class FexOperator extends Operator implements Output {
     @Override
     public void initialize() throws OperatorException {
 
+        if (targetPath == null) {
+            throw new OperatorException("'targetPath' is a mandatory parameter");
+        }
+
         getLogger().warning("Processing source product " + sourceProduct.getFileLocation());
 
         if (patchWriterFactory == null) {
@@ -170,7 +174,7 @@ public abstract class FexOperator extends Operator implements Output {
 
         // todo - nf20131010 - make 'outputProperties' an operator parameter so that we can have PatchWriterFactory-specific properties (e.g. from Hadoop job requests)
         if (patchWriterConfig == null) {
-            patchWriterConfig = new HashMap<String, Object>();
+            patchWriterConfig = new HashMap<>();
         }
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetPath);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode);
@@ -275,7 +279,7 @@ public abstract class FexOperator extends Operator implements Output {
     }
 
     private Product createSubset(Product sourceProduct, Rectangle subsetRegion) {
-        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+        final HashMap<String, Object> parameters = new HashMap<>();
         parameters.put("region", subsetRegion);
         parameters.put("copyMetadata", false);
         return GPF.createProduct("Subset", parameters, sourceProduct);
