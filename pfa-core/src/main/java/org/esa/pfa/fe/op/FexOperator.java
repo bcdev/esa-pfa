@@ -70,7 +70,7 @@ public abstract class FexOperator extends Operator implements Output {
     @Parameter(defaultValue = DEFAULT_PATCH_SIZE + "")
     protected int patchHeight;
 
-    @Parameter(description = "The path where features will be extracted to")
+    @Parameter(description = "The path where features will be extracted to", notNull = true)
     protected String targetPath;
 
     @Parameter(defaultValue = "false", description = "Disposes all global image caches after a patch has been completed")
