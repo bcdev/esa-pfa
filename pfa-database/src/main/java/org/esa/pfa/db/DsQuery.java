@@ -1,5 +1,10 @@
 package org.esa.pfa.db;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DirectoryReader;
@@ -19,6 +24,8 @@ import org.esa.pfa.fe.op.FeatureType;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -31,49 +38,74 @@ import java.util.concurrent.Executors;
  * @author Norman
  */
 public class DsQuery {
+    static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
 
     NumericConfig intNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.INT);
     NumericConfig longNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.LONG);
     NumericConfig floatNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.FLOAT);
     NumericConfig doubleNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.FLOAT);
     Map<Class<?>, NumericConfig> attributeNumericConfigMap;
-
-    // <options>
-    int threadCount = 1;
-    int maxHitCount = 100;
-    int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
-    String defaultField = "product";
-    // </options>
-
     DatasetDescriptor dsDescriptor;
 
+    final Options options;
+
+    // <options>
+    static CommonOptions commonOptions = new CommonOptions();
+    int maxThreadCount = 1;
+    int maxHitCount = 100;
+    int precisionStep;
+    String defaultField = "product";
+    String indexName;
+    // </options>
+
+    // <arguments>
+    private File datasetDir;
+    // </arguments>
+
+    public DsQuery() {
+        indexName = DsIndexer.DEFAULT_INDEX_NAME;
+        precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
+        maxThreadCount = 1;
+        maxHitCount = 20;
+        defaultField = "product";
+
+        options = new Options();
+        CommonOptions.addOptions(options);
+        options.addOption(CommonOptions.opt('i', "index-name", 1, "string", String.format("Name of the input index directory to be queried. Default is '%s'.", indexName)));
+        options.addOption(CommonOptions.opt('m', "max-hits", 1, "int", String.format("Maximum number of hits. Default is %d.", maxHitCount)));
+        options.addOption(CommonOptions.opt('t', "max-threads", 1, "int", String.format("Maximum number of threads to use for a query. Default is %d.", maxThreadCount)));
+        options.addOption(CommonOptions.opt('f', "default-field", 1, "string", String.format("Default field name for query expressions. Default is '%s'.", defaultField)));
+        options.addOption(CommonOptions.opt('p', "precision-step", 1, "int", String.format("Precision step used for indexing numeric data. " +
+                                                                                           "Lower values consume more disk space but speed up searching. " +
+                                                                                           "Suitable values are between 1 and 8. Default is %d.", precisionStep)));
+    }
+
+
     public static void main(String[] args) {
+        Locale.setDefault(Locale.ENGLISH);
         try {
-            new DsQuery().run(args);
-            System.exit(0);
+            System.exit(new DsQuery().run(args));
         } catch (Exception e) {
-            e.printStackTrace();
+            commonOptions.printError(e);
             System.exit(1);
         }
     }
 
-    private void run(String[] args) throws Exception {
-        if (args.length != 1) {
-            throw new Exception("usage: DsQuery <dataset-dir>");
+    private int run(String[] args) throws Exception {
+        if (!parseCommandLine(args)) {
+            return 1;
         }
 
-        String dsPath = args[0];
-        File dsDir = new File(dsPath);
-        dsDescriptor = DatasetDescriptor.read(new File(dsDir, "ds-descriptor.xml"));
+        dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
 
         StandardQueryParser parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
         parser.setNumericConfigMap(getNumericConfigMap(dsDescriptor));
 
-        //try (Directory indexDirectory = new MMapDirectory(new File(dsDir, "lucene-index"))) {
-        //try (Directory indexDirectory = new NIOFSDirectory(new File(dsDir, "lucene-index"))) {
-        try (Directory indexDirectory = new SimpleFSDirectory(new File(dsDir, "lucene-index"))) {
+        //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, indexName))) {
+        //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
+        try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, indexName))) {
             try (IndexReader indexReader = DirectoryReader.open(indexDirectory)) {
-                IndexSearcher indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.threadCount));
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
                 BufferedReader queryReader = new BufferedReader(new InputStreamReader(System.in));
 
                 System.out.println("Type 'help' for help, type 'exit' or 'quit' to leave.");
@@ -87,7 +119,52 @@ public class DsQuery {
                 } while (queryExpr != null && processQuery(indexSearcher, parser, queryExpr));
             }
         }
+        return 0;
+    }
 
+    private boolean parseCommandLine(String[] args) throws ParseException {
+        CommandLine commandLine = new PosixParser().parse(options, args);
+        commonOptions.configure(commandLine);
+        if (commandLine.hasOption("help")) {
+            new HelpFormatter().printHelp(PW, 80,
+                                          DsQuery.class.getSimpleName() + " [OPTIONS] <index-dir>",
+                                          "Interactive query tool for a lucene index. [OPTIONS] are:",
+                                          options, 2, 2, "\n");
+            return false;
+        }
+        if (commandLine.getArgList().size() != 1) {
+            new HelpFormatter().printUsage(PW, 80, DsQuery.class.getSimpleName(), options);
+            return false;
+        }
+
+        datasetDir = new File(commandLine.getArgs()[0]);
+
+        String indexName = commandLine.getOptionValue("index-name");
+        if (indexName != null) {
+            this.indexName = indexName;
+        }
+
+        String precisionStep = commandLine.getOptionValue("precision-step");
+        if (precisionStep != null) {
+            this.precisionStep = Integer.parseInt(precisionStep);
+        }
+
+        String maxThreads = commandLine.getOptionValue("max-threads");
+        if (maxThreads != null) {
+            this.maxThreadCount = Integer.parseInt(maxThreads);
+        }
+
+        String maxHits = commandLine.getOptionValue("max-hits");
+        if (maxHits != null) {
+            this.maxHitCount = Integer.parseInt(maxHits);
+        }
+
+        String defaultField = commandLine.getOptionValue("default-field");
+        if (defaultField != null) {
+            this.defaultField = defaultField;
+        }
+
+        return true;
     }
 
     private boolean processQuery(IndexSearcher indexSearcher, StandardQueryParser parser, String queryExpr) {
@@ -120,7 +197,7 @@ public class DsQuery {
             Query query = parser.parse(queryExpr, defaultField);
 
             long t1 = System.currentTimeMillis();
-            TopDocs topDocs = indexSearcher.search(query, this.maxHitCount);
+            TopDocs topDocs = indexSearcher.search(query, maxHitCount);
             long t2 = System.currentTimeMillis();
 
             if (topDocs.totalHits == 0) {

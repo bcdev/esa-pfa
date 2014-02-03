@@ -1,10 +1,22 @@
 package org.esa.pfa.db;
 
 import com.bc.ceres.core.Assert;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.util.CharTokenizer;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.DoubleField;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.FloatField;
+import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -16,8 +28,19 @@ import org.apache.lucene.util.Version;
 import org.esa.pfa.fe.op.AttributeType;
 import org.esa.pfa.fe.op.FeatureType;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * The PFA Dataset Indexer Tool.
@@ -26,9 +49,12 @@ import java.util.*;
  */
 public class DsIndexer {
 
+    static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
+
     public static final Version LUCENE_VERSION = Version.LUCENE_46;
     //public static final Analyzer LUCENE_ANALYZER = new SimpleAnalyzer(LUCENE_VERSION);
     public static final Analyzer LUCENE_ANALYZER = new ProductNameAnalyzer(LUCENE_VERSION);
+    public static final String DEFAULT_INDEX_NAME = "lucene-index";
 
     private FieldType storedIntType;
     private FieldType storedLongType;
@@ -44,16 +70,26 @@ public class DsIndexer {
     private IndexWriter indexWriter;
     private long docID;
 
+    final Options options;
+
     // <options>
-    private boolean verbose = false;
-    private int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
+    private static CommonOptions commonOptions = new CommonOptions();
+    private int precisionStep;
+    private int maxThreadCount;
+    private String indexName;
     // </options>
 
+    // <arguments>
+    private File datasetDir;
+    // </arguments>
+
     public static void main(String[] args) {
+        Locale.setDefault(Locale.ENGLISH);
         try {
-            new DsIndexer().run(args);
+            System.exit(new DsIndexer().run(args));
         } catch (Exception e) {
-            e.printStackTrace();
+            commonOptions.printError(e);
+            System.exit(1);
         }
     }
 
@@ -112,14 +148,29 @@ public class DsIndexer {
         }
     }
 
-    private void run(String[] args) throws Exception {
-        if (args.length != 1) {
-            throw new Exception("usage: DsIndexer <dataset-dir>");
-        }
-        String dsPath = args[0];
-        File dsDir = new File(dsPath);
-        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dsDir, "ds-descriptor.xml"));
+    public DsIndexer() {
 
+        precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
+        maxThreadCount = IndexWriterConfig.DEFAULT_MAX_THREAD_STATES;
+        indexName = DEFAULT_INDEX_NAME;
+
+        options = new Options();
+        CommonOptions.addOptions(options);
+        options.addOption(CommonOptions.opt('i', "index-name", 1, "string", String.format("Name of the output index directory. Default is '%s'.", indexName)));
+        options.addOption(CommonOptions.opt('t', "max-threads", 1, "int", String.format("Number of threads to use for indexing. Default is %d.", maxThreadCount)));
+        options.addOption(CommonOptions.opt('p', "precision-step", 1, "int", String.format("Precision step used for indexing numeric data. " +
+                                                                                           "Lower values consume more disk space but speed up searching. " +
+                                                                                           "Suitable values are between 1 and 8. Default is %d.", precisionStep)));
+    }
+
+
+    private int run(String[] args) throws Exception {
+
+        if (!parseCommandLine(args)) {
+            return 1;
+        }
+
+        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
         initIndexableFieldFactories();
 
         featureFieldFactories = new ArrayList<>();
@@ -141,20 +192,20 @@ public class DsIndexer {
             }
         }
 
-
         IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, LUCENE_ANALYZER);
         config.setRAMBufferSizeMB(16);
-        if (verbose) {
+        config.setMaxThreadStates(maxThreadCount);
+        if (commonOptions.isVerbose()) {
             config.setInfoStream(System.out);
         }
 
         long t1, t2;
 
-        try (Directory indexDirectory = FSDirectory.open(new File(dsPath, "lucene-index"))) {
+        try (Directory indexDirectory = FSDirectory.open(new File(datasetDir, indexName))) {
             indexWriter = new IndexWriter(indexDirectory, config);
             try {
                 t1 = System.currentTimeMillis();
-                processDsDir(dsDir);
+                processDatasetDir(datasetDir);
                 t2 = System.currentTimeMillis();
             } finally {
                 indexWriter.close();
@@ -162,11 +213,46 @@ public class DsIndexer {
         }
 
         System.out.println(docID + "(s) patches added to index within " + ((t2 - t1) / 1000) + " seconds");
-
+        return 0;
     }
 
-    private void processDsDir(File dsDir) throws Exception {
-        File[] fexDirs = dsDir.listFiles(new FileFilter() {
+    private boolean parseCommandLine(String[] args) throws ParseException {
+        CommandLine commandLine = new PosixParser().parse(options, args);
+        commonOptions.configure(commandLine);
+        if (commandLine.hasOption("help")) {
+            new HelpFormatter().printHelp(PW, 80,
+                                          DsIndexer.class.getSimpleName() + " [OPTIONS] <dataset-dir>",
+                                          "Creates a Lucene index for the feature extraction directory. [OPTIONS] are:",
+                                          options, 2, 2, "\n");
+            return false;
+        }
+        if (commandLine.getArgList().size() != 1) {
+            new HelpFormatter().printUsage(PW, 80, DsIndexer.class.getSimpleName(), options);
+            return false;
+        }
+
+        datasetDir = new File(commandLine.getArgs()[0]);
+
+        String indexName = commandLine.getOptionValue("index-name");
+        if (indexName != null) {
+            this.indexName = indexName;
+        }
+
+        String precisionStep = commandLine.getOptionValue("precision-step");
+        if (precisionStep != null) {
+            this.precisionStep = Integer.parseInt(precisionStep);
+        }
+
+        String maxThreads = commandLine.getOptionValue("max-threads");
+        if (maxThreads != null) {
+            this.maxThreadCount = Integer.parseInt(maxThreads);
+        }
+
+        return true;
+    }
+
+    private void processDatasetDir(File datasetDir) throws Exception {
+        File[] fexDirs = datasetDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
                 return file.isDirectory() && file.getName().endsWith(".fex");
@@ -174,7 +260,7 @@ public class DsIndexer {
         });
 
         if (fexDirs == null || fexDirs.length == 0) {
-            throw new Exception("empty dataset directory: " + dsDir);
+            throw new Exception("empty dataset directory: " + datasetDir);
         }
 
         for (File fexDir : fexDirs) {
@@ -233,18 +319,17 @@ public class DsIndexer {
         }
 
         Document doc = new Document();
-        doc.add(new TextField("product", productName, Field.Store.YES));
         doc.add(new LongField("id", docID, storedLongType));
-        doc.add(new IntField("no", (int)docID, storedIntType));
+        doc.add(new TextField("product", productName, Field.Store.YES));
         doc.add(new IntField("px", patchX, storedIntType));
         doc.add(new IntField("py", patchY, storedIntType));
         // 'rnd' is for selecting random subsets
-        doc.add(new DoubleField("rnd", Math.random(), storedDoubleType));
-        //doc.add(new DoubleField("rnd", Math.random(), unstoredDoubleType));
+        doc.add(new DoubleField("rnd", Math.random(), unstoredDoubleType));
+
         // todo - put useful values into 'lat', 'lon', 'time'
         doc.add(new FloatField("lat", -90 + 180 * (float) Math.random(), unstoredFloatType));
         doc.add(new FloatField("lon", -180 + 360 * (float) Math.random(), unstoredFloatType));
-        //doc.add(new LongField("time", docID, unstoredLongType));
+        doc.add(new LongField("time", docID, unstoredLongType));
 
         for (FeatureFieldFactory featureFieldFactory : featureFieldFactories) {
             String fieldName = featureFieldFactory.getFieldName();
@@ -344,4 +429,6 @@ public class DsIndexer {
         type.freeze();
         return type;
     }
+
+
 }
