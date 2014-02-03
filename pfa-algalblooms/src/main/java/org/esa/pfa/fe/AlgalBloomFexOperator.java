@@ -135,7 +135,6 @@ public class AlgalBloomFexOperator extends FexOperator {
     @Parameter(defaultValue = "0.00005", description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
     private double flhGradientThreshold;
 
-
     private transient float[] coastDistData;
     private transient int coastDistWidth;
     private transient int coastDistHeight;
