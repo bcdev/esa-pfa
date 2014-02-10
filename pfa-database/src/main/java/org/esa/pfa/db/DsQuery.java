@@ -6,11 +6,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.queryparser.flexible.standard.config.NumericConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -26,10 +24,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.text.NumberFormat;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.Executors;
 
 /**
@@ -40,11 +35,6 @@ import java.util.concurrent.Executors;
 public class DsQuery {
     static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
 
-    NumericConfig intNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.INT);
-    NumericConfig longNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.LONG);
-    NumericConfig floatNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.FLOAT);
-    NumericConfig doubleNumericConfig = new NumericConfig(8, NumberFormat.getNumberInstance(Locale.ENGLISH), FieldType.NumericType.FLOAT);
-    Map<Class<?>, NumericConfig> attributeNumericConfigMap;
     DatasetDescriptor dsDescriptor;
 
     final Options options;
@@ -99,7 +89,8 @@ public class DsQuery {
         dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
 
         StandardQueryParser parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
-        parser.setNumericConfigMap(getNumericConfigMap(dsDescriptor));
+        NumericConfiguration numConf = new NumericConfiguration(precisionStep);
+        parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
 
         //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, indexName))) {
         //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
@@ -255,69 +246,4 @@ public class DsQuery {
     private void printAttrHelp(String fieldName, Class<?> valueType, String description) {
         System.out.printf("  %s: %s  --  %s\n", fieldName, valueType, description);
     }
-
-    private Map<String, NumericConfig> getNumericConfigMap(DatasetDescriptor dsDescriptor) {
-        initAttributeNumericConfig();
-        Map<String, NumericConfig> numericConfigMap = new HashMap<>();
-        numericConfigMap.put("id", longNumericConfig);
-        numericConfigMap.put("px", intNumericConfig);
-        numericConfigMap.put("py", intNumericConfig);
-        numericConfigMap.put("rnd", doubleNumericConfig);
-        numericConfigMap.put("lat", floatNumericConfig);
-        numericConfigMap.put("lon", floatNumericConfig);
-        numericConfigMap.put("time", longNumericConfig);
-        addAttributeNumericConfigs(dsDescriptor, numericConfigMap);
-        return numericConfigMap;
-    }
-
-    private void addAttributeNumericConfigs(DatasetDescriptor dsDescriptor, Map<String, NumericConfig> numericConfigMap) {
-        FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
-        for (FeatureType featureType : featureTypes) {
-            if (featureType.hasAttributes()) {
-                AttributeType[] attributeTypes = featureType.getAttributeTypes();
-                for (AttributeType attributeType : attributeTypes) {
-                    NumericConfig numericConfig = getAttributeNumericConfig(attributeType);
-                    if (numericConfig != null) {
-                        numericConfigMap.put(featureType.getName() + "." + attributeType.getName(), numericConfig);
-                    }
-                }
-            } else {
-                NumericConfig numericConfig = getAttributeNumericConfig(featureType);
-                if (numericConfig != null) {
-                    numericConfigMap.put(featureType.getName(), numericConfig);
-                }
-            }
-        }
-    }
-
-    private NumericConfig getAttributeNumericConfig(AttributeType attributeType) {
-        Class<?> valueType = attributeType.getValueType();
-        return attributeNumericConfigMap.get(valueType);
-    }
-
-
-    void initAttributeNumericConfig() {
-        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
-        intNumericConfig = new NumericConfig(precisionStep, numberFormat, FieldType.NumericType.INT);
-        longNumericConfig = new NumericConfig(precisionStep, numberFormat, FieldType.NumericType.LONG);
-        floatNumericConfig = new NumericConfig(precisionStep, numberFormat, FieldType.NumericType.FLOAT);
-        doubleNumericConfig = new NumericConfig(precisionStep, numberFormat, FieldType.NumericType.DOUBLE);
-
-        attributeNumericConfigMap = new HashMap<>();
-        attributeNumericConfigMap.put(Byte.TYPE, intNumericConfig);
-        attributeNumericConfigMap.put(Byte.class, intNumericConfig);
-        attributeNumericConfigMap.put(Short.TYPE, intNumericConfig);
-        attributeNumericConfigMap.put(Short.class, intNumericConfig);
-        attributeNumericConfigMap.put(Integer.TYPE, intNumericConfig);
-        attributeNumericConfigMap.put(Integer.class, intNumericConfig);
-        attributeNumericConfigMap.put(Long.TYPE, longNumericConfig);
-        attributeNumericConfigMap.put(Long.class, longNumericConfig);
-        attributeNumericConfigMap.put(Float.TYPE, floatNumericConfig);
-        attributeNumericConfigMap.put(Float.class, floatNumericConfig);
-        // Statistics of features are stored as Double, but Float is sufficient.
-        attributeNumericConfigMap.put(Double.TYPE, floatNumericConfig);
-        attributeNumericConfigMap.put(Double.class, floatNumericConfig);
-    }
-
-
 }

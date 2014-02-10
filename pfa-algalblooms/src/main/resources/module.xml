@@ -19,6 +19,9 @@
     <dependency>
         <module>beam-gpf</module>
     </dependency>
+    <dependency>
+        <module>pfa-core</module>
+    </dependency>
 
     <categories>Processor</categories>
 

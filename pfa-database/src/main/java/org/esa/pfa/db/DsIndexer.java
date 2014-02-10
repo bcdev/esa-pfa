@@ -296,6 +296,7 @@ public class DsIndexer {
         }
 
         String name = patchDir.getName();
+        //Todo this needs to be smarter for datasets with more than 100x100 patches
         int patchX = Integer.parseInt(name.substring(1, 3));
         int patchY = Integer.parseInt(name.substring(4, 6));
 
