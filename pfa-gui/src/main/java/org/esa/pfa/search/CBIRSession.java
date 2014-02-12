@@ -16,6 +16,10 @@
 package org.esa.pfa.search;
 
 
+import org.esa.pfa.db.DatasetDescriptor;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.op.Patch;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,45 +29,88 @@ import java.util.List;
  */
 public class CBIRSession {
 
-    private List<PatchImage> queryImageList = new ArrayList<PatchImage>(3);
-    private List<PatchImage> relevantImageList = new ArrayList<PatchImage>(50);
-    private List<PatchImage> irrelevantImageList = new ArrayList<PatchImage>(50);
-    private List<PatchImage> retrievedImageList = new ArrayList<PatchImage>(500);
+    private List<Patch> queryImageList = new ArrayList<Patch>(4);
+    private List<Patch> relevantImageList = new ArrayList<Patch>(50);
+    private List<Patch> irrelevantImageList = new ArrayList<Patch>(50);
+    private List<Patch> retrievedImageList = new ArrayList<Patch>(500);
 
-    public CBIRSession() {
+    private final PFAApplicationDescriptor applicationDescriptor;
+    private int numTrainingImages;
+    private int numRetrievedImages;
 
+    private SearchToolStub searchTool = new SearchToolStub();
+
+    public CBIRSession(final PFAApplicationDescriptor applicationDescriptor,
+                       final int numTrainingImages, final int numRetrievedImages) {
+        this.applicationDescriptor = applicationDescriptor;
+
+        this.numTrainingImages = numTrainingImages;
+        this.numRetrievedImages = numRetrievedImages;
     }
 
-    public void addQueryImage(final PatchImage queryImage) {
+    public PFAApplicationDescriptor getApplicationDescriptor() {
+        return applicationDescriptor;
+    }
+
+    public DatasetDescriptor getDsDescriptor() {
+        return searchTool.getDsDescriptor();
+    }
+
+    public int getNumTrainingImages() {
+        return numTrainingImages;
+    }
+
+    public int getNumRetrievedImages() {
+        return numRetrievedImages;
+    }
+
+    public void addQueryPatch(final Patch queryImage) {
         queryImageList.add(queryImage);
     }
 
-    public PatchImage[] getQueryImages() {
-        return queryImageList.toArray(new PatchImage[queryImageList.size()]);
+    public Patch[] getQueryPatches() {
+        return queryImageList.toArray(new Patch[queryImageList.size()]);
     }
 
-    public void trainClassifier() {
-        SearchToolStub.instance().trainClassifier(getQueryImages());
+    public void setQueryImages() throws Exception {
+        searchTool.setQueryImages(getQueryPatches());
 
-        relevantImageList.addAll(Arrays.asList(SearchToolStub.instance().getRelavantTrainingImages()));
-        irrelevantImageList.addAll(Arrays.asList(SearchToolStub.instance().getIrrelavantTrainingImages()));
+        relevantImageList.clear();
+        irrelevantImageList.clear();
+
+        final Patch[] imagesToLabel = searchTool.getImagesToLabel();
+        for(Patch patch : imagesToLabel) {
+            if(patch.getLabel() == 1) {
+                relevantImageList.add(patch);
+            } else {
+                irrelevantImageList.add(patch);
+            }
+        }
     }
 
-    public PatchImage[] getRelevantTrainingImages() {
-        return relevantImageList.toArray(new PatchImage[relevantImageList.size()]);
+    public Patch[] getRelevantTrainingImages() {
+        return relevantImageList.toArray(new Patch[relevantImageList.size()]);
     }
 
-    public PatchImage[] getIrrelevantTrainingImages() {
-        return irrelevantImageList.toArray(new PatchImage[irrelevantImageList.size()]);
+    public Patch[] getIrrelevantTrainingImages() {
+        return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
+    }
+
+    public void trainModel() throws Exception {
+        final List<Patch> labeledList = new ArrayList<Patch>(30);
+        labeledList.addAll(relevantImageList);
+        labeledList.addAll(irrelevantImageList);
+
+        searchTool.trainModel(labeledList.toArray(new Patch[labeledList.size()]));
     }
 
     public void retrieveImages(final int numImages) {
-        SearchToolStub.instance().retrieveImages(getRelevantTrainingImages(), getIrrelevantTrainingImages());
+        searchTool.retrieveImages(getRelevantTrainingImages(), getIrrelevantTrainingImages());
 
-        retrievedImageList.addAll(Arrays.asList(SearchToolStub.instance().getRetrievedImages(numImages)));
+        retrievedImageList.addAll(Arrays.asList(searchTool.getRetrievedImages(numImages)));
     }
 
-    public PatchImage[] getRetrievedImages() {
-        return retrievedImageList.toArray(new PatchImage[retrievedImageList.size()]);
+    public Patch[] getRetrievedImages() {
+        return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 }

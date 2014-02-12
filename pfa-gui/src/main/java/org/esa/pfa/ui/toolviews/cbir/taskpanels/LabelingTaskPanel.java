@@ -22,9 +22,6 @@ import org.esa.pfa.ui.toolviews.cbir.TaskPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 
 /**
     Labeling Panel
@@ -37,8 +34,6 @@ public class LabelingTaskPanel extends TaskPanel {
     public LabelingTaskPanel(final CBIRSession session) {
         super("Training Images");
         this.session = session;
-
-        session.trainClassifier();
 
         createPanel();
 
@@ -65,7 +60,14 @@ public class LabelingTaskPanel extends TaskPanel {
     }
 
     public boolean validateInput() {
-        return true;
+        try {
+            session.trainModel();
+
+            return true;
+        } catch(Exception e)  {
+            showErrorMsg(e.getMessage());
+        }
+        return false;
     }
 
     private void createPanel() {

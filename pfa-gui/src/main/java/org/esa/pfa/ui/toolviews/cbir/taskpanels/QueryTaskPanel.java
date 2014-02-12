@@ -15,9 +15,15 @@
  */
 package org.esa.pfa.ui.toolviews.cbir.taskpanels;
 
-import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.PatchImage;
+import com.bc.ceres.swing.selection.AbstractSelectionChangeListener;
+import com.bc.ceres.swing.selection.SelectionChangeEvent;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.ui.SourceProductSelector;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.ui.toolviews.cbir.DragScrollListener;
 import org.esa.pfa.ui.toolviews.cbir.PatchDrawer;
 import org.esa.pfa.ui.toolviews.cbir.TaskPanel;
@@ -26,6 +32,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 
 /**
     Labeling Panel
@@ -36,9 +43,15 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
     private final CBIRSession session;
     private PatchDrawer drawer;
 
+    //temp
+    private final SourceProductSelector sourceProductSelector;
+
     public QueryTaskPanel(final CBIRSession session) {
         super("Query Images");
         this.session = session;
+
+        this.sourceProductSelector = new SourceProductSelector(VisatApp.getApp(), "Source Product:");
+        sourceProductSelector.initProducts();
 
         createPanel();
 
@@ -74,9 +87,9 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
 
         final JPanel imageScrollPanel = new JPanel(new BorderLayout(2, 2));
         imageScrollPanel.setBorder(BorderFactory.createTitledBorder("Query Images"));
-        imageScrollPanel.setMinimumSize(new Dimension(500, 110));
 
-        drawer = new PatchDrawer(session.getQueryImages());
+        drawer = new PatchDrawer(session.getQueryPatches());
+        drawer.setMinimumSize(new Dimension(500, 110));
         final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                                                                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -97,8 +110,16 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
         addButton.addActionListener(this);
         listsPanel.add(addButton);
 
+        //temp
+        this.add(createSourceProductPanel(), BorderLayout.CENTER);
+
         this.add(listsPanel, BorderLayout.SOUTH);
     }
+
+
+    //temp
+    private static int subX = 0;
+    private static int subY = 0;
 
     /**
      * Handles events.
@@ -109,11 +130,40 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
         try {
             final String command = event.getActionCommand();
             if (command.equals("addButton")) {
-                session.addQueryImage(new PatchImage());
-                drawer.update(session.getQueryImages());
+                final Product product = sourceProductSelector.getSelectedProduct();
+                if(product == null)
+                    return;
+
+                final Dimension dim = session.getApplicationDescriptor().getPatchDimension();
+                final Product subset = FeatureWriter.createSubset(product, new Rectangle(subX, subY, dim.width, dim.height));
+                subX += dim.width;
+                subY += dim.height;
+
+                BufferedImage image = ProductUtils.createColorIndexedImage(subset.getBand(ProductUtils.findSuitableQuicklookBandName(subset)),
+                                                                           com.bc.ceres.core.ProgressMonitor.NULL);
+                Patch patch = new Patch(0, 0, null, subset);
+                patch.setImage(image);
+                session.addQueryPatch(patch);
+                drawer.update(session.getQueryPatches());
             }
         } catch (Exception e) {
             VisatApp.getApp().showErrorDialog(e.toString());
         }
+    }
+
+    private JPanel createSourceProductPanel() {
+        final JPanel panel = sourceProductSelector.createDefaultPanel();
+        sourceProductSelector.getProductNameLabel().setText("Name:");
+        sourceProductSelector.getProductNameComboBox().setPrototypeDisplayValue(
+                "MER_RR__1PPBCM20030730_071000_000003972018_00321_07389_0000.N1");
+        sourceProductSelector.addSelectionChangeListener(new AbstractSelectionChangeListener() {
+            @Override
+            public void selectionChanged(SelectionChangeEvent event) {
+                final Product sourceProduct = sourceProductSelector.getSelectedProduct();
+
+
+            }
+        });
+        return panel;
     }
 }
