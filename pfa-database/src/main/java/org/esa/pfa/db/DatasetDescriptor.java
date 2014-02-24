@@ -68,9 +68,9 @@ public class DatasetDescriptor {
 
     private static XStream getXStream() {
         XStream xStream = new XStream();
-        xStream.alias("DatasetDescriptor", DatasetDescriptor.class);
-        xStream.alias("FeatureType", FeatureType.class);
-        xStream.alias("AttributeType", AttributeType.class);
+        xStream.alias("DatasetDescriptor", org.esa.pfa.db.DatasetDescriptor.class);
+        xStream.alias("FeatureType", org.esa.pfa.fe.op.FeatureType.class);
+        xStream.alias("AttributeType", org.esa.pfa.fe.op.AttributeType.class);
         return xStream;
     }
 
