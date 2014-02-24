@@ -99,7 +99,7 @@ public abstract class TaskPanel extends JPanel {
         return instructPanel;
     }
 
-    public abstract boolean validateInput();
+    public abstract boolean validateInput() throws Exception ;
 
     /**
      * This method is called when the dialog redisplays this panel as a result of the user clicking
@@ -122,6 +122,15 @@ public abstract class TaskPanel extends JPanel {
      * @return boolean.
      */
     public abstract boolean hasNextPanel();
+
+    /**
+     * Returns true if its possible to move on to the next panel.
+     *
+     * @return boolean.
+     */
+    public boolean canProceedToNextPanel() {
+        return true;
+    }
 
     /**
      * Returns true if it is possible to finish from this panel.

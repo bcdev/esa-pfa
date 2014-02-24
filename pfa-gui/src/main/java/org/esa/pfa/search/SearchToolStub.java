@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URL;
 
 /**
  * Stub for PFA Search Tool on the server
@@ -35,16 +36,9 @@ public class SearchToolStub {
     private PatchQuery db = null;
     private ActiveLearning al = null;
 
-    private static final java.net.URL dummyURL = SearchToolStub.class.getClassLoader().getResource("images/sigma0_ql.png");
-    private static File dummyFile = new File(dummyURL.getPath());
-
-    public SearchToolStub() {
-        try {
-            db = new PatchQuery(new File("c:\\temp"));
-            al = new ActiveLearning(10, 40);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public SearchToolStub(final String archiveFolder) throws Exception {
+        db = new PatchQuery(new File(archiveFolder));
+        al = new ActiveLearning();
     }
 
     public DatasetDescriptor getDsDescriptor() {
@@ -58,36 +52,46 @@ public class SearchToolStub {
     public void setQueryImages(final Patch[] queryImages) throws Exception {
         al.setQueryPatches(queryImages);
 
-        Patch[] archivePatches = db.query("product:ENVI*", 50);
+        final Patch[] archivePatches = db.query("product:ENVI*", 500);
         al.setRandomPatches(archivePatches);
     }
 
-    public Patch[] getImagesToLabel() {
-        return al.getMostAmbiguousPatches();
+    public Patch[] getImagesToLabel(final int numImages) throws Exception {
+        final Patch[] patchesToLabel = al.getMostAmbiguousPatches(numImages);
+        getPatchQuicklooks(patchesToLabel);
+
+        return patchesToLabel;
+    }
+
+    private void getPatchQuicklooks(final Patch[] patches) {
+        for(Patch patch : patches) {
+            if(patch.getImage()== null) {
+                try {
+                    URL imageURL = db.retrievePatchImage(patch);
+                    //todo download image
+                    File imageFile = new File(imageURL.getPath());
+                    patch.setImage(loadImageFile(imageFile));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public void trainModel(Patch[] labeledImages) throws Exception {
         al.train(labeledImages);
     }
 
-    public void retrieveImages(final Patch[] rel, final Patch[] irrel) {
+    public Patch[] getRetrievedImages(final int numImages) throws Exception {
 
+       final Patch[] archivePatches = db.query("product:ENVI*", numImages);
+       al.classify(archivePatches);
+       getPatchQuicklooks(archivePatches);
+
+       return archivePatches;
     }
 
-    public Patch[] getRetrievedImages(final int numImages) {
-        return createDummyImageList(numImages);
-    }
-
-    private static Patch[] createDummyImageList(final int size) {
-        final Patch[] imageList = new Patch[size];
-        for(int i=0; i < imageList.length; ++i) {
-            imageList[i] = new Patch(0,0, null, null);
-            imageList[i].setImage(loadFile(dummyFile));
-        }
-        return imageList;
-    }
-
-    private static BufferedImage loadFile(final File file) {
+    private static BufferedImage loadImageFile(final File file) {
         BufferedImage bufferedImage = null;
         if (file.canRead()) {
             try {

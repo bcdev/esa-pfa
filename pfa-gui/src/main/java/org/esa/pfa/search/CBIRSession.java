@@ -38,14 +38,17 @@ public class CBIRSession {
     private int numTrainingImages;
     private int numRetrievedImages;
 
-    private SearchToolStub searchTool = new SearchToolStub();
+    private final SearchToolStub searchTool;
 
     public CBIRSession(final PFAApplicationDescriptor applicationDescriptor,
-                       final int numTrainingImages, final int numRetrievedImages) {
+                       final String archivePath,
+                       final int numTrainingImages, final int numRetrievedImages) throws Exception {
         this.applicationDescriptor = applicationDescriptor;
 
         this.numTrainingImages = numTrainingImages;
         this.numRetrievedImages = numRetrievedImages;
+
+        this.searchTool = new SearchToolStub(archivePath);
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
@@ -56,12 +59,8 @@ public class CBIRSession {
         return searchTool.getDsDescriptor();
     }
 
-    public int getNumTrainingImages() {
-        return numTrainingImages;
-    }
-
-    public int getNumRetrievedImages() {
-        return numRetrievedImages;
+    public void clearQueryPatches() {
+        queryImageList.clear();
     }
 
     public void addQueryPatch(final Patch queryImage) {
@@ -74,15 +73,20 @@ public class CBIRSession {
 
     public void setQueryImages() throws Exception {
         searchTool.setQueryImages(getQueryPatches());
+        getImagesToLabel();
+    }
 
-        relevantImageList.clear();
-        irrelevantImageList.clear();
-
-        final Patch[] imagesToLabel = searchTool.getImagesToLabel();
-        for(Patch patch : imagesToLabel) {
-            if(patch.getLabel() == 1) {
+    public void reassignTrainingImage(final Patch patch) {
+        if(patch.getLabel() == Patch.LABEL_RELEVANT) {
+            int index = irrelevantImageList.indexOf(patch);
+            if(index != -1) {
+                irrelevantImageList.remove(index);
                 relevantImageList.add(patch);
-            } else {
+            }
+        } else if(patch.getLabel() == Patch.LABEL_IRRELEVANT) {
+            int index = relevantImageList.indexOf(patch);
+            if(index != -1) {
+                relevantImageList.remove(index);
                 irrelevantImageList.add(patch);
             }
         }
@@ -96,6 +100,23 @@ public class CBIRSession {
         return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
     }
 
+    public void getImagesToLabel() throws Exception {
+
+        relevantImageList.clear();
+        irrelevantImageList.clear();
+
+        final Patch[] imagesToLabel = searchTool.getImagesToLabel(numTrainingImages);
+        for(Patch patch : imagesToLabel) {
+            if(patch.getLabel() == Patch.LABEL_RELEVANT) {
+                relevantImageList.add(patch);
+            } else {
+                // default to irrelevant so user only needs to select the relevant
+                patch.setLabel(Patch.LABEL_IRRELEVANT);
+                irrelevantImageList.add(patch);
+            }
+        }
+    }
+
     public void trainModel() throws Exception {
         final List<Patch> labeledList = new ArrayList<Patch>(30);
         labeledList.addAll(relevantImageList);
@@ -104,10 +125,9 @@ public class CBIRSession {
         searchTool.trainModel(labeledList.toArray(new Patch[labeledList.size()]));
     }
 
-    public void retrieveImages(final int numImages) {
-        searchTool.retrieveImages(getRelevantTrainingImages(), getIrrelevantTrainingImages());
-
-        retrievedImageList.addAll(Arrays.asList(searchTool.getRetrievedImages(numImages)));
+    public void retrieveImages() throws Exception {
+        retrievedImageList.clear();
+        retrievedImageList.addAll(Arrays.asList(searchTool.getRetrievedImages(numRetrievedImages)));
     }
 
     public Patch[] getRetrievedImages() {

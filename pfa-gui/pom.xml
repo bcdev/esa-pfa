@@ -21,12 +21,10 @@
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-core</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
 		<dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
 		<dependency>
             <groupId>org.esa.beam</groupId>
@@ -35,8 +33,17 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-visat-rcp</artifactId>
             <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
         </dependency>
     </dependencies>
     

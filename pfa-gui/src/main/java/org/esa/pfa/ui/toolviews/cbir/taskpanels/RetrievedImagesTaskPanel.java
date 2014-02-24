@@ -28,14 +28,12 @@ import java.awt.*;
  */
 public class RetrievedImagesTaskPanel extends TaskPanel {
 
-    private final static String instructionsStr = "Click and drag patches in the relevant list and drop into the irrelevant list";
+    private final static String instructionsStr = "Assess the level of accuracy in the retrieval";
     private final CBIRSession session;
 
     public RetrievedImagesTaskPanel(final CBIRSession session) {
         super("Retrieved Images");
         this.session = session;
-
-        session.retrieveImages(200);
 
         createPanel();
 
@@ -54,14 +52,15 @@ public class RetrievedImagesTaskPanel extends TaskPanel {
     }
 
     public boolean canFinish() {
-        return false;
+        return true;
     }
 
     public TaskPanel getNextPanel() {
         return new LabelingTaskPanel(session);
     }
 
-    public boolean validateInput() {
+    public boolean validateInput() throws Exception {
+        session.getImagesToLabel();
         return true;
     }
 
