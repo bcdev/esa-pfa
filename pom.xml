@@ -20,7 +20,9 @@
     <modules>
         <module>pfa-core</module>
         <module>pfa-database</module>
-        <module>pfa-algalblooms</module>
+		<module>pfa-algalblooms</module>
+        <module>pfa-gui</module>
+        <module>pfa-sar-fex</module>
     </modules>
 
     <dependencyManagement>
