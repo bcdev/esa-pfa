@@ -15,7 +15,7 @@
  */
 package org.esa.pfa.activelearning;
 
-import org.esa.beam.util.math.Array;
+import libsvm.svm_model;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 
@@ -164,7 +164,52 @@ public class ActiveLearning {
      * @return The patch array.
      */
     public Patch[] getTrainingData() {
+
         return trainingData.toArray(new Patch[trainingData.size()]);
+    }
+
+    /**
+     * Save training patches in a file.
+     * @param fileName The file name string.
+     */
+    public void saveTrainingData(String fileName) {
+
+    }
+
+    /**
+     * Load training patches saved in file and use them to initialize trainingData.
+     * @param fileName The file name string.
+     */
+    public void loadTrainingData(String fileName) {
+
+    }
+
+    public void setModel(final svm_model model) {
+        svmClassifier.setModel(model);
+    }
+
+    public svm_model getModel() {
+        return svmClassifier.getModel();
+    }
+
+    /**
+     * Save SVM model to file.
+     * @param fileName The file name string.
+     * @throws Exception The exception.
+     */
+    public void saveSVMModel(String fileName) throws Exception {
+
+        svmClassifier.saveSVMModel(fileName);
+    }
+
+    /**
+     * Load the SVM model saved in file.
+     * @param fileName The file name string.
+     * @throws Exception The exception.
+     */
+    public void loadSVMModel(String fileName) throws Exception {
+
+        svmClassifier.loadSVMModel(fileName);
     }
 
     /**

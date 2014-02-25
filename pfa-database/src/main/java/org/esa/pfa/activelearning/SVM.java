@@ -53,7 +53,15 @@ public class SVM {
         this.upper = upper;
 	}
 
-	/**
+    public void setModel(final svm_model model) {
+        this.model = model;
+    }
+
+    public svm_model getModel() {
+        return model;
+    }
+
+    /**
 	 * Train SVM model with given training data.
      * @param trainingSet The training data set.
      * @throws Exception The exception.
@@ -80,13 +88,13 @@ public class SVM {
      */
     public double kernel(final double[] x1, final double[] x2) throws Exception {
 
-        if (x1.length != x2.length) {
-            throw new Exception("Samples to the kernel function must have the same dimension");
+        if (x1.length != numFeatures || x2.length != numFeatures) {
+            throw new Exception("Invalid feature dimension.");
         }
 
         double sum = 0.0;
         for (int i = 0; i < x1.length; i++) {
-            final double d = x1[i] - x2[i];
+            final double d = scale(i, x1[i]) - scale(i, x2[i]);
             sum += d*d;
         }
         return Math.exp(-modelParameters.gamma*sum);
@@ -115,6 +123,26 @@ public class SVM {
         } catch (Throwable e) {
             throw new Exception(e.getMessage());
         }
+    }
+
+    /**
+     * Save SVM model to file.
+     * @param fileName The file name string.
+     * @throws Exception The exception.
+     */
+    public void saveSVMModel(String fileName) throws Exception {
+
+        svm.svm_save_model(fileName, model);
+    }
+
+    /**
+     * Load the SVM model saved in file.
+     * @param fileName The file name string.
+     * @throws Exception The exception.
+     */
+    public void loadSVMModel(String fileName) throws Exception {
+
+        model = svm.svm_load_model(fileName);
     }
 
     /**
