@@ -48,18 +48,17 @@ import java.util.Map;
  * Output features into patches
  */
 @OperatorMetadata(alias = "FeatureWriter",
-        authors = "Jun Lu, Luis Veci",
-        copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
-        suppressWrite = true,
-        description = "Writes features into patches."/*,
-        category = "Classification\\Feature Extraction"*/
-        )
+                  authors = "Jun Lu, Luis Veci",
+                  copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
+                  suppressWrite = true,
+                  description = "Writes features into patches.",
+                  category = "Classification\\Feature Extraction")
 public abstract class FeatureWriter extends Operator {
 
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
 
-    @Parameter(description = "The output folder to which the data is written.", label="Output Folder", notNull = true, notEmpty = true)
+    @Parameter(description = "The output folder to which the data is written.", label = "Output Folder", notNull = true, notEmpty = true)
     private File targetPath;
 
     @Parameter(defaultValue = "false", description = "Disposes all global image caches after a patch has been completed")
@@ -84,10 +83,10 @@ public abstract class FeatureWriter extends Operator {
     private transient PatchWriterFactory patchWriterFactory;
     private PatchWriter patchWriter = null;
 
-    @Parameter(description = "Patch size in km", interval = "(0, *)", defaultValue = "12.0", label="Patch Size (km)")
+    @Parameter(description = "Patch size in km", interval = "(0, *)", defaultValue = "12.0", label = "Patch Size (km)")
     private double patchSizeKm = 12.0;
 
-    @Parameter(description = "Minimum percentage of valid pixels", label="Minimum valid pixels (%)", defaultValue = "0.1")
+    @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)", defaultValue = "0.1")
     protected float minValidPixels = 0.1f;
 
     protected int patchWidth = 0;
@@ -117,7 +116,7 @@ public abstract class FeatureWriter extends Operator {
     @Override
     public void initialize() throws OperatorException {
         try {
-            if(targetPath == null || !targetPath.isAbsolute()) {
+            if (targetPath == null || !targetPath.isAbsolute()) {
                 throw new OperatorException("Please specify an output folder");
             }
 
@@ -195,8 +194,7 @@ public abstract class FeatureWriter extends Operator {
      * @param targetTiles     The current tiles to be computed for each target band.
      * @param targetRectangle The area in pixel coordinates to be computed (same for all rasters in <code>targetRasters</code>).
      * @param pm              A progress monitor which should be used to determine computation cancelation requests.
-     * @throws org.esa.beam.framework.gpf.OperatorException
-     *          if an error occurs during computation of the target rasters.
+     * @throws org.esa.beam.framework.gpf.OperatorException if an error occurs during computation of the target rasters.
      */
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
@@ -204,8 +202,8 @@ public abstract class FeatureWriter extends Operator {
             final Product patchProduct = createSubset(sourceProduct, targetRectangle);
             patchProduct.setName("patch");
 
-            final int patchX = (int)(targetRectangle.getMinX()/targetRectangle.getWidth());
-            final int patchY = (int)(targetRectangle.getMinY()/targetRectangle.getHeight());
+            final int patchX = (int) (targetRectangle.getMinX() / targetRectangle.getWidth());
+            final int patchY = (int) (targetRectangle.getMinY() / targetRectangle.getHeight());
 
             final Patch patch = new Patch(patchX, patchY, targetRectangle, patchProduct);
             processPatch(patch, patchWriter);
@@ -251,16 +249,16 @@ public abstract class FeatureWriter extends Operator {
         double mean = stx.getMean();
         double skewness = (p90 - 2 * p50 + p10) / (p90 - p10);
         return new Feature(featureType,
-                null,
-                mean,
-                stx.getStandardDeviation(),
-                stx.getStandardDeviation() / mean,
-                stx.getMinimum(),
-                stx.getMaximum(),
-                p10,
-                p50,
-                p90,
-                skewness,
-                stx.getSampleCount());
+                           null,
+                           mean,
+                           stx.getStandardDeviation(),
+                           stx.getStandardDeviation() / mean,
+                           stx.getMinimum(),
+                           stx.getMaximum(),
+                           p10,
+                           p50,
+                           p90,
+                           skewness,
+                           stx.getSampleCount());
     }
 }
