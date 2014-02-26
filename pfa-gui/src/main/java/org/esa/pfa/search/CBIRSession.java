@@ -42,7 +42,7 @@ public class CBIRSession {
                        final String archivePath) throws Exception {
         this.applicationDescriptor = applicationDescriptor;
 
-        this.searchTool = new SearchToolStub(archivePath, classifierName, applicationDescriptor.getAllQueryExpr());
+        this.searchTool = new SearchToolStub(applicationDescriptor, archivePath, classifierName);
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
