@@ -18,14 +18,18 @@ package org.esa.pfa.fe.op;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductSubsetBuilder;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchOutput;
@@ -33,7 +37,7 @@ import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
 
 import javax.media.jai.JAI;
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -46,9 +50,11 @@ import java.util.Map;
 @OperatorMetadata(alias = "FeatureWriter",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
+        suppressWrite = true,
         description = "Writes features into patches."/*,
-        category = "Classification\\Feature Extraction"*/)
-public abstract class FeatureWriter extends Operator implements Output {
+        category = "Classification\\Feature Extraction"*/
+        )
+public abstract class FeatureWriter extends Operator {
 
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
