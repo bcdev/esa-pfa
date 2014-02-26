@@ -17,6 +17,7 @@ package org.esa.pfa.search;
 
 import org.esa.pfa.db.DatasetDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import java.util.ArrayList;
@@ -51,6 +52,10 @@ public class CBIRSession {
 
     public DatasetDescriptor getDsDescriptor() {
         return searchTool.getDsDescriptor();
+    }
+
+    public FeatureType[] getEffectiveFeatureTypes()  {
+        return searchTool.getPatchQuery().getEffectiveFeatureTypes();
     }
 
     public void setNumTrainingImages(final int numTrainingImages) {
@@ -151,4 +156,5 @@ public class CBIRSession {
     public Patch[] getRetrievedImages() {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
+
 }
