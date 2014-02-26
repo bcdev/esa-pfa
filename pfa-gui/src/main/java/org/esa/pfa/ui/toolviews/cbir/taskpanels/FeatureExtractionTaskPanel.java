@@ -325,22 +325,6 @@ public class FeatureExtractionTaskPanel extends TaskPanel implements ActionListe
         }
     }
 
-    private static String writeFeatures(final Patch patch) {
-        final StringBuilder str = new StringBuilder(100);
-
-        final Feature[] features = patch.getFeatures();
-        for(Feature feature : features) {
-            str.append(feature.getName());
-            str.append(": ");
-            str.append(feature.getValue().toString());
-            str.append('\n');
-        }
-        if(str.length() == 0) {
-            str.append("No features found");
-        }
-        return str.toString();
-    }
-
     private static class FeaturePanel extends JPanel implements LabelBarProgressMonitor.ProgressBarListener {
         private final Patch patch;
         private final JProgressBar progressBar;
@@ -372,7 +356,7 @@ public class FeatureExtractionTaskPanel extends TaskPanel implements ActionListe
         public void notifyDone() {
             progressBar.setVisible(false);
             textScroll.setVisible(true);
-            textPane.setText(writeFeatures(patch));
+            textPane.setText(patch.writeFeatures());
         }
     }
 }
