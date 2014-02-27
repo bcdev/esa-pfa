@@ -89,17 +89,17 @@ public class FeatureExtractionTaskPanel extends TaskPanel implements ActionListe
         try {
             final Patch[] processedPatches = session.getQueryPatches();
 
-            session.clearQueryPatches();
+            java.util.List<Patch> queryPatches = new ArrayList<>(processedPatches.length);
             for (Patch patch : processedPatches) {
                 if (patch.getFeatures().length > 0) {
-                    session.addQueryPatch(patch);
+                    queryPatches.add(patch);
                 }
             }
-            if (session.getQueryPatches().length == 0) {
+            if (queryPatches.isEmpty()) {
                 throw new Exception("No features found in the query images");
             }
 
-            session.setQueryImages();
+            session.setQueryImages(queryPatches.toArray(new Patch[queryPatches.size()]));
 
             return true;
         } catch (Exception e) {
