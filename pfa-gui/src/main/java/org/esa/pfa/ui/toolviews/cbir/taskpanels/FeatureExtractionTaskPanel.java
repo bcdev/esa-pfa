@@ -339,7 +339,7 @@ public class FeatureExtractionTaskPanel extends TaskPanel implements ActionListe
         public void notifyDone() {
             progressBar.setVisible(false);
             textScroll.setVisible(true);
-            textPane.setText(patch.writeFeatures());
+            textPane.setText(patch.getFeaturesAsText());
         }
     }
 

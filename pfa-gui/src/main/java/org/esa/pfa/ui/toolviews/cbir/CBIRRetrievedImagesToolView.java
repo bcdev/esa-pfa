@@ -20,13 +20,19 @@ import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
-    Labeling Panel
+ * Labeling Panel
  */
 public class CBIRRetrievedImagesToolView extends AbstractToolView implements ActionListener,
         Patch.PatchListener, CBIRSession.CBIRSessionListener {
@@ -45,11 +51,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
 
     public JComponent createControl() {
 
-        final JPanel mainPane = new JPanel(new BorderLayout(5,5));
+        final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
         final JPanel retPanel = new JPanel(new BorderLayout(2, 2));
         retPanel.setBorder(BorderFactory.createTitledBorder("Retrieved Images"));
 
-        drawer = new PatchDrawer(new Patch[] {});
+        drawer = new PatchDrawer();
         drawer.setPreferredSize(new Dimension(2000, 2000));
         final JScrollPane scrollPane1 = new JScrollPane(drawer);
 
@@ -76,8 +82,8 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     private void updateControls() {
-        float pct = accuracy/(float)retrievedPatches.length * 100;
-        accuracyLabel.setText(accuracy+"/"+retrievedPatches.length+" ("+(int)pct+"%)");
+        float pct = accuracy / (float) retrievedPatches.length * 100;
+        accuracyLabel.setText(accuracy + "/" + retrievedPatches.length + " (" + (int) pct + "%)");
     }
 
     /**
@@ -88,7 +94,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     public void actionPerformed(final ActionEvent event) {
         try {
             final String command = event.getActionCommand();
-            if(command.equals("improveBtn")) {
+            if (command.equals("improveBtn")) {
 
                 session.getImagesToLabel();
 
@@ -100,7 +106,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     private void listenToPatches() {
-        for(Patch patch : retrievedPatches) {
+        for (Patch patch : retrievedPatches) {
             patch.addListener(this);
         }
     }
@@ -129,7 +135,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     public void notifyStateChanged(final Patch patch) {
-        if(patch.getLabel() == Patch.LABEL_IRRELEVANT) {
+        if (patch.getLabel() == Patch.LABEL_IRRELEVANT) {
             accuracy--;
             updateControls();
         }
