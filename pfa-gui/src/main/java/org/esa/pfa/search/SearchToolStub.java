@@ -25,11 +25,7 @@ import org.esa.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +69,11 @@ public class SearchToolStub {
 
     public DatasetDescriptor getDsDescriptor() {
         return db.getDsDescriptor();
+    }
+
+    public boolean deleteClassifier() {
+        //todo other clean up
+        return classifierFile.delete();
     }
 
     public void setNumTrainingImages(final int numTrainingImages) {
@@ -142,11 +143,30 @@ public class SearchToolStub {
 
     public Patch[] getRetrievedImages() throws Exception {
 
-        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numRetrievedImages);
+        final List<Patch> relavantImages = new ArrayList<>(numRetrievedImages);
+        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numRetrievedImages*100);
         al.classify(archivePatches);
-        getPatchQuicklooks(archivePatches);
+        int i=0;
+        for(Patch patch : archivePatches) {
+            if(patch.getLabel() == Patch.LABEL_RELEVANT) {
+                if(!contains(relavantImages, patch)) {
+                    relavantImages.add(patch);
+                    ++i;
+                }
+                if(i >= numRetrievedImages) {
+                    break;
+                }
+            }
+        }
+        final Patch[] retrievedRelevantImage = relavantImages.toArray(new Patch[relavantImages.size()]);
+        getPatchQuicklooks(retrievedRelevantImage);
 
-        return archivePatches;
+        return retrievedRelevantImage;
+    }
+
+    private static boolean contains(final List<Patch> list, final Patch patch) {
+        //todo
+        return false;
     }
 
     private static BufferedImage loadImageFile(final File file) {
@@ -184,12 +204,22 @@ public class SearchToolStub {
     }
 
     private void loadClassifier(final File classifierFile) throws Exception {
-        ClassifierWriter classifier = ClassifierWriter.read(classifierFile);
-        numTrainingImages = classifier.getNumTrainingImages();
-        numRetrievedImages = classifier.getNumRetrievedImages();
-        numIterations = classifier.getNumIterations();
+        final ClassifierWriter storedClassifier = ClassifierWriter.read(classifierFile);
+        numTrainingImages = storedClassifier.getNumTrainingImages();
+        numRetrievedImages = storedClassifier.getNumRetrievedImages();
+        numIterations = storedClassifier.getNumIterations();
 
-        al.setModel(classifier.getModel());
+        al.setModel(storedClassifier.getModel());
+
+        final ClassifierWriter.PatchInfo[] patchInfo = storedClassifier.getPatchInfo();
+        if(patchInfo != null) {
+            final Patch[] patches = new Patch[patchInfo.length];
+            int i = 0;
+            for(ClassifierWriter.PatchInfo info : patchInfo) {
+                patches[i++] = info.recreatePatch();
+            }
+            al.setTrainingData(patches, numIterations);
+        }
     }
 
     private void saveClassifier() throws IOException {

@@ -34,16 +34,39 @@ public class CBIRSession {
     private List<Patch> irrelevantImageList = new ArrayList<>(50);
     private List<Patch> retrievedImageList = new ArrayList<>(500);
 
-    private final PFAApplicationDescriptor applicationDescriptor;
+    private String classifierName;
+    private PFAApplicationDescriptor applicationDescriptor;
 
-    private final SearchToolStub searchTool;
+    private SearchToolStub searchTool;
 
-    public CBIRSession(final String classifierName,
+    private final List<CBIRSessionListener> listenerList = new ArrayList<>(1);
+    enum Notification { NewSession, NewTrainingImages, ModelTrained };
+
+    private static CBIRSession instance = null;
+
+    private CBIRSession() {
+    }
+
+    public static CBIRSession Instance() {
+        if(instance == null) {
+            instance = new CBIRSession();
+        }
+        return instance;
+    }
+
+    public void initSession(final String classifierName,
                        final PFAApplicationDescriptor applicationDescriptor,
                        final String archivePath) throws Exception {
+        this.classifierName = classifierName;
         this.applicationDescriptor = applicationDescriptor;
 
-        this.searchTool = new SearchToolStub(applicationDescriptor, archivePath, classifierName);
+        searchTool = new SearchToolStub(applicationDescriptor, archivePath, classifierName);
+
+        fireNotification(Notification.NewSession);
+    }
+
+    public String getName() {
+        return classifierName;
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
@@ -52,6 +75,10 @@ public class CBIRSession {
 
     public DatasetDescriptor getDsDescriptor() {
         return searchTool.getDsDescriptor();
+    }
+
+    public boolean deleteClassifier() {
+        return searchTool.deleteClassifier();
     }
 
     public FeatureType[] getEffectiveFeatureTypes()  {
@@ -138,6 +165,8 @@ public class CBIRSession {
                 irrelevantImageList.add(patch);
             }
         }
+
+        fireNotification(Notification.NewTrainingImages);
     }
 
     public void trainModel() throws Exception {
@@ -146,6 +175,8 @@ public class CBIRSession {
         labeledList.addAll(irrelevantImageList);
 
         searchTool.trainModel(labeledList.toArray(new Patch[labeledList.size()]));
+
+        fireNotification(Notification.ModelTrained);
     }
 
     public void retrieveImages() throws Exception {
@@ -157,4 +188,40 @@ public class CBIRSession {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 
+    private void fireNotification(final Notification msg) throws Exception {
+        for(CBIRSessionListener listener : listenerList) {
+            switch (msg) {
+                case NewSession:
+                    listener.notifyNewSession();
+                    break;
+                case NewTrainingImages:
+                    listener.notifyNewTrainingImages();
+                    break;
+                case ModelTrained:
+                    listener.notifyModelTrained();
+                    break;
+                default:
+                    throw new Exception("Unknown notification message: "+msg);
+            }
+        }
+    }
+
+    public void addListener(final CBIRSessionListener listener) {
+        if (!listenerList.contains(listener)) {
+            listenerList.add(listener);
+        }
+    }
+
+    public void removeListener(final CBIRSessionListener listener) {
+        listenerList.remove(listener);
+    }
+
+    public interface CBIRSessionListener {
+
+        public void notifyNewSession();
+
+        public void notifyNewTrainingImages();
+
+        public void notifyModelTrained();
+    }
 }

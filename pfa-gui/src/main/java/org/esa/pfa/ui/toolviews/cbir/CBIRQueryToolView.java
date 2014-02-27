@@ -13,12 +13,12 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.ui.toolviews.cbir.taskpanels;
+package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
-import com.bc.ceres.swing.figure.interactions.NullInteractor;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
@@ -26,10 +26,6 @@ import org.esa.beam.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.ui.toolviews.cbir.DragScrollListener;
-import org.esa.pfa.ui.toolviews.cbir.PatchDrawer;
-import org.esa.pfa.ui.toolviews.cbir.PatchSelectionInteractor;
-import org.esa.pfa.ui.toolviews.cbir.TaskPanel;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.CropDescriptor;
@@ -44,64 +40,31 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 
 /**
- * Labeling Panel
+    Query Toolview
  */
-public class QueryTaskPanel extends TaskPanel implements ActionListener {
+public class CBIRQueryToolView extends AbstractToolView implements ActionListener, CBIRSession.CBIRSessionListener {
 
-    private final static String instructionsStr = "Add query images by selecting patch areas in an image view";
-    private final CBIRSession session;
+    public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView";
+
+    private CBIRSession session;
     private PatchDrawer drawer;
     private PatchSelectionInteractor interactor;
+    private JButton addPatchBtn, editBtn, startTrainingBtn;
 
-    public QueryTaskPanel(final CBIRSession session) {
-        super("Query Images");
-        this.session = session;
-
-        createPanel();
-
-        repaint();
+    public CBIRQueryToolView() {
+        CBIRSession.Instance().addListener(this);
     }
 
-    public void returnFromLaterStep() {
-    }
+    public JComponent createControl() {
 
-    public boolean canRedisplayNextPanel() {
-        return false;
-    }
-
-    public boolean hasNextPanel() {
-        return true;
-    }
-
-    public boolean canProceedToNextPanel() {
-        return session.getQueryPatches().length > 0;
-    }
-
-    public boolean canFinish() {
-        return false;
-    }
-
-    public TaskPanel getNextPanel() {
-        VisatApp.getApp().setActiveInteractor(NullInteractor.INSTANCE);
-
-        return new FeatureExtractionTaskPanel(session);
-    }
-
-    public boolean validateInput() {
-        return true;
-    }
-
-    private void createPanel() {
-
-        this.add(createInstructionsPanel(null, instructionsStr), BorderLayout.NORTH);
-
+        final JPanel mainPane = new JPanel(new BorderLayout(5,5));
         final JPanel imageScrollPanel = new JPanel(new BorderLayout(2, 2));
         imageScrollPanel.setBorder(BorderFactory.createTitledBorder("Query Images"));
 
-        drawer = new PatchDrawer(session.getQueryPatches());
+        drawer = new PatchDrawer(new Patch[] {});
         drawer.setMinimumSize(new Dimension(500, 210));
         final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                                                       JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                                                               JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         final DragScrollListener dl = new DragScrollListener(drawer);
         dl.setDraggableElements(DragScrollListener.DRAGABLE_HORIZONTAL_SCROLL_BAR);
@@ -115,15 +78,62 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
         listsPanel.setLayout(layout);
         listsPanel.add(imageScrollPanel);
 
-        this.add(listsPanel, BorderLayout.CENTER);
+        mainPane.add(listsPanel, BorderLayout.CENTER);
 
         final JPanel btnPanel = new JPanel();
-        final JButton addPatchButton = new JButton("Add");
-        addPatchButton.setActionCommand("addPatchButton");
-        addPatchButton.addActionListener(this);
-        btnPanel.add(addPatchButton);
+        addPatchBtn = new JButton("Add");
+        addPatchBtn.setActionCommand("addPatchBtn");
+        addPatchBtn.addActionListener(this);
+        addPatchBtn.setEnabled(false);
+        btnPanel.add(addPatchBtn);
 
-        this.add(btnPanel, BorderLayout.EAST);
+        mainPane.add(btnPanel, BorderLayout.EAST);
+
+        final JPanel bottomPanel = new JPanel();
+        editBtn = new JButton("Edit Constraints");
+        editBtn.setActionCommand("editBtn");
+        editBtn.addActionListener(this);
+        editBtn.setEnabled(false);
+        bottomPanel.add(editBtn);
+
+        startTrainingBtn = new JButton("Start Training");
+        startTrainingBtn.setActionCommand("startTrainingBtn");
+        startTrainingBtn.addActionListener(this);
+        startTrainingBtn.setEnabled(false);
+        bottomPanel.add(startTrainingBtn);
+
+        mainPane.add(bottomPanel, BorderLayout.SOUTH);
+
+        updateControls();
+
+        return mainPane;
+    }
+
+    public void notifyNewSession() {
+        session = CBIRSession.Instance();
+
+        if(isControlCreated()) {
+            updateControls();
+        }
+    }
+
+    public void notifyNewTrainingImages() {
+    }
+
+    public void notifyModelTrained() {
+    }
+
+    private void updateControls() {
+        boolean sessionActive = false;
+        boolean hasQueryImages = false;
+        if(session != null) {
+            sessionActive = true;
+            hasQueryImages = session.getQueryPatches().length > 0;
+        }
+
+        addPatchBtn.setEnabled(sessionActive);
+        startTrainingBtn.setEnabled(hasQueryImages);
+        editBtn.setEnabled(false); //todo //hasQueryImages);
     }
 
     /**
@@ -134,9 +144,8 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
     public void actionPerformed(final ActionEvent event) {
         try {
             final String command = event.getActionCommand();
-            if (command.equals("addPatchButton")) {
-                ProductSceneView productSceneView = VisatApp.getApp().getSelectedProductSceneView();
-                if (productSceneView == null) {
+            if (command.equals("addPatchBtn")) {
+                if(VisatApp.getApp().getSelectedProductSceneView() == null) {
                     throw new Exception("First open a product and an image view to be able to add new query images.");
                 }
 
@@ -147,9 +156,26 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
                 interactor.activate();
 
                 VisatApp.getApp().setActiveInteractor(interactor);
+            } else if(command.equals("startTrainingBtn")) {
+                final Patch[] processedPatches = session.getQueryPatches();
+
+                //only add patches with features
+                session.clearQueryPatches();
+                for (Patch patch : processedPatches) {
+                    if (patch.getFeatures().length > 0) {
+                        session.addQueryPatch(patch);
+                    }
+                }
+                if (session.getQueryPatches().length == 0) {
+                    throw new Exception("No features found in the query images");
+                }
+
+                session.setQueryImages();
+
+                getContext().getPage().showToolView(CBIRLabelingToolView.ID);
             }
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            VisatApp.getApp().showErrorDialog(e.toString());
         }
     }
 
@@ -172,16 +198,18 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
                     final Product product = VisatApp.getApp().getSelectedProduct();
                     addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight(), parentImage);
 
-                    getOwner().updateState();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        private void addQueryImage(final Product product, final int x, final int y, final int w, final int h, RenderedImage parentImage) throws IOException {
+        private void addQueryImage(final Product product, final int x, final int y, final int w, final int h,
+                                   final RenderedImage parentImage) throws IOException {
 
-            Rectangle region = new Rectangle(parentImage.getWidth(), parentImage.getHeight()).intersection(new Rectangle(x, y, w, h));
+            final Rectangle region = new Rectangle(parentImage.getWidth(), parentImage.getHeight()).
+                    intersection(new Rectangle(x, y, w, h));
 
             final Product subset = FeatureWriter.createSubset(product, region);
             final int patchX = x / w;
@@ -190,10 +218,10 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
             final BufferedImage patchImage;
             if (parentImage != null) {
                 RenderedOp renderedOp = CropDescriptor.create(parentImage,
-                                                              (float) region.getX(),
-                                                              (float) region.getY(),
-                                                              (float) region.getWidth(),
-                                                              (float) region.getHeight(), null);
+                        (float) region.getX(),
+                        (float) region.getY(),
+                        (float) region.getWidth(),
+                        (float) region.getHeight(), null);
                 patchImage = renderedOp.getAsBufferedImage();
             } else {
                 patchImage = ProductUtils.createColorIndexedImage(
@@ -206,6 +234,11 @@ public class QueryTaskPanel extends TaskPanel implements ActionListener {
             patch.setLabel(Patch.LABEL_RELEVANT);
             session.addQueryPatch(patch);
             drawer.update(session.getQueryPatches());
+
+            final PatchProcessor proc = new PatchProcessor(session);
+            proc.process(patch);
+
+            updateControls();
         }
 
         private ProductSceneView getProductSceneView(InputEvent event) {

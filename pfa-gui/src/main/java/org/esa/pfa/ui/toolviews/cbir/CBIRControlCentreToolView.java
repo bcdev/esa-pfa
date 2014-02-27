@@ -13,136 +13,79 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.ui.toolviews.cbir.taskpanels;
+package org.esa.pfa.ui.toolviews.cbir;
+
 
 import com.jidesoft.swing.FolderChooser;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.ModalDialog;
+import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.ui.toolviews.cbir.TaskPanel;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
-/**
-    Start Panel
- */
-public class CBIRStartTaskPanel extends TaskPanel {
 
+public class CBIRControlCentreToolView extends AbstractToolView {
+
+    private final static Font titleFont = new Font("Ariel", Font.BOLD, 14);
     private final static String instructionsStr = "Select a feature extraction application";
     private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
 
-    private JComboBox<String> applicationCombo = new JComboBox<>();
-
+    private JComboBox<String> applicationCombo;
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
-    private JTextField numTrainingImages = new JTextField();
-    private JTextField numRetrievedImages = new JTextField();
+    private JButton queryBtn, trainBtn;
+    private JTextField numTrainingImages;
+    private JTextField numRetrievedImages;
     private JLabel iterationsLabel = new JLabel();
 
     private File dbFolder;
-    private final JTextField dbFolderTextField = new JTextField();
+    private JTextField dbFolderTextField;
 
     private CBIRSession session = null;
 
-    public CBIRStartTaskPanel() {
-        super("Content Based Image Retrieval");
-
-        final PFAApplicationDescriptor[] apps = PFAApplicationRegistry.getInstance().getAllDescriptors();
-        for(PFAApplicationDescriptor app : apps) {
-            applicationCombo.addItem(app.getName());
-        }
-
-        applicationCombo.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                final String fea = (String) applicationCombo.getSelectedItem();
-
-            }
-        });
-
-        dbFolder = new File(VisatApp.getApp().getPreferences().getPropertyString(PROPERTY_KEY_DB_PATH, ""));
-        if(dbFolder.exists()) {
-            dbFolderTextField.setText(dbFolder.getAbsolutePath());
-        }
-
-        createPanel();
-
-        if (apps.length == 0) {
-            Component[] components = getComponents();
-            for (Component component : components) {
-                component.setEnabled(false);
-            }
-        }
+    public CBIRControlCentreToolView() {
     }
 
-    public void returnFromLaterStep() {
-    }
+    public JComponent createControl() {
 
-    public boolean canRedisplayNextPanel() {
-        return false;
-    }
-
-    public boolean canProceedToNextPanel() {
-        return session != null;
-    }
-
-    public boolean hasNextPanel() {
-        return true;
-    }
-
-    public boolean canFinish() {
-        return false;
-    }
-
-    public TaskPanel getNextPanel() {
-        return new QueryTaskPanel(session);
-    }
-
-    public boolean validateInput() {
-        try {
-            if(session == null) {
-                throw new Exception("Select or create a new classifier");
-            }
-
-            String dbPath = dbFolderTextField.getText();
-            dbFolder = new File(dbPath);
-            if(dbPath.isEmpty() || !dbFolder.exists()) {
-                throw new Exception("Database path is invalid");
-            }
-
-            final int numTrainingImg = Integer.parseInt(numTrainingImages.getText());
-            final int numRetrievedImg = Integer.parseInt(numRetrievedImages.getText());
-            session.setNumTrainingImages(numTrainingImg);
-            session.setNumRetrievedImages(numRetrievedImg);
-
-            VisatApp.getApp().getPreferences().setPropertyString(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
-
-            return true;
-        } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
-        }
-        return false;
-    }
-
-    private void createPanel() {
-
-        this.add(createInstructionsPanel(null, instructionsStr), BorderLayout.NORTH);
-
+        final JPanel mainPane = new JPanel(new BorderLayout(5,5));
         final JPanel contentPane = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0;
         gbc.gridy = 0;
+
+        final PFAApplicationDescriptor[] apps = PFAApplicationRegistry.getInstance().getAllDescriptors();
+        applicationCombo = new JComboBox<>();
+        for(PFAApplicationDescriptor app : apps) {
+            applicationCombo.addItem(app.getName());
+        }
+        applicationCombo.setEditable(false);
+        applicationCombo.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent event) {
+                session = null;
+                updateControls();
+            }
+        });
+
+        dbFolder = new File(VisatApp.getApp().getPreferences().getPropertyString(PROPERTY_KEY_DB_PATH, ""));
+        dbFolderTextField = new JTextField();
+        if(dbFolder.exists()) {
+            dbFolderTextField.setText(dbFolder.getAbsolutePath());
+        }
 
         contentPane.add(new Label("Application:"), gbc);
         gbc.gridy++;
@@ -200,14 +143,30 @@ public class CBIRStartTaskPanel extends TaskPanel {
 
         optionsPane.add(new JLabel("# of training images:"), gbcOpt);
         gbcOpt.gridx = 1;
+        numTrainingImages = new JTextField();
         numTrainingImages.setColumns(3);
+        numTrainingImages.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                session = null;
+                updateControls();
+            }
+        });
         optionsPane.add(numTrainingImages, gbcOpt);
 
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
         optionsPane.add(new JLabel("# of retrieved images:"), gbcOpt);
         gbcOpt.gridx = 1;
+        numRetrievedImages = new JTextField();
         numRetrievedImages.setColumns(3);
+        numRetrievedImages.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                session = null;
+                updateControls();
+            }
+        });
         optionsPane.add(numRetrievedImages, gbcOpt);
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
@@ -223,13 +182,41 @@ public class CBIRStartTaskPanel extends TaskPanel {
         gbc.gridy++;
         contentPane.add(createClassifierButtonPanel(), gbc);
 
-        this.add(contentPane, BorderLayout.CENTER);
+        mainPane.add(createInstructionsPanel(null, instructionsStr), BorderLayout.NORTH);
+        mainPane.add(contentPane, BorderLayout.CENTER);
+        mainPane.add(createSideButtonPanel(), BorderLayout.EAST);
 
         updateControls();
+
+        return mainPane;
+    }
+
+    protected JLabel createTitleLabel() {
+        final JLabel titleLabel = new JLabel("CBIR");
+        titleLabel.setFont(titleFont);
+        return titleLabel;
+    }
+
+    protected static JPanel createTextPanel(final String title, final String text) {
+        final JPanel textPanel = new JPanel(new BorderLayout(2,2));
+        if(title != null)
+            textPanel.setBorder(BorderFactory.createTitledBorder(title));
+        final JTextPane textPane = new JTextPane();
+        textPane.setText(text);
+        textPane.setEditable(false);
+        textPanel.add(textPane, BorderLayout.CENTER);
+        return textPanel;
+    }
+
+    protected JPanel createInstructionsPanel(final String title, final String text) {
+        final JPanel instructPanel = new JPanel(new BorderLayout(2, 2));
+        instructPanel.add(createTitleLabel(), BorderLayout.NORTH);
+        instructPanel.add(createTextPanel(title, text), BorderLayout.CENTER);
+        return instructPanel;
     }
 
     private JPanel createClassifierButtonPanel() {
-        final JPanel panel = new JPanel();
+        final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         newBtn = new JButton(new AbstractAction("New") {
             public void actionPerformed(ActionEvent e) {
@@ -245,36 +232,57 @@ public class CBIRStartTaskPanel extends TaskPanel {
             }
         });
         deleteBtn = new JButton(new AbstractAction("Delete") {
-            public void actionPerformed(ActionEvent e) {
+             public void actionPerformed(ActionEvent e) {
                 final boolean ret = session.deleteClassifier();
                 if(ret) {
                     final DefaultListModel listModel = (DefaultListModel)classifierList.getModel();
                     listModel.remove(classifierList.getSelectedIndex());
                 }
+             }
+         });
+
+        panel.add(newBtn);
+        panel.add(deleteBtn);
+
+        return panel;
+    }
+
+    private JPanel createSideButtonPanel() {
+        final JPanel panel = new JPanel();
+        final BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
+        panel.setLayout(layout);
+
+        queryBtn = new JButton(new AbstractAction("Query") {
+            public void actionPerformed(ActionEvent e) {
+                getContext().getPage().showToolView(CBIRQueryToolView.ID);
             }
-        });    /*
-        final JButton saveBtn = new JButton(new AbstractAction("Save") {
+        });
+        trainBtn = new JButton(new AbstractAction("Training") {
             public void actionPerformed(ActionEvent e) {
 
             }
         });
-        final JButton editBtn = new JButton(new AbstractAction("Edit") {
+      /*  final JButton btn3 = new JButton(new AbstractAction("3") {
             public void actionPerformed(ActionEvent e) {
 
             }
-        });   */
+        });
+        final JButton btn4 = new JButton(new AbstractAction("4") {
+            public void actionPerformed(ActionEvent e) {
 
-        panel.add(newBtn);
-        panel.add(deleteBtn);
-        //panel.add(saveBtn);
-        //panel.add(editBtn);
+            }
+        });    */
+
+        panel.add(queryBtn);
+        panel.add(trainBtn);
+        //panel.add(btn3);
+        //panel.add(btn4);
 
         return panel;
     }
 
     private void updateControls() {
         newBtn.setEnabled(dbFolder.exists());
-        deleteBtn.setEnabled(classifierList.getSelectedIndex() != -1);
 
         final String name = classifierList.getSelectedValue();
         if(name != null) {
@@ -284,30 +292,36 @@ public class CBIRStartTaskPanel extends TaskPanel {
         }
 
         final boolean activeSession = name != null && session != null;
+        deleteBtn.setEnabled(activeSession);
+
+        applicationCombo.setEnabled(activeSession);
         numTrainingImages.setEnabled(activeSession);
         numRetrievedImages.setEnabled(activeSession);
+
+        queryBtn.setEnabled(activeSession);
+        trainBtn.setEnabled(activeSession);
 
         if(session != null) {
             numTrainingImages.setText(String.valueOf(session.getNumTrainingImages()));
             numRetrievedImages.setText(String.valueOf(session.getNumRetrievedImages()));
             iterationsLabel.setText(String.valueOf(session.getNumIterations()));
         }
-
-        if(getOwner() != null) {
-            getOwner().updateState();
-        }
     }
 
     private void createNewSession(final String classifierName) {
         try {
+            System.out.println("Creating new session");
+
             final String application = (String)applicationCombo.getSelectedItem();
             final PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(application);
 
             final String dbPath = dbFolderTextField.getText();
             session = CBIRSession.Instance();
+
             session.initSession(classifierName, applicationDescriptor, dbPath);
+
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            VisatApp.getApp().showErrorDialog(e.getMessage());
         }
     }
 
@@ -331,6 +345,7 @@ public class CBIRStartTaskPanel extends TaskPanel {
             if (chooser.showDialog(window, APPROVE_BUTTON_TEXT) == JFileChooser.APPROVE_OPTION) {
                 dbFolder = chooser.getSelectedFile();
                 dbFolderTextField.setText(dbFolder.getAbsolutePath());
+                VisatApp.getApp().getPreferences().setPropertyString(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
                 updateControls();
             }
         }
