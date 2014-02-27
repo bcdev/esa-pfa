@@ -4,7 +4,10 @@ import com.thoughtworks.xstream.XStream;
 import libsvm.svm_model;
 import org.esa.pfa.fe.op.Patch;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,27 +20,27 @@ public class ClassifierWriter {
     int numRetrievedImages;
     int numIterations;
     svm_model model;
+    PatchInfo[] queryInfo;
     PatchInfo[] patchInfo;
 
     ClassifierWriter() {}
 
-    public ClassifierWriter(final int numTrainingImages, final int numRetrievedImages, final int numIterations,
-                     final ActiveLearning al) {
+    public ClassifierWriter(final int numTrainingImages, final int numRetrievedImages, final ActiveLearning al) {
         this.numTrainingImages = numTrainingImages;
         this.numRetrievedImages = numRetrievedImages;
-        this.numIterations = numIterations;
+        this.numIterations = al.getNumIterations();
         model = al.getModel();
 
-        savePatchInfo(al);
+        queryInfo = getPatchInfo(al.getQueryPatches());
+        patchInfo = getPatchInfo(al.getTrainingData());
     }
 
-    private void savePatchInfo(final ActiveLearning al) {
-        final Patch[] trainingPatches = al.getTrainingData();
-        final List<PatchInfo> patchInfoList = new ArrayList<>(trainingPatches.length);
-        for(Patch patch : trainingPatches) {
+    private static PatchInfo[] getPatchInfo(final Patch[] patches) {
+        final List<PatchInfo> patchInfoList = new ArrayList<>(patches.length);
+        for(Patch patch : patches) {
             patchInfoList.add(new PatchInfo(patch));
         }
-        patchInfo = patchInfoList.toArray(new PatchInfo[patchInfoList.size()]);
+        return patchInfoList.toArray(new PatchInfo[patchInfoList.size()]);
     }
 
     /**
@@ -46,6 +49,10 @@ public class ClassifierWriter {
      */
     public PatchInfo[] getPatchInfo() {
         return patchInfo;
+    }
+
+    public PatchInfo[] getQueryPatchInfo() {
+        return queryInfo;
     }
 
     public int getNumTrainingImages() {
