@@ -289,7 +289,7 @@ public class PatchContextMenuFactory {
                                                 patch.getPatchY() * patchDimension.height,
                                                 patchDimension.width, patchDimension.height);
             modelRect.grow(patchDimension.width / 2, patchDimension.height / 2);
-            System.out.println("modelRect = " + modelRect);
+//            System.out.println("modelRect = " + modelRect);
             sceneView.getLayerCanvas().setInitiallyZoomingAll(false);
             sceneView.zoom(modelRect);
         }
