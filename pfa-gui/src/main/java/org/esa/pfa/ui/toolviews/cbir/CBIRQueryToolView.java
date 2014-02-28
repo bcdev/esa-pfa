@@ -152,12 +152,12 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 //only add patches with features
                 List<Patch> queryPatches = new ArrayList<>(processedPatches.length);
                 for (Patch patch : processedPatches) {
-                    if (patch.getFeatures().length > 0) {
+                    if (patch.getFeatures().length > 0 && patch.getLabel() == Patch.LABEL_RELEVANT) {
                         queryPatches.add(patch);
                     }
                 }
                 if (queryPatches.isEmpty()) {
-                    throw new Exception("No features found in the query images");
+                    throw new Exception("No features found in the relevant query images");
                 }
 
                 session.setQueryImages(queryPatches.toArray(new Patch[queryPatches.size()]));
