@@ -16,8 +16,8 @@
 package org.esa.pfa.ui.toolviews.cbir;
 
 
-import com.bc.ceres.core.*;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.ModalDialog;
@@ -308,10 +308,27 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         trainBtn = new JButton(new AbstractAction("Train") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    getContext().getPage().showToolView(CBIRLabelingToolView.ID);
-
-                    session.populateArchivePatches();
-                    session.getImagesToLabel(ProgressMonitor.NULL);
+                    Window window = VisatApp.getApp().getApplicationWindow();
+                    ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Training") {
+                        @Override
+                        protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
+                            pm.beginTask("Training...", 100);
+                            try {
+                                session.populateArchivePatches();
+                                session.getImagesToLabel(pm);
+                                if (!pm.isCanceled()) {
+                                    return Boolean.TRUE;
+                                }
+                            } finally {
+                                pm.done();
+                            }
+                            return Boolean.FALSE;
+                        }
+                    };
+                    worker.executeWithBlocking();
+                    if (worker.get()) {
+                        getContext().getPage().showToolView(CBIRLabelingToolView.ID);
+                    }
                 } catch (Throwable t) {
                     VisatApp.getApp().handleUnknownException(t);
                 }
