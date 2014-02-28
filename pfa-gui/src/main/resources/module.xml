@@ -7,11 +7,12 @@
 
     <description>PFA User Interfaces</description>
 
-    <vendor>Array Systems Computing Inc</vendor>
-    <contactAddress>1120 Finch Ave W. Toronto (Canada)</contactAddress>
-    <copyright>(C) 2013 by Array Systems Computing Inc</copyright>
-    <url>http://www.array.ca/nest</url>
+    <vendor>ESA/ESRIN</vendor>
+    <contactAddress>Via Galileo Galilei Casella Postale 64 00044 Frascati (Roma) Italy</contactAddress>
+    <url>http://wiki.services.eoportal.org/tiki-index.php?page=PFA</url>
+    <copyright>(C) 2014 by Array Systems Computing Inc, Brockmann Consult GmbH</copyright>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+    <funding>European Space Agency</funding>
 
 	<dependency>
         <module>pfa-core</module>
