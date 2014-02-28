@@ -15,6 +15,7 @@
  */
 package org.esa.pfa.search;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.db.DatasetDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
@@ -116,9 +117,9 @@ public class CBIRSession {
         return searchTool.getQueryImages();
     }
 
-    public void setQueryImages(final Patch[] queryImages) throws Exception {
+    public void setQueryImages(final Patch[] queryImages, ProgressMonitor pm) throws Exception {
         searchTool.setQueryImages(queryImages);
-        getImagesToLabel();
+        getImagesToLabel(pm);
     }
 
     public void populateArchivePatches() throws Exception {
@@ -149,12 +150,12 @@ public class CBIRSession {
         return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
     }
 
-    public void getImagesToLabel() throws Exception {
+    public void getImagesToLabel(ProgressMonitor pm) throws Exception {
 
         relevantImageList.clear();
         irrelevantImageList.clear();
 
-        final Patch[] imagesToLabel = searchTool.getImagesToLabel();
+        final Patch[] imagesToLabel = searchTool.getImagesToLabel(pm);
         for(Patch patch : imagesToLabel) {
             if(patch.getLabel() == Patch.LABEL_RELEVANT) {
                 relevantImageList.add(patch);

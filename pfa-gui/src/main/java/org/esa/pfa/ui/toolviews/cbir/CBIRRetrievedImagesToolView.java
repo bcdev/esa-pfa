@@ -15,6 +15,7 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
@@ -102,7 +103,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
             final String command = event.getActionCommand();
             if (command.equals("improveBtn")) {
 
-                session.getImagesToLabel();
+                session.getImagesToLabel(ProgressMonitor.NULL);
 
                 getContext().getPage().showToolView(CBIRLabelingToolView.ID);
             }

@@ -16,6 +16,8 @@
 package org.esa.pfa.ui.toolviews.cbir;
 
 
+import com.bc.ceres.core.*;
+import com.bc.ceres.core.ProgressMonitor;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.ModalDialog;
@@ -309,7 +311,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     getContext().getPage().showToolView(CBIRLabelingToolView.ID);
 
                     session.populateArchivePatches();
-                    session.getImagesToLabel();
+                    session.getImagesToLabel(ProgressMonitor.NULL);
                 } catch (Throwable t) {
                     VisatApp.getApp().handleUnknownException(t);
                 }
