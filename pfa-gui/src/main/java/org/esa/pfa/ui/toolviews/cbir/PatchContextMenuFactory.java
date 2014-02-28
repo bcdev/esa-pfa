@@ -139,11 +139,11 @@ public class PatchContextMenuFactory {
         }
 
         File serverPathToPatch = new File(pathOnServer);
-        System.out.println("serverPathToPatch = " + serverPathToPatch);
+//        System.out.println("serverPathToPatch = " + serverPathToPatch);
         String parentProductFexName = serverPathToPatch.getParentFile().getName();
-        System.out.println("parentProductFexName = " + parentProductFexName);
+//        System.out.println("parentProductFexName = " + parentProductFexName);
         String parentProductName = parentProductFexName.substring(0, parentProductFexName.length() - 4); // prune ".fex" extension
-        System.out.println("parentProductName = " + parentProductName);
+//        System.out.println("parentProductName = " + parentProductName);
         return parentProductName;
     }
 
