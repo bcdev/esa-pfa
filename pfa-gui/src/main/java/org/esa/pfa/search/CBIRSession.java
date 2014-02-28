@@ -173,8 +173,9 @@ public class CBIRSession {
                 irrelevantImageList.add(patch);
             }
         }
-
-        fireNotification(Notification.NewTrainingImages);
+        if (!pm.isCanceled()) {
+            fireNotification(Notification.NewTrainingImages);
+        }
     }
 
     public void trainModel() throws Exception {

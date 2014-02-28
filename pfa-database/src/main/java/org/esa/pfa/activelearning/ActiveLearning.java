@@ -152,12 +152,13 @@ public class ActiveLearning {
 
             selectMostUncertainSamples();
             pm.worked(10);
-
-
             if (pm.isCanceled()) {
                 return new Patch[0];
             }
             selectMostDiverseSamples(SubProgressMonitor.create(pm, 90));
+            if (pm.isCanceled()) {
+                return new Patch[0];
+            }
         } finally {
             pm.done();
         }
@@ -566,6 +567,9 @@ public class ActiveLearning {
         KernelKmeansClusterer kkc = new KernelKmeansClusterer(maxIterationsKmeans, h, svmClassifier);
         kkc.setData(uncertainSamples);
         kkc.clustering(pm);
+        if (pm.isCanceled()) {
+            return;
+        }
         final int[] diverseSampleIDs = kkc.getRepresentatives();
 
         diverseSamples.clear();
