@@ -172,10 +172,13 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                         pm.beginTask("Training...", 100);
                         try {
                             session.setQueryImages(queryImages, pm);
-                            return Boolean.TRUE;
+                            if (!pm.isCanceled()) {
+                                return Boolean.TRUE;
+                            }
                         } finally {
                             pm.done();
                         }
+                        return Boolean.FALSE;
                     }
                 };
                 worker.executeWithBlocking();

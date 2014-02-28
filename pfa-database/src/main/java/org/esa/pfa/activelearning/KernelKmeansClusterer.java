@@ -68,6 +68,9 @@ public class KernelKmeansClusterer {
 
         pm.beginTask("Clustering", maxIterations + 1);
         setInitialClusterCenters();
+        if (pm.isCanceled()) {
+            return;
+        }
         pm.worked(1);
 
         for (int i = 0; i < maxIterations; i++) {
@@ -94,6 +97,9 @@ public class KernelKmeansClusterer {
                         System.out.println("Cluster " + clusterIdx + ": sample index " + clusters[clusterIdx].centerSampleIdx);
                     }
                 }
+            }
+            if (pm.isCanceled()) {
+                return;
             }
             pm.worked(1);
         }
