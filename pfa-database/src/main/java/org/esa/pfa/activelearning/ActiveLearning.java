@@ -38,15 +38,17 @@ public class ActiveLearning {
     private int h = 0; // number of batch samples selected with diversity and density criteria
     private int q = 0; // number of uncertainty samples selected with uncertainty criterion
     private int iteration = 0;  // Iteration index in active learning
+    private int numFeatures = 0;
     private List<Patch> testData = new ArrayList<Patch>();
     private List<Patch> queryData = new ArrayList<Patch>();
     private List<Patch> trainingData = new ArrayList<Patch>();
     private List<Patch> uncertainSamples = new ArrayList<Patch>();
     private List<Patch> diverseSamples = new ArrayList<Patch>();
     private SVM svmClassifier = null;
+    private double[] featureMin = null;
+    private double[] featureMax = null;
 
     private static int numInitialIterations = 3; // AL parameter
-    private static int numInitialIrrelevantPatches = 10; // AL parameter
     private static int maxIterationsKmeans = 10; // KKC parameter
     private static int numFolds = 5;    // SVM parameter: number of folds for cross validation
     private static double lower = 0.0;  // SVM parameter: training data scaling lower limit
@@ -81,6 +83,7 @@ public class ActiveLearning {
         trainingData.clear();
         checkQueryPatchesValidation(patchArray);
         trainingData.addAll(Arrays.asList(patchArray));
+        numFeatures = patchArray[0].getFeatures().length;
 
         queryData.clear();
         queryData.addAll(Arrays.asList(patchArray));
@@ -97,13 +100,13 @@ public class ActiveLearning {
      * @param patchArray The patch array.
      * @throws Exception The exception.
      */
-    public void setRandomPatches(final Patch[] patchArray) throws Exception {
+    public void setRandomPatches(final Patch[] patchArray, final ProgressMonitor pm) throws Exception {
 
         setTestDataSetWithValidPatches(patchArray);
 
         if (iteration == 0) {
             setInitialTrainingSet();
-            svmClassifier.train(trainingData);
+            svmClassifier.train(trainingData, pm);
         }
 
         if (debug) {
@@ -122,12 +125,14 @@ public class ActiveLearning {
      *
      * @param patchArray     The patch array.
      * @param iterationIndex The iteration index.
+     * @exception Exception The exception.
      */
-    public void setTrainingData(final Patch[] patchArray, final int iterationIndex) throws Exception {
+    public void setTrainingData(final Patch[] patchArray, final int iterationIndex,
+                                final ProgressMonitor pm) throws Exception {
 
         trainingData.clear();
         trainingData.addAll(Arrays.asList(patchArray));
-        svmClassifier.train(trainingData);
+        svmClassifier.train(trainingData, pm);
         iteration = iterationIndex;
     }
 
@@ -139,7 +144,7 @@ public class ActiveLearning {
      * @return The patch array.
      * @throws Exception The exceptions.
      */
-    public Patch[] getMostAmbiguousPatches(final int numImages, ProgressMonitor pm) throws Exception {
+    public Patch[] getMostAmbiguousPatches(final int numImages, final ProgressMonitor pm) throws Exception {
 
         this.h = numImages;
         this.q = 4 * h;
@@ -147,6 +152,7 @@ public class ActiveLearning {
             System.out.println("Number of uncertain patches to select: " + q);
             System.out.println("Number of diverse patches to select: " + h);
         }
+
         pm.beginTask("Get Most Ambiguous Patches", 100);
         try {
 
@@ -178,13 +184,13 @@ public class ActiveLearning {
      * @param userLabelledPatches The user labeled patch array.
      * @throws Exception The exception.
      */
-    public void train(Patch[] userLabelledPatches) throws Exception {
+    public void train(final Patch[] userLabelledPatches, final ProgressMonitor pm) throws Exception {
 
         checkLabels(userLabelledPatches);
 
         trainingData.addAll(Arrays.asList(userLabelledPatches));
 
-        svmClassifier.train(trainingData);
+        svmClassifier.train(trainingData, pm);
 
         iteration++;
 
@@ -206,7 +212,7 @@ public class ActiveLearning {
             double p = svmClassifier.classify(patch, decValues);
             final int label = p < 1 ? Patch.LABEL_IRRELEVANT : Patch.LABEL_RELEVANT;
             patch.setLabel(label);
-            patch.setDistance(decValues[0]);
+            patch.setDistance(Math.abs(decValues[0]));
             //System.out.println("Classified patch: x" + patch.getPatchX() + "y" + patch.getPatchY() + ", label: " + label);
         }
 
@@ -223,24 +229,6 @@ public class ActiveLearning {
     public Patch[] getTrainingData() {
 
         return trainingData.toArray(new Patch[trainingData.size()]);
-    }
-
-    /**
-     * Save training patches in a file.
-     *
-     * @param fileName The file name string.
-     */
-    public void saveTrainingData(String fileName) {
-
-    }
-
-    /**
-     * Load training patches saved in file and use them to initialize trainingData.
-     *
-     * @param fileName The file name string.
-     */
-    public void loadTrainingData(String fileName) {
-
     }
 
     public void setModel(final svm_model model) {
@@ -359,6 +347,8 @@ public class ActiveLearning {
      */
     private void setInitialTrainingSet() {
 
+        getFeatureMinMax();
+
         final double[] relevantPatchClusterCenter = computeClusterCenter(trainingData);
 
         final double[][] distance = computeDistanceToClusterCenter(relevantPatchClusterCenter);
@@ -369,10 +359,10 @@ public class ActiveLearning {
             }
         });
 
-        final int numIrrelevantSample = Math.min(numInitialIrrelevantPatches, distance.length);
+        final int numIrrelevantSample = Math.min(queryData.size(), distance.length);
         int[] patchIDs = new int[numIrrelevantSample];
         for (int i = 0; i < numIrrelevantSample; i++) {
-            final Patch patch = testData.get((int) distance[i][0]);
+            final Patch patch = testData.get((int)distance[i][0]);
             patch.setLabel(Patch.LABEL_IRRELEVANT);
             patchIDs[i] = patch.getID();
             trainingData.add(patch);
@@ -390,12 +380,74 @@ public class ActiveLearning {
     }
 
     /**
+     * Get lower and upper bounds for all features.
+     */
+    private void getFeatureMinMax() {
+
+        featureMin = new double[numFeatures];
+        featureMax = new double[numFeatures];
+        for (int i = 0; i < numFeatures; i++) {
+            featureMin[i] = Double.MAX_VALUE;
+            featureMax[i] = -Double.MAX_VALUE;
+        }
+
+        List<Patch> tempList = new ArrayList<Patch>();
+        tempList.addAll(testData);
+        tempList.addAll(queryData);
+
+        for (Patch patch:tempList) {
+            final double[] featureValues = getValues(patch.getFeatures());
+            for (int i = 0; i < numFeatures; i++) {
+                if (featureValues[i] < featureMin[i]) {
+                    featureMin[i] = featureValues[i];
+                }
+
+                if (featureValues[i] > featureMax[i]) {
+                    featureMax[i] = featureValues[i];
+                }
+            }
+        }
+    }
+
+    /**
+     * Normalize all features to range [0,1].
+     *
+     * @param features The feature array.
+     * @return Normalized features.
+     */
+    private double[] scale(final double[] features) {
+
+        double[] scaledFeatures = new double[numFeatures];
+        for (int i = 0; i < numFeatures; i++) {
+            scaledFeatures[i] = scale(i, features[i]);
+        }
+        return scaledFeatures;
+    }
+
+    /**
+     * Normalize a given feature to range [0,1].
+     *
+     * @param featureIdx The feature index.
+     * @param featureValue The feature value.
+     * @return The normalized feature.
+     */
+    private double scale(final int featureIdx, final double featureValue) {
+
+        if (featureMin[featureIdx] < featureMax[featureIdx]) {
+            double lambda = (featureValue - featureMin[featureIdx]) / (featureMax[featureIdx] - featureMin[featureIdx]);
+            return lower + lambda*(upper - lower);
+        } else {
+            return lower;
+        }
+    }
+
+    /**
      * Compute cluster center of the given list of patches.
      *
      * @param patchList The patch list.
      * @return The cluster center.
      */
-    private static double[] computeClusterCenter(final List<Patch> patchList) {
+    private double[] computeClusterCenter(final List<Patch> patchList) {
 
         double[] center = new double[patchList.get(0).getFeatures().length];
         for (Patch patch : patchList) {
@@ -424,7 +476,7 @@ public class ActiveLearning {
         int k = 0;
         for (Patch patch : testData) {
             distance[k][0] = k; // sample index in testData
-            distance[k][1] = computeEuclideanDistance(getValues(patch.getFeatures()), clusterCenter);
+            distance[k][1] = computeEuclideanDistance(scale(getValues(patch.getFeatures())), scale(clusterCenter));
             k++;
         }
 
@@ -465,6 +517,7 @@ public class ActiveLearning {
 
     /**
      * Select uncertain samples from test data.
+     *
      * @throws Exception The exception.
      */
     private void selectMostUncertainSamples() throws Exception {
@@ -532,7 +585,7 @@ public class ActiveLearning {
         uncertainSamples.clear();
         for (int i = 0; i < distance.length; i++) {
             if (distance[i][1] < 1.0) {
-                uncertainSamples.add(testData.get((int) distance[i][0]));
+                uncertainSamples.add(testData.get((int)distance[i][0]));
             }
         }
     }
@@ -553,7 +606,7 @@ public class ActiveLearning {
         uncertainSamples.clear();
         final int maxUncertainSample = Math.min(q, distance.length);
         for (int i = 0; i < maxUncertainSample; i++) {
-            uncertainSamples.add(testData.get((int) distance[i][0]));
+            uncertainSamples.add(testData.get((int)distance[i][0]));
         }
     }
 
@@ -564,6 +617,7 @@ public class ActiveLearning {
      * @throws Exception The exception.
      */
     private void selectMostDiverseSamples(ProgressMonitor pm) throws Exception {
+
         KernelKmeansClusterer kkc = new KernelKmeansClusterer(maxIterationsKmeans, h, svmClassifier);
         kkc.setData(uncertainSamples);
         kkc.clustering(pm);
