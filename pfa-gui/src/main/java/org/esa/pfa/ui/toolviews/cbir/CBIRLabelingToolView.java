@@ -15,6 +15,8 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
+import com.bc.ceres.core.*;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
@@ -32,6 +34,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         CBIRSession.CBIRSessionListener {
 
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRLabelingToolView";
+    private final static Dimension preferredDimension = new Dimension(550, 500);
 
     private CBIRSession session;
     private PatchDrawer relavantDrawer;
@@ -82,7 +85,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
 
         mainPane.add(listsPanel, BorderLayout.CENTER);
 
-        final JPanel bottomPanel = new JPanel();
+        final JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         iterationsLabel = new JLabel();
         bottomPanel.add(iterationsLabel);
 
@@ -96,6 +99,17 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         updateControls();
 
         return mainPane;
+    }
+
+    @Override
+    public void componentShown() {
+
+        final Window win = getPaneWindow();
+        if (win != null) {
+            win.setPreferredSize(preferredDimension);
+            win.setMaximumSize(preferredDimension);
+            win.setSize(preferredDimension);
+        }
     }
 
     private void updateControls() {
@@ -119,7 +133,23 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
             if(command.equals("applyBtn")) {
                 getContext().getPage().showToolView(CBIRRetrievedImagesToolView.ID);
 
-                session.trainModel();
+                final Window window = VisatApp.getApp().getApplicationWindow();
+                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Retrieving") {
+                    @Override
+                    protected Boolean doInBackground(final com.bc.ceres.core.ProgressMonitor pm) throws Exception {
+                        pm.beginTask("Retrieving images...", 100);
+                        try {
+                            session.trainModel(pm);
+                            if (!pm.isCanceled()) {
+                                return Boolean.TRUE;
+                            }
+                        } finally {
+                            pm.done();
+                        }
+                        return Boolean.FALSE;
+                    }
+                };
+                worker.executeWithBlocking();
             }
         } catch (Exception e) {
             VisatApp.getApp().showErrorDialog(e.toString());

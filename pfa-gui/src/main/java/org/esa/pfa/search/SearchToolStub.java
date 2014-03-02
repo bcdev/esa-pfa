@@ -45,7 +45,8 @@ public class SearchToolStub {
     private int numRetrievedImages = 50;
     private int numHitsMax = 500;
 
-    public SearchToolStub(PFAApplicationDescriptor applicationDescriptor, String archiveFolder, String classifierName) throws Exception {
+    public SearchToolStub(final PFAApplicationDescriptor applicationDescriptor, final String archiveFolder,
+                          final String classifierName, final ProgressMonitor pm) throws Exception {
         this.applicationDescriptor = applicationDescriptor;
 
         final File dbFolder = new File(archiveFolder);
@@ -59,7 +60,7 @@ public class SearchToolStub {
         al = new ActiveLearning();
 
         if (classifierFile.exists()) {
-            loadClassifier(classifierFile);
+            loadClassifier(classifierFile, pm);
         }
     }
 
@@ -109,7 +110,7 @@ public class SearchToolStub {
         return queryPatches;
     }
 
-    public void populateArchivePatches() throws Exception {
+    public void populateArchivePatches(final ProgressMonitor pm) throws Exception {
         final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numHitsMax);
 
         int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
@@ -121,19 +122,19 @@ public class SearchToolStub {
             throw new IllegalArgumentException(msg);
         }
 
-        al.setRandomPatches(archivePatches);
+        al.setRandomPatches(archivePatches, pm);
     }
 
-    public void setQueryImages(final Patch[] queryPatches) throws Exception {
+    public void setQueryImages(final Patch[] queryPatches, final ProgressMonitor pm) throws Exception {
 
         al.resetQuery();
         al.setQueryPatches(queryPatches);
-        populateArchivePatches();
+        populateArchivePatches(pm);
 
         saveClassifier();
     }
 
-    public Patch[] getImagesToLabel(ProgressMonitor pm) throws Exception {
+    public Patch[] getImagesToLabel(final ProgressMonitor pm) throws Exception {
         final Patch[] patchesToLabel = al.getMostAmbiguousPatches(numTrainingImages, pm);
         getPatchQuicklooks(patchesToLabel);
 
@@ -159,8 +160,8 @@ public class SearchToolStub {
         }
     }
 
-    public void trainModel(Patch[] labeledImages) throws Exception {
-        al.train(labeledImages);
+    public void trainModel(final Patch[] labeledImages, final ProgressMonitor pm) throws Exception {
+        al.train(labeledImages, pm);
 
         saveClassifier();
     }
@@ -227,7 +228,7 @@ public class SearchToolStub {
         return nameList.toArray(new String[nameList.size()]);
     }
 
-    private void loadClassifier(final File classifierFile) throws Exception {
+    private void loadClassifier(final File classifierFile, final ProgressMonitor pm) throws Exception {
         final ClassifierWriter storedClassifier = ClassifierWriter.read(classifierFile);
         numTrainingImages = storedClassifier.getNumTrainingImages();
         numRetrievedImages = storedClassifier.getNumRetrievedImages();
@@ -242,7 +243,7 @@ public class SearchToolStub {
 
         final Patch[] patches = loadPatches(storedClassifier.getPatchInfo());
         if(patches != null && patches.length > 0) {
-            al.setTrainingData(patches, numIterations);
+            al.setTrainingData(patches, numIterations, pm);
         }
     }
 

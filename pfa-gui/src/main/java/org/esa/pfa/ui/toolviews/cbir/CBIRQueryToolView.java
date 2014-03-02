@@ -51,6 +51,7 @@ import java.util.concurrent.ExecutionException;
 public class CBIRQueryToolView extends AbstractToolView implements ActionListener, CBIRSession.CBIRSessionListener {
 
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView";
+    private final static Dimension preferredDimension = new Dimension(550, 250);
 
     private CBIRSession session;
     private PatchDrawer drawer;
@@ -69,7 +70,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         imageScrollPanel.setLayout(new BoxLayout(imageScrollPanel, BoxLayout.X_AXIS));
         imageScrollPanel.setBorder(BorderFactory.createTitledBorder("Query Images"));
 
-        drawer = new PatchDrawer(new Patch[]{});
+        drawer = new PatchDrawer();
         drawer.setMinimumSize(new Dimension(500, 310));
         final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                                                        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -166,10 +167,10 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
 
                 Window window = VisatApp.getApp().getApplicationWindow();
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Training") {
+                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
-                        pm.beginTask("Training...", 100);
+                        pm.beginTask("Getting images...", 100);
                         try {
                             session.setQueryImages(queryImages, pm);
                             if (!pm.isCanceled()) {
@@ -253,6 +254,17 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         }
     }
 
+    @Override
+    public void componentShown() {
+
+        final Window win = getPaneWindow();
+        if (win != null) {
+            win.setPreferredSize(preferredDimension);
+            win.setMaximumSize(preferredDimension);
+            win.setSize(preferredDimension);
+        }
+    }
+
     public void notifyNewSession() {
         session = CBIRSession.Instance();
 
@@ -260,13 +272,6 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
             updateControls();
 
             drawer.update(session.getQueryPatches());
-
-            final Window win = getPaneWindow();
-            if (win != null) {
-                win.setPreferredSize(new Dimension(600, 250));
-                win.setMaximumSize(new Dimension(600, 250));
-                win.setSize(new Dimension(600, 250));
-            }
         }
     }
 

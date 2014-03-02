@@ -28,9 +28,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -59,8 +57,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
         final JPanel retPanel = new JPanel(new BorderLayout(2, 2));
         retPanel.setBorder(BorderFactory.createTitledBorder("Retrieved Images"));
 
-        drawer = new PatchDrawer();
-        drawer.setPreferredSize(new Dimension(500, 500));
+        drawer = new PatchDrawer(true, new Patch[] {});
         final JScrollPane scrollPane1 = new JScrollPane(drawer);
 
         final DragScrollListener dl = new DragScrollListener(drawer);
@@ -70,7 +67,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
         retPanel.add(scrollPane1, BorderLayout.CENTER);
         mainPane.add(retPanel, BorderLayout.CENTER);
 
-        final JPanel bottomPanel = new JPanel();
+        final JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(accuracyLabel);
 
         improveBtn = new JButton("Improve Classifier");
@@ -91,7 +88,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
 
         if(haveRetrievedImages) {
             float pct = accuracy/(float)retrievedPatches.length * 100;
-            accuracyLabel.setText("Accuracy: "+accuracy+"/"+retrievedPatches.length+" ("+(int)pct+"%)");
+            accuracyLabel.setText("Accuracy: "+accuracy+'/'+retrievedPatches.length+" ("+(int)pct+"%)");
         }
     }
 
@@ -104,11 +101,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
         try {
             final String command = event.getActionCommand();
             if (command.equals("improveBtn")) {
-                Window window = VisatApp.getApp().getApplicationWindow();
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Training") {
+                final Window window = VisatApp.getApp().getApplicationWindow();
+                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
-                        pm.beginTask("Training...", 100);
+                        pm.beginTask("Getting images...", 100);
                         try {
                             session.getImagesToLabel(pm);
                             if (!pm.isCanceled()) {
