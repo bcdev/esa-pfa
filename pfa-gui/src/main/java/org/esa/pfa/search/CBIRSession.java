@@ -23,6 +23,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +42,7 @@ public class CBIRSession {
 
     private SearchToolStub searchTool;
 
-    ProductOrderBasket productOrderBasket;
+    private ProductOrderBasket productOrderBasket;
 
     private final List<CBIRSessionListener> listenerList = new ArrayList<>(1);
     enum Notification { NewSession, NewTrainingImages, ModelTrained };
@@ -118,6 +119,18 @@ public class CBIRSession {
         return SearchToolStub.getSavedClassifierNames(archiveFolder);
     }
 
+    public void setQuicklookBandName(final Patch[] patches, final String quicklookBandName) {
+        searchTool.setQuicklookBandName(quicklookBandName);
+        //reset patch images
+        for(Patch patch : patches) {
+            patch.setImage(null);
+        }
+    }
+
+    public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
+        return searchTool.getAvailableQuickLooks(patch);
+    }
+
     public void addQueryPatch(final Patch patch) {
         searchTool.addQueryImage(patch);
     }
@@ -157,11 +170,15 @@ public class CBIRSession {
     }
 
     public Patch[] getRelevantTrainingImages() {
-        return relevantImageList.toArray(new Patch[relevantImageList.size()]);
+        final Patch[] patches = relevantImageList.toArray(new Patch[relevantImageList.size()]);
+        searchTool.getPatchQuicklooks(patches);
+        return patches;
     }
 
     public Patch[] getIrrelevantTrainingImages() {
-        return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
+        final Patch[] patches = irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
+        searchTool.getPatchQuicklooks(patches);
+        return patches;
     }
 
     public void getImagesToLabel(final ProgressMonitor pm) throws Exception {
@@ -200,7 +217,9 @@ public class CBIRSession {
     }
 
     public Patch[] getRetrievedImages() {
-        return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
+        final Patch[] patches = retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
+        searchTool.getPatchQuicklooks(patches);
+        return patches;
     }
 
     private void fireNotification(final Notification msg) throws Exception {

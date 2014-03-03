@@ -44,6 +44,7 @@ public class SearchToolStub {
     private int numTrainingImages = 12;
     private int numRetrievedImages = 50;
     private int numHitsMax = 500;
+    private String quicklookBandName;
 
     public SearchToolStub(final PFAApplicationDescriptor applicationDescriptor, final String archiveFolder,
                           final String classifierName, final ProgressMonitor pm) throws Exception {
@@ -55,6 +56,7 @@ public class SearchToolStub {
             classifierFolder.mkdirs();
         }
         this.classifierFile = new File(classifierFolder, classifierName + ".xml");
+        this.quicklookBandName = applicationDescriptor.getDefaultQuicklookFileName();
 
         db = new PatchQuery(dbFolder, applicationDescriptor.getDefaultFeatureSet());
         al = new ActiveLearning();
@@ -99,6 +101,10 @@ public class SearchToolStub {
         return al.getNumIterations();
     }
 
+    public void setQuicklookBandName(final String quicklookBandName) {
+        this.quicklookBandName = quicklookBandName;
+    }
+
     public void addQueryImage(final Patch patch) {
         al.addQueryImage(patch);
     }
@@ -141,15 +147,19 @@ public class SearchToolStub {
         return patchesToLabel;
     }
 
+    public static String[] getAvailableQuickLooks(final Patch patch) throws IOException {
+        return PatchQuery.getAvailableQuickLooks(patch);
+    }
+
     /**
      * Not all patches need quicklooks. This function adds quicklooks to the patches requested
      * @param patches the patches to get quicklooks for
      */
-    private void getPatchQuicklooks(final Patch[] patches) {
+    public void getPatchQuicklooks(final Patch[] patches) {
         for (Patch patch : patches) {
             if (patch.getImage() == null) {
                 try {
-                    URL imageURL = db.retrievePatchImage(patch, applicationDescriptor.getDefaultQuicklookFileName());
+                    URL imageURL = db.retrievePatchImage(patch, quicklookBandName);
                     //todo download image
                     File imageFile = new File(imageURL.getPath());
                     patch.setImage(loadImageFile(imageFile));
@@ -169,7 +179,7 @@ public class SearchToolStub {
     public Patch[] getRetrievedImages() throws Exception {
 
         final List<Patch> relavantImages = new ArrayList<>(numRetrievedImages);
-        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numRetrievedImages*100);
+        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numRetrievedImages*10);
         al.classify(archivePatches);
         int i=0;
         for(Patch patch : archivePatches) {

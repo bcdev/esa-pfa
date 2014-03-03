@@ -26,6 +26,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 /**
     Labeling Toolview
@@ -41,6 +43,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     private PatchDrawer irrelavantDrawer;
     private JButton applyBtn;
     private JLabel iterationsLabel;
+    private JComboBox<String> quickLookCombo;
 
     public CBIRLabelingToolView() {
         CBIRSession.Instance().addListener(this);
@@ -48,7 +51,22 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
 
     public JComponent createControl() {
 
-        final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
+        final JPanel topOptionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        quickLookCombo = new JComboBox();
+        quickLookCombo.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED) {
+                    session.setQuicklookBandName(session.getRelevantTrainingImages(), (String)quickLookCombo.getSelectedItem());
+                    session.setQuicklookBandName(session.getIrrelevantTrainingImages(), (String)quickLookCombo.getSelectedItem());
+                    relavantDrawer.update(session.getRelevantTrainingImages());
+                    irrelavantDrawer.update(session.getIrrelevantTrainingImages());
+                }
+            }
+        });
+        topOptionsPanel.add(new JLabel("Band shown:"));
+        topOptionsPanel.add(quickLookCombo);
+
         final JPanel relPanel = new JPanel(new BorderLayout(2, 2));
         relPanel.setBorder(BorderFactory.createTitledBorder("Relevant Images"));
 
@@ -83,8 +101,6 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         listsPanel.add(relPanel);
         listsPanel.add(irrelPanel);
 
-        mainPane.add(listsPanel, BorderLayout.CENTER);
-
         final JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         iterationsLabel = new JLabel();
         bottomPanel.add(iterationsLabel);
@@ -94,6 +110,9 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         applyBtn.addActionListener(this);
         bottomPanel.add(applyBtn);
 
+        final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
+        mainPane.add(topOptionsPanel, BorderLayout.NORTH);
+        mainPane.add(listsPanel, BorderLayout.CENTER);
         mainPane.add(bottomPanel, BorderLayout.SOUTH);
 
         updateControls();
@@ -113,12 +132,28 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     }
 
     private void updateControls() {
-        applyBtn.setEnabled(session != null);
+        try {
+            applyBtn.setEnabled(session != null);
 
-        if(session != null) {
-            relavantDrawer.update(session.getRelevantTrainingImages());
-            irrelavantDrawer.update(session.getIrrelevantTrainingImages());
-            iterationsLabel.setText("Training iterations: "+session.getNumIterations());
+            if(session != null) {
+                final Patch[] relImages = session.getRelevantTrainingImages();
+                final Patch[] irrelImages = session.getIrrelevantTrainingImages();
+                relavantDrawer.update(relImages);
+                irrelavantDrawer.update(irrelImages);
+                iterationsLabel.setText("Training iterations: "+session.getNumIterations());
+
+                if(quickLookCombo.getItemCount() == 0 && (irrelImages.length > 0 || relImages.length > 0)) {
+                    final Patch patch = irrelImages.length > 0 ? irrelImages[0] : relImages[0];
+                    final String[] bandNames = session.getAvailableQuickLooks(patch);
+                    for(String bandName : bandNames) {
+                        quickLookCombo.addItem(bandName);
+                    }
+                    final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
+                    quickLookCombo.setSelectedItem(defaultBandName);
+                }
+            }
+        } catch (Exception e) {
+            VisatApp.getApp().handleUnknownException(e);
         }
     }
 
