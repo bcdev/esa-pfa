@@ -127,7 +127,6 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
         }
     }
 
-
     @Override
     public void notifyNewSession() {
         CBIRSession session = CBIRSession.Instance();
@@ -135,7 +134,6 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
 
         PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
         setLocalProductDir(applicationDescriptor.getLocalProductDir());
-
     }
 
     @Override
