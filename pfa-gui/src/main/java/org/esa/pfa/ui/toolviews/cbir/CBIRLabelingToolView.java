@@ -166,8 +166,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         try {
             final String command = event.getActionCommand();
             if(command.equals("applyBtn")) {
-                final Window window = VisatApp.getApp().getApplicationWindow();
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(window, "Retrieving") {
+                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Retrieving") {
                     @Override
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Retrieving images...", 100);
