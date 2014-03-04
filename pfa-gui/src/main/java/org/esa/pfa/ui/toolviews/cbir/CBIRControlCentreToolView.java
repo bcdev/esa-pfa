@@ -41,9 +41,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
@@ -59,8 +59,6 @@ import java.awt.Label;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.File;
 
 
@@ -72,7 +70,6 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     private final static String instructionsStr = "Select a feature extraction application";
     private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
 
-    private JComboBox<String> applicationCombo;
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
     private JButton queryBtn, trainBtn, applyBtn;
@@ -84,10 +81,11 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     private File dbFolder;
     private JTextField dbFolderTextField;
 
-    private CBIRSession session = null;
+    private final CBIRSession session;
 
     public CBIRControlCentreToolView() {
-        CBIRSession.getInstance().addListener(this);
+        session = CBIRSession.getInstance();
+        session.addListener(this);
     }
 
     public JComponent createControl() {
@@ -99,29 +97,12 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        final PFAApplicationDescriptor[] apps = PFAApplicationRegistry.getInstance().getAllDescriptors();
-        applicationCombo = new JComboBox<>();
-        for (PFAApplicationDescriptor app : apps) {
-            applicationCombo.addItem(app.getName());
-        }
-        applicationCombo.setEditable(false);
-        applicationCombo.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                session = null;
-                updateControls();
-            }
-        });
 
         dbFolder = new File(VisatApp.getApp().getPreferences().getPropertyString(PROPERTY_KEY_DB_PATH, ""));
         dbFolderTextField = new JTextField();
         if (dbFolder.exists()) {
             dbFolderTextField.setText(dbFolder.getAbsolutePath());
         }
-
-        contentPane.add(new Label("Application:"), gbc);
-        gbc.gridy++;
-        gbc.gridwidth = 3;
-        contentPane.add(applicationCombo, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy++;
@@ -134,7 +115,24 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         gbc.gridx = 2;
         gbc.fill = GridBagConstraints.NONE;
 
-        final JButton fileChooserButton = new JButton(new FolderChooserAction("..."));
+        final JButton fileChooserButton = new JButton(new AbstractAction("...") {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                JFileChooser chooser = new FolderChooser();
+                chooser.setDialogTitle("Find database folder");
+                if (dbFolder.exists()) {
+                    chooser.setCurrentDirectory(dbFolder.getParentFile());
+                }
+                final Window window = SwingUtilities.getWindowAncestor((JComponent) event.getSource());
+                if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
+                    dbFolder = chooser.getSelectedFile();
+                    dbFolderTextField.setText(dbFolder.getAbsolutePath());
+                    VisatApp.getApp().getPreferences().setPropertyString(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
+                    initClassifierList();
+                }
+            }
+        });
+
         contentPane.add(fileChooserButton, gbc);
 
         gbc.gridwidth = 1;
@@ -145,13 +143,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy++;
 
-        final String[] savedClassifierNames = CBIRSession.getSavedClassifierNames(dbFolder.getAbsolutePath());
-        final DefaultListModel modelList = new DefaultListModel<String>();
-        for (String name : savedClassifierNames) {
-            modelList.addElement(name);
-        }
-
-        classifierList = new JList<String>(modelList);
+        classifierList = new JList<>();
         classifierList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         classifierList.setLayoutOrientation(JList.VERTICAL);
         classifierList.setPrototypeCellValue("123456789012345678901234567890");
@@ -160,8 +152,13 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             public void valueChanged(ListSelectionEvent e) {
                 try {
                     if (e.getValueIsAdjusting() == false) {
-                        createNewSession();
-                        updateControls();
+                        String classifierName = classifierList.getSelectedValue();
+                        if (classifierName != null) {
+                            SearchToolStub classifier = session.getClassifier();
+                            if (classifier == null || !classifierName.equals(classifier.getClassifierName())) {
+                                session.loadClassifier(dbFolder.getAbsolutePath(), classifierName);
+                            }
+                        }
                     }
                 } catch (Throwable t) {
                     VisatApp.getApp().handleUnknownException(t);
@@ -186,7 +183,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    if (session != null) {
+                    if (session.hasClassifier()) {
                         session.setNumTrainingImages(Integer.parseInt(numTrainingImages.getText()));
                     }
                 } catch (Throwable t) {
@@ -208,7 +205,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    if (session != null) {
+                    if (session.hasClassifier()) {
                         session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
                     }
                 } catch (Throwable t) {
@@ -228,7 +225,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         updateBtn = new JButton(new AbstractAction("Update") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    if (session != null) {
+                    if (session.hasClassifier()) {
                         session.setNumTrainingImages(Integer.parseInt(numTrainingImages.getText()));
                         session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
                     }
@@ -256,6 +253,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         final JPanel mainPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mainPane.add(mainPane0);
 
+        initClassifierList();
         updateControls();
 
         return mainPane;
@@ -263,13 +261,21 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
 
     @Override
     public void componentShown() {
-
         final Window win = getPaneWindow();
         if (win != null) {
             win.setPreferredSize(preferredDimension);
             win.setMaximumSize(preferredDimension);
             win.setSize(preferredDimension);
         }
+    }
+
+    private void initClassifierList() {
+        final String[] savedClassifierNames = CBIRSession.getSavedClassifierNames(dbFolder.getAbsolutePath());
+        final DefaultListModel<String> modelList = new DefaultListModel<>();
+        for (String name : savedClassifierNames) {
+            modelList.addElement(name);
+        }
+        classifierList.setModel(modelList);
     }
 
     public static JLabel createTitleLabel(final String title) {
@@ -305,11 +311,13 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     final PromptDialog dlg = new PromptDialog("New Classifier", "Name", "");
                     dlg.show();
 
-                    final String value = dlg.getValue();
-                    if (!value.isEmpty()) {
-                        final DefaultListModel listModel = (DefaultListModel) classifierList.getModel();
-                        listModel.addElement(value);
-                        classifierList.setSelectedIndex(listModel.indexOf(value));
+                    String classifierName = dlg.getClassifierName();
+                    if (!classifierName.isEmpty()) {
+                        String applicationName = dlg.getApplicationName();
+                        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+                        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
+                        String dbPath = dbFolderTextField.getText();
+                        createNewClassifier(applicationDescriptor, classifierName, dbPath);
                     }
                 } catch (Throwable t) {
                     VisatApp.getApp().handleUnknownException(t);
@@ -320,8 +328,6 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             public void actionPerformed(ActionEvent e) {
                 try {
                     session.deleteClassifier();
-                    final DefaultListModel listModel = (DefaultListModel) classifierList.getModel();
-                    listModel.remove(classifierList.getSelectedIndex());
                 } catch (Throwable t) {
                     VisatApp.getApp().handleUnknownException(t);
                 }
@@ -415,40 +421,12 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         return panel2;
     }
 
-    private void createNewSession() throws Exception {
-        final String name = classifierList.getSelectedValue();
-        System.out.println("name = " + name);
-        if(name == null)
-            return;
-        if (session == null || (session.getClassifierName() == null || !session.getClassifierName().equals(name))) {
-
-            ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Loading") {
-                @Override
-                protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                    pm.beginTask("Creating session...", 100);
-                    try {
-                        createNewSession(name, pm);
-                        if (!pm.isCanceled()) {
-                            return Boolean.TRUE;
-                        }
-                    } finally {
-                        pm.done();
-                    }
-                    return Boolean.FALSE;
-                }
-            };
-            worker.executeWithBlocking();
-        }
-    }
-
     private void updateControls() {
         newBtn.setEnabled(dbFolder.exists());
 
-        final String name = classifierList.getSelectedValue();
-        final boolean activeSession = name != null && session != null;
+        final boolean activeSession = session.hasClassifier();
         deleteBtn.setEnabled(activeSession);
 
-        applicationCombo.setEnabled(activeSession);
         numTrainingImages.setEnabled(activeSession);
         numRetrievedImages.setEnabled(activeSession);
         updateBtn.setEnabled(activeSession);
@@ -457,7 +435,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         trainBtn.setEnabled(activeSession);
         applyBtn.setEnabled(activeSession);
 
-        if (session != null && session.hasClassifier()) {
+        if (activeSession) {
             final int numIterations = session.getNumIterations();
             numTrainingImages.setText(String.valueOf(session.getNumTrainingImages()));
             numRetrievedImages.setText(String.valueOf(session.getNumRetrievedImages()));
@@ -468,83 +446,101 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         }
     }
 
-    private void createNewSession(final String classifierName, final ProgressMonitor pm) throws Exception {
-        final String application = (String) applicationCombo.getSelectedItem();
-        final PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(application);
-
-        final String dbPath = dbFolderTextField.getText();
-        session = CBIRSession.getInstance();
-
-        session.createClassifier(classifierName, applicationDescriptor, dbPath, pm);
-    }
-
-    private class FolderChooserAction extends AbstractAction {
-
-        private String APPROVE_BUTTON_TEXT = "Select";
-        private JFileChooser chooser;
-
-        private FolderChooserAction(final String text) {
-            super(text);
-            chooser = new FolderChooser();
-            chooser.setDialogTitle("Find database folder");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            final Window window = SwingUtilities.getWindowAncestor((JComponent) event.getSource());
-            if (dbFolder.exists()) {
-                chooser.setCurrentDirectory(dbFolder.getParentFile());
-            }
-            if (chooser.showDialog(window, APPROVE_BUTTON_TEXT) == JFileChooser.APPROVE_OPTION) {
-                dbFolder = chooser.getSelectedFile();
-                dbFolderTextField.setText(dbFolder.getAbsolutePath());
-                VisatApp.getApp().getPreferences().setPropertyString(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
-                final String[] savedClassifierNames = CBIRSession.getSavedClassifierNames(dbFolder.getAbsolutePath());
-
-                DefaultListModel<String> modelList = (DefaultListModel<String>) classifierList.getModel();
-                modelList.clear();
-                for (String name : savedClassifierNames) {
-                    modelList.addElement(name);
-                }
-                updateControls();
-            }
-        }
-    }
 
     private static class PromptDialog extends ModalDialog {
 
-        private JTextArea textArea;
+        private final JTextField nameTextField;
+        private final JComboBox<String> applicationCombo;
 
         public PromptDialog(String title, String labelStr, String defaultValue) {
             super(VisatApp.getApp().getMainFrame(), title, ModalDialog.ID_OK, null);
 
-            final JPanel content = new JPanel();
-            final JLabel label = new JLabel(labelStr);
-            textArea = new JTextArea(defaultValue);
-            textArea.setColumns(50);
+            final JPanel contentPane = new JPanel(new GridBagLayout());
+            final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.NORTHWEST;
+            gbc.gridx = 0;
+            gbc.gridy = 0;
 
-            content.add(label);
-            content.add(textArea);
 
-            setContent(content);
+            nameTextField = new JTextField(defaultValue);
+            nameTextField.setColumns(50);
+            contentPane.add(new JLabel(labelStr), gbc);
+            gbc.gridx = 1;
+            contentPane.add(nameTextField, gbc);
+
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            contentPane.add(new Label("Application:"), gbc);
+
+            applicationCombo = new JComboBox<>();
+            for (PFAApplicationDescriptor app : PFAApplicationRegistry.getInstance().getAllDescriptors()) {
+                applicationCombo.addItem(app.getName());
+            }
+            applicationCombo.setEditable(false);
+
+            gbc.gridx = 0;
+            gbc.gridy = 2;
+            gbc.gridwidth = 2;
+            contentPane.add(applicationCombo, gbc);
+
+            setContent(contentPane);
         }
 
-        public String getValue() {
-            return textArea.getText();
+        String getClassifierName() {
+            return nameTextField.getText();
         }
 
+        String getApplicationName() {
+            return (String) applicationCombo.getSelectedItem();
+        }
+
+        @Override
         protected void onOK() {
             hide();
         }
     }
 
+    private static void createNewClassifier(final PFAApplicationDescriptor applicationDescriptor, final String classifierName, final String dbPath) {
+        ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(VisatApp.getApp().getMainFrame(), "Loading") {
+            @Override
+            protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
+                pm.beginTask("Creating classifier...", 100);
+                try {
+                    CBIRSession instance = CBIRSession.getInstance();
+                    instance.createClassifier(classifierName, applicationDescriptor, dbPath, pm);
+                    if (!pm.isCanceled()) {
+                        return Boolean.TRUE;
+                    }
+                } finally {
+                    pm.done();
+                }
+                return Boolean.FALSE;
+            }
+        };
+        worker.executeWithBlocking();
+        try {
+            worker.get();
+        } catch (Exception e) {
+            VisatApp.getApp().handleError("Failed to create new Classifier", e);
+        }
+    }
+
     @Override
     public void notifyNewClassifier(SearchToolStub classifier) {
+        String name = classifier.getClassifierName();
+        DefaultListModel<String> model = (DefaultListModel<String>) classifierList.getModel();
+        if (!model.contains(name)) {
+            model.addElement(name);
+            classifierList.setSelectedValue(name, true);
+        }
+        updateControls();
     }
 
     @Override
     public void notifyDeleteClassifier(SearchToolStub classifier) {
-        // todo - implement notifyDeleteClassifier (Norman, 04.03.14)
+        initClassifierList();
+        updateControls();
     }
 
     @Override

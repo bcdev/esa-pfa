@@ -46,14 +46,15 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView";
     private final static Dimension preferredDimension = new Dimension(550, 300);
 
-    private CBIRSession session;
+    private final CBIRSession session;
     private PatchDrawer drawer;
     private PatchSelectionInteractor interactor;
     private JButton addPatchBtn, editBtn, startTrainingBtn;
     private JComboBox<String> quickLookCombo;
 
     public CBIRQueryToolView() {
-        CBIRSession.getInstance().addListener(this);
+        session = CBIRSession.getInstance();
+        session.addListener(this);
     }
 
     public JComponent createControl() {
@@ -61,7 +62,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
 
         final JPanel topOptionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        quickLookCombo = new JComboBox();
+        quickLookCombo = new JComboBox<>();
         quickLookCombo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -129,10 +130,9 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
 
     private void updateControls() {
         try {
-            boolean sessionActive = false;
+            boolean hasClassifier = session.hasClassifier();
             boolean hasQueryImages = false;
-            if (session != null) {
-                sessionActive = true;
+            if (hasClassifier) {
                 final Patch[] queryPatches = session.getQueryPatches();
                 hasQueryImages = queryPatches.length > 0;
 
@@ -145,8 +145,8 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                     quickLookCombo.setSelectedItem(defaultBandName);
                 }
             }
-
-            addPatchBtn.setEnabled(sessionActive);
+            quickLookCombo.setEnabled(hasClassifier);
+            addPatchBtn.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
             editBtn.setEnabled(false); //todo //hasQueryImages);
         } catch (Exception e) {
@@ -288,8 +288,6 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
 
     @Override
     public void notifyNewClassifier(SearchToolStub classifier) {
-        session = CBIRSession.getInstance();
-
         if (isControlCreated()) {
             quickLookCombo.removeAllItems();
             updateControls();
@@ -300,9 +298,11 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
 
     @Override
     public void notifyDeleteClassifier(SearchToolStub classifier) {
-        session = null;
         if (isControlCreated()) {
+            quickLookCombo.removeAllItems();
             updateControls();
+
+            drawer.update(new Patch[0]);
         }
     }
 
