@@ -68,7 +68,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return AlgalBloomApplicationDescriptor.class.getClassLoader().getResourceAsStream("AlgalBloomFeatureWriter.xml");
+        return getClass().getResourceAsStream("AlgalBloomFeatureWriter.xml");
     }
 
     @Override
