@@ -40,9 +40,7 @@ import java.awt.Component;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
+import java.io.*;
 
 /**
  * Feature extraction
@@ -101,8 +99,15 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             writeOp.setWriteEntireTileRows(true);
             writeOp.writeProduct(ProgressMonitor.NULL);
 
-            final File graphFile = session.getApplicationDescriptor().getGraphFile();
-            final Graph graph = GraphIO.read(new FileReader(graphFile), null);
+            Reader graphReader = null;
+            Graph graph;
+            try {
+                graphReader = new InputStreamReader(session.getApplicationDescriptor().getGraphFileAsStream());
+                graph = GraphIO.read(graphReader, null);
+            } finally {
+                if(graphReader != null)
+                    graphReader.close();
+            }
             setIO(graph, subsetFile, tmpOutFolder);
 
             final GraphProcessor processor = new GraphProcessor();
