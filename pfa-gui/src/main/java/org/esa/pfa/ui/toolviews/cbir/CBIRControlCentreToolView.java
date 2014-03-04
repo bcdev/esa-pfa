@@ -308,7 +308,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         newBtn = new JButton(new AbstractAction("New") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    final PromptDialog dlg = new PromptDialog("New Classifier", "Name", "");
+                    final PromptDialog dlg = new PromptDialog("New Classifier", "Name:", "");
                     dlg.show();
 
                     String classifierName = dlg.getClassifierName();
@@ -464,7 +464,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
 
 
             nameTextField = new JTextField(defaultValue);
-            nameTextField.setColumns(50);
+            nameTextField.setColumns(24);
             contentPane.add(new JLabel(labelStr), gbc);
             gbc.gridx = 1;
             contentPane.add(nameTextField, gbc);
@@ -479,9 +479,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             }
             applicationCombo.setEditable(false);
 
-            gbc.gridx = 0;
-            gbc.gridy = 2;
-            gbc.gridwidth = 2;
+            gbc.gridx = 1;
             contentPane.add(applicationCombo, gbc);
 
             setContent(contentPane);
