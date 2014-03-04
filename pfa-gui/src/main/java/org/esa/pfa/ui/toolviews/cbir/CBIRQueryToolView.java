@@ -26,6 +26,7 @@ import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.pfa.search.SearchToolStub;
 
 import javax.swing.*;
 import java.awt.*;
@@ -285,7 +286,8 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         }
     }
 
-    public void notifyNewSession() {
+    @Override
+    public void notifyNewClassifier(SearchToolStub classifier) {
         session = CBIRSession.getInstance();
 
         if (isControlCreated()) {
@@ -296,9 +298,16 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         }
     }
 
-    public void notifyNewTrainingImages() {
+    @Override
+    public void notifyDeleteClassifier(SearchToolStub classifier) {
+        // todo - implement notifyDeleteClassifier (Norman, 04.03.14)
     }
 
-    public void notifyModelTrained() {
+    @Override
+    public void notifyNewTrainingImages(SearchToolStub classifier) {
+    }
+
+    @Override
+    public void notifyModelTrained(SearchToolStub classifier) {
     }
 }

@@ -22,6 +22,7 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.pfa.search.SearchToolStub;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -128,7 +129,7 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifyNewSession() {
+    public void notifyNewClassifier(SearchToolStub classifier) {
         CBIRSession session = CBIRSession.getInstance();
         setProductOrderBasket(session.getProductOrderBasket());
 
@@ -137,11 +138,16 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifyNewTrainingImages() {
+    public void notifyDeleteClassifier(SearchToolStub classifier) {
+        // todo - implement notifyDeleteClassifier (Norman, 04.03.14)
     }
 
     @Override
-    public void notifyModelTrained() {
+    public void notifyNewTrainingImages(SearchToolStub classifier) {
+    }
+
+    @Override
+    public void notifyModelTrained(SearchToolStub classifier) {
     }
 
     @Override
