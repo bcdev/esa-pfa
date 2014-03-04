@@ -55,7 +55,7 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     private File localProductDir;
 
     public CBIROrderingToolView() {
-        CBIRSession.Instance().addListener(this);
+        CBIRSession.getInstance().addListener(this);
     }
 
     public JComponent createControl() {
@@ -129,7 +129,7 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
 
     @Override
     public void notifyNewSession() {
-        CBIRSession session = CBIRSession.Instance();
+        CBIRSession session = CBIRSession.getInstance();
         setProductOrderBasket(session.getProductOrderBasket());
 
         PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();

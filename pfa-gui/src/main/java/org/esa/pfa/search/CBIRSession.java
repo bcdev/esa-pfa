@@ -34,6 +34,12 @@ import java.util.List;
  */
 public class CBIRSession {
 
+    public enum Notification {
+        NewSession,
+        NewTrainingImages,
+        ModelTrained
+    }
+
     private List<Patch> relevantImageList = new ArrayList<>(50);
     private List<Patch> irrelevantImageList = new ArrayList<>(50);
     private List<Patch> retrievedImageList = new ArrayList<>(500);
@@ -49,16 +55,14 @@ public class CBIRSession {
 
     private final List<CBIRSessionListener> listenerList = new ArrayList<>(1);
 
-    enum Notification { NewSession, NewTrainingImages, ModelTrained };
-
     private static CBIRSession instance = null;
     private boolean initialized = false;
 
     private CBIRSession() {
     }
 
-    public static CBIRSession Instance() {
-        if(instance == null) {
+    public static CBIRSession getInstance() {
+        if (instance == null) {
             instance = new CBIRSession();
         }
         return instance;
@@ -69,18 +73,18 @@ public class CBIRSession {
     }
 
     public void initSession(final String classifierName,
-                       final PFAApplicationDescriptor applicationDescriptor,
-                       final String archivePath, final ProgressMonitor pm) throws Exception {
+                            final PFAApplicationDescriptor applicationDescriptor,
+                            final String archivePath, final ProgressMonitor pm) throws Exception {
         try {
-        this.classifierName = classifierName;
-        this.applicationDescriptor = applicationDescriptor;
+            this.classifierName = classifierName;
+            this.applicationDescriptor = applicationDescriptor;
 
-        searchTool = new SearchToolStub(applicationDescriptor, archivePath, classifierName, pm);
-        productOrderBasket = new ProductOrderBasket();
-        productOrderService = new ProductOrderService(productOrderBasket);
+            searchTool = new SearchToolStub(applicationDescriptor, archivePath, classifierName, pm);
+            productOrderBasket = new ProductOrderBasket();
+            productOrderService = new ProductOrderService(productOrderBasket);
 
-        initialized = true;
-        fireNotification(Notification.NewSession);
+            initialized = true;
+            fireNotification(Notification.NewSession);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -111,7 +115,7 @@ public class CBIRSession {
         return searchTool.deleteClassifier();
     }
 
-    public FeatureType[] getEffectiveFeatureTypes()  {
+    public FeatureType[] getEffectiveFeatureTypes() {
         return searchTool.getPatchQuery().getEffectiveFeatureTypes();
     }
 
@@ -142,7 +146,7 @@ public class CBIRSession {
     public void setQuicklookBandName(final Patch[] patches, final String quicklookBandName) {
         searchTool.setQuicklookBandName(quicklookBandName);
         //reset patch images
-        for(Patch patch : patches) {
+        for (Patch patch : patches) {
             patch.setImage(null);
         }
     }
@@ -174,15 +178,15 @@ public class CBIRSession {
     }
 
     public void reassignTrainingImage(final Patch patch) {
-        if(patch.getLabel() == Patch.LABEL_RELEVANT) {
+        if (patch.getLabel() == Patch.LABEL_RELEVANT) {
             int index = irrelevantImageList.indexOf(patch);
-            if(index != -1) {
+            if (index != -1) {
                 irrelevantImageList.remove(index);
                 relevantImageList.add(patch);
             }
-        } else if(patch.getLabel() == Patch.LABEL_IRRELEVANT) {
+        } else if (patch.getLabel() == Patch.LABEL_IRRELEVANT) {
             int index = relevantImageList.indexOf(patch);
-            if(index != -1) {
+            if (index != -1) {
                 relevantImageList.remove(index);
                 irrelevantImageList.add(patch);
             }
@@ -207,8 +211,8 @@ public class CBIRSession {
         irrelevantImageList.clear();
 
         final Patch[] imagesToLabel = searchTool.getImagesToLabel(pm);
-        for(Patch patch : imagesToLabel) {
-            if(patch.getLabel() == Patch.LABEL_RELEVANT) {
+        for (Patch patch : imagesToLabel) {
+            if (patch.getLabel() == Patch.LABEL_RELEVANT) {
                 relevantImageList.add(patch);
             } else {
                 // default to irrelevant so user only needs to select the relevant
@@ -243,7 +247,7 @@ public class CBIRSession {
     }
 
     private void fireNotification(final Notification msg) throws Exception {
-        for(CBIRSessionListener listener : listenerList) {
+        for (CBIRSessionListener listener : listenerList) {
             switch (msg) {
                 case NewSession:
                     listener.notifyNewSession();
@@ -255,7 +259,7 @@ public class CBIRSession {
                     listener.notifyModelTrained();
                     break;
                 default:
-                    throw new Exception("Unknown notification message: "+msg);
+                    throw new Exception("Unknown notification message: " + msg);
             }
         }
     }

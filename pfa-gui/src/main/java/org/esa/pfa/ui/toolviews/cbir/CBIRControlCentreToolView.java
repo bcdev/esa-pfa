@@ -62,7 +62,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     private CBIRSession session = null;
 
     public CBIRControlCentreToolView() {
-        CBIRSession.Instance().addListener(this);
+        CBIRSession.getInstance().addListener(this);
     }
 
     public JComponent createControl() {
@@ -447,7 +447,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         final PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(application);
 
         final String dbPath = dbFolderTextField.getText();
-        session = CBIRSession.Instance();
+        session = CBIRSession.getInstance();
 
         session.initSession(classifierName, applicationDescriptor, dbPath, pm);
     }

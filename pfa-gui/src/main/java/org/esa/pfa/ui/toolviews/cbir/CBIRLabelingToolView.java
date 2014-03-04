@@ -46,7 +46,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     private JComboBox<String> quickLookCombo;
 
     public CBIRLabelingToolView() {
-        CBIRSession.Instance().addListener(this);
+        CBIRSession.getInstance().addListener(this);
     }
 
     public JComponent createControl() {
@@ -203,7 +203,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     }
 
     public void notifyNewSession() {
-        session = CBIRSession.Instance();
+        session = CBIRSession.getInstance();
     }
 
     public void notifyNewTrainingImages() {

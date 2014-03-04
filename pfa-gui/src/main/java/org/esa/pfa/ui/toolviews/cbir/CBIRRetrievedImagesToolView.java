@@ -63,7 +63,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     private JComboBox<String> quickLookCombo;
 
     public CBIRRetrievedImagesToolView() {
-        CBIRSession.Instance().addListener(this);
+        CBIRSession.getInstance().addListener(this);
     }
 
     public JComponent createControl() {
@@ -204,7 +204,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     public void notifyNewSession() {
-        session = CBIRSession.Instance();
+        session = CBIRSession.getInstance();
     }
 
     public void notifyNewTrainingImages() {
@@ -251,7 +251,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
                 contextActions.add(new AbstractAction("Order All Parent Products") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        ProductOrderService productOrderService = CBIRSession.Instance().getProductOrderService();
+                        ProductOrderService productOrderService = CBIRSession.getInstance().getProductOrderService();
                         ProductOrderBasket productOrderBasket = productOrderService.getProductOrderBasket();
 
                         Set<String> productNameSet = new HashSet<>();
