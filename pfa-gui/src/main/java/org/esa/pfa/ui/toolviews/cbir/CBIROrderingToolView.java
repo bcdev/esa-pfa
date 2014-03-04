@@ -170,7 +170,8 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
                     progressBar.setString(progress + "% downloaded");
                     return progressBar;
                 } else if (productOrder.getState() != null) {
-                    super.getTableCellRendererComponent(table, productOrder.getState().toString(), isSelected, hasFocus, row, column);
+                    String text = productOrder.getMessage() != null ? productOrder.getMessage() : productOrder.getState().toString();
+                    super.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
                     Font font = getFont();
                     setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
                     setForeground(getStateColor(productOrder.getState()));
@@ -182,11 +183,13 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
         }
 
         Color getStateColor(ProductOrder.State state) {
-            if (state == ProductOrder.State.DOWNLOADED) {
+            if (state == ProductOrder.State.COMPLETED) {
                 return Color.GREEN.darker();
             } else if (state == ProductOrder.State.WAITING) {
                 return Color.BLUE.darker();
-            } else if (state == ProductOrder.State.REQUEST_SUBMITTED) {
+            } else if (state == ProductOrder.State.SUBMITTED) {
+                return Color.BLUE.darker();
+            } else if (state == ProductOrder.State.ERROR) {
                 return Color.RED.darker();
             } else {
                 return Color.DARK_GRAY;

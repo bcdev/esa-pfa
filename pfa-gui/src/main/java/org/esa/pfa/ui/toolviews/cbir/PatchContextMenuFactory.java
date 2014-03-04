@@ -107,7 +107,7 @@ public class PatchContextMenuFactory {
                 ProductOrderBasket productOrderBasket = CBIRSession.Instance().getProductOrderBasket();
                 ProductOrder productOrder = productOrderBasket.getProductOrder(parentProductName);
                 if (productOrder != null) {
-                    if (productOrder.getState() == ProductOrder.State.DOWNLOADED) {
+                    if (productOrder.getState() == ProductOrder.State.COMPLETED) {
                         int resp = VisatApp.getApp().showQuestionDialog((String) getValue(NAME),
                                                                         String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
                                                                                       parentProductName), null);
