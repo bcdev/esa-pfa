@@ -28,9 +28,25 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.SearchToolStub;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Rectangle;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -66,9 +82,11 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         quickLookCombo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if(e.getStateChange() == ItemEvent.SELECTED) {
-                    session.setQuicklookBandName(session.getQueryPatches(), (String)quickLookCombo.getSelectedItem());
-                    drawer.update(session.getQueryPatches());
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    if (session.hasClassifier()) {
+                        session.setQuicklookBandName(session.getQueryPatches(), (String) quickLookCombo.getSelectedItem());
+                        drawer.update(session.getQueryPatches());
+                    }
                 }
             }
         });
@@ -136,9 +154,9 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 final Patch[] queryPatches = session.getQueryPatches();
                 hasQueryImages = queryPatches.length > 0;
 
-                if(hasQueryImages && quickLookCombo.getItemCount() == 0) {
+                if (hasQueryImages && quickLookCombo.getItemCount() == 0) {
                     final String[] bandNames = session.getAvailableQuickLooks(queryPatches[0]);
-                    for(String bandName : bandNames) {
+                    for (String bandName : bandNames) {
                         quickLookCombo.addItem(bandName);
                     }
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
@@ -222,6 +240,9 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
 
         @Override
         public void interactionStopped(Interactor interactor, InputEvent inputEvent) {
+            if (!session.hasClassifier()) {
+                return;
+            }
             final PatchSelectionInteractor patchInteractor = (PatchSelectionInteractor) interactor;
             if (patchInteractor != null) {
                 try {

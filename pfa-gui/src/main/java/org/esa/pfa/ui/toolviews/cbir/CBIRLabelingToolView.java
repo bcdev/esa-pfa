@@ -60,10 +60,12 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    session.setQuicklookBandName(session.getRelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
-                    session.setQuicklookBandName(session.getIrrelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
-                    relavantDrawer.update(session.getRelevantTrainingImages());
-                    irrelavantDrawer.update(session.getIrrelevantTrainingImages());
+                    if (session.hasClassifier()) {
+                        session.setQuicklookBandName(session.getRelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
+                        session.setQuicklookBandName(session.getIrrelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
+                        relavantDrawer.update(session.getRelevantTrainingImages());
+                        irrelavantDrawer.update(session.getIrrelevantTrainingImages());
+                    }
                 }
             }
         });
@@ -177,6 +179,10 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         try {
             final String command = event.getActionCommand();
             if (command.equals("applyBtn")) {
+                if (!session.hasClassifier()) {
+                    return;
+                }
+
                 ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Retrieving") {
                     @Override
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {

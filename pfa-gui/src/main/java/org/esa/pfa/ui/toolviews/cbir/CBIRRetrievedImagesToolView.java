@@ -100,9 +100,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    session.setQuicklookBandName(retrievedPatches, (String) quickLookCombo.getSelectedItem());
-                    retrievedPatches = session.getRetrievedImages();
-                    drawer.update(retrievedPatches);
+                    if (session.hasClassifier()) {
+                        session.setQuicklookBandName(retrievedPatches, (String) quickLookCombo.getSelectedItem());
+                        retrievedPatches = session.getRetrievedImages();
+                        drawer.update(retrievedPatches);
+                    }
                 }
             }
         });

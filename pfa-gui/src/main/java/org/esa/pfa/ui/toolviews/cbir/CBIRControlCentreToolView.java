@@ -43,7 +43,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
-import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
@@ -354,6 +353,9 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         });
         trainBtn = new JButton(new AbstractAction("Label") {
             public void actionPerformed(ActionEvent e) {
+                if (!session.hasClassifier()) {
+                    return;
+                }
                 try {
                     ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
                         @Override
@@ -383,6 +385,9 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         applyBtn = new JButton(new AbstractAction("Apply") {
             public void actionPerformed(ActionEvent e) {
                 try {
+                    if (!session.hasClassifier()) {
+                        return;
+                    }
                     ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Retrieving") {
                         @Override
                         protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
@@ -424,18 +429,18 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     private void updateControls() {
         newBtn.setEnabled(dbFolder.exists());
 
-        final boolean activeSession = session.hasClassifier();
-        deleteBtn.setEnabled(activeSession);
+        final boolean hasActiveClassifier = session.hasClassifier();
+        deleteBtn.setEnabled(hasActiveClassifier);
 
-        numTrainingImages.setEnabled(activeSession);
-        numRetrievedImages.setEnabled(activeSession);
-        updateBtn.setEnabled(activeSession);
+        numTrainingImages.setEnabled(hasActiveClassifier);
+        numRetrievedImages.setEnabled(hasActiveClassifier);
+        updateBtn.setEnabled(hasActiveClassifier);
 
-        queryBtn.setEnabled(activeSession);
-        trainBtn.setEnabled(activeSession);
-        applyBtn.setEnabled(activeSession);
+        queryBtn.setEnabled(hasActiveClassifier);
+        trainBtn.setEnabled(hasActiveClassifier);
+        applyBtn.setEnabled(hasActiveClassifier);
 
-        if (activeSession) {
+        if (hasActiveClassifier) {
             final int numIterations = session.getNumIterations();
             numTrainingImages.setText(String.valueOf(session.getNumTrainingImages()));
             numRetrievedImages.setText(String.valueOf(session.getNumRetrievedImages()));
