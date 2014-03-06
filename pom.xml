@@ -20,7 +20,7 @@
     <modules>
         <module>pfa-core</module>
         <module>pfa-database</module>
-		<module>pfa-algalblooms</module>
+        <module>pfa-algalblooms</module>
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
     </modules>
@@ -95,6 +95,16 @@
                     <target>1.7</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                    <configuration>
+                      <descriptors>
+                        <descriptor>assembly.xml</descriptor>
+                      </descriptors>
+                    </configuration>
             </plugin>
         </plugins>
     </build>
