@@ -57,7 +57,7 @@ import java.util.List;
  * @author Norman Fomferra
  * @author Ralf Quast
  */
-@OperatorMetadata(alias = "AlgalBloomFex", version = "1.1", suppressWrite = true)
+@OperatorMetadata(alias = "AlgalBloomFex", version = "1.1", autoWriteDisabled = true)
 public class AlgalBloomFexOperator extends FexOperator {
 
     public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
@@ -297,8 +297,8 @@ public class AlgalBloomFexOperator extends FexOperator {
     }
 
     private void addFlhGradientBands(Product featureProduct) {
-        featureProduct.addBand(new ConvolutionFilterBand("flh_average", featureProduct.getBand("flh"), new Kernel(3, 3, 1.0 / 9.0, new double[]{1, 1, 1, 1, 1, 1, 1, 1, 1})));
-        featureProduct.addBand(new ConvolutionFilterBand("flh_gradient", featureProduct.getBand("flh_average"), new Kernel(3, 3, 1.0 / 9.0, new double[]{-1, -2, -1, 0, 0, 0, 1, 2, 1})));
+        featureProduct.addBand(new ConvolutionFilterBand("flh_average", featureProduct.getBand("flh"), new Kernel(3, 3, 1.0 / 9.0, new double[]{1, 1, 1, 1, 1, 1, 1, 1, 1}), 1));
+        featureProduct.addBand(new ConvolutionFilterBand("flh_gradient", featureProduct.getBand("flh_average"), new Kernel(3, 3, 1.0 / 9.0, new double[]{-1, -2, -1, 0, 0, 0, 1, 2, 1}), 1));
         featureProduct.addMask("flh_high_gradient", "abs(flh_gradient) > " + flhGradientThreshold, "", Color.RED, 0.5);
     }
 
