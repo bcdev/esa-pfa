@@ -27,6 +27,11 @@
             <artifactId>pfa-database</artifactId>
         </dependency>
 		<dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-algalblooms</artifactId>
+            <version>0.2-SNAPSHOT</version>
+        </dependency>
+		<dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
             <version>${beam.version}</version>
