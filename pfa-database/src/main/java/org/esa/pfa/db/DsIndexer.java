@@ -179,13 +179,13 @@ public class DsIndexer {
             if (featureType.hasAttributes()) {
                 AttributeType[] attributeTypes = featureType.getAttributeTypes();
                 for (AttributeType attributeType : attributeTypes) {
-                    FeatureFieldFactory featureFieldFactory = getIndexableFieldFactory(featureType.getName() + "." + attributeType.getName(), attributeType);
+                    FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName() + "." + attributeType.getName(), attributeType);
                     if (featureFieldFactory != null) {
                         featureFieldFactories.add(featureFieldFactory);
                     }
                 }
             } else {
-                FeatureFieldFactory featureFieldFactory = getIndexableFieldFactory(featureType.getName(), featureType);
+                FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName(), featureType);
                 if (featureFieldFactory != null) {
                     featureFieldFactories.add(featureFieldFactory);
                 }
@@ -347,7 +347,7 @@ public class DsIndexer {
     }
 
 
-    private FeatureFieldFactory getIndexableFieldFactory(String fieldName, AttributeType attributeType) {
+    private FeatureFieldFactory getFeatureFieldFactory(String fieldName, AttributeType attributeType) {
         Class<?> valueType = attributeType.getValueType();
         IndexableFieldFactory indexableFieldFactory = indexableFieldFactoryMap.get(valueType);
         if (indexableFieldFactory == null) {
