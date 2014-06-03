@@ -12,9 +12,8 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.esa.pfa</groupId>
     <artifactId>pfa-gui</artifactId>
-    <name>PFA User Interfaces</name>
+    <name>ESA PFA User Interfaces</name>
     <version>0.1-SNAPSHOT</version>
 
     <dependencies>
@@ -22,16 +21,16 @@
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-core</artifactId>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-algalblooms</artifactId>
             <version>0.2-SNAPSHOT</version>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
             <version>${beam.version}</version>
@@ -51,5 +50,5 @@
             <version>2.4</version>
         </dependency>
     </dependencies>
-    
+
 </project>
