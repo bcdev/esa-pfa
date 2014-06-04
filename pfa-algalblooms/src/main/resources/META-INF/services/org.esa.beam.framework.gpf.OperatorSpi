@@ -1,2 +1,2 @@
-org.esa.pfa.fe.AlgalBloomFexOperator$Spi
+org.esa.pfa.fe.AlgalBloomFeatureWriter$Spi
 org.esa.pfa.fe.FrontsCloudMaskOperator$Spi

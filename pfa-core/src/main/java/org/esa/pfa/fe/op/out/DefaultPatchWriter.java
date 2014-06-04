@@ -20,7 +20,6 @@ public class DefaultPatchWriter implements PatchWriter {
     private final PatchWriter[] patchWriters;
 
     public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, Product product) throws IOException {
-
         String targetPath = patchWriterFactory.getTargetPath();
         if (targetPath == null) {
             targetPath = ".";
@@ -33,15 +32,15 @@ public class DefaultPatchWriter implements PatchWriter {
             if (!overwriteMode) {
                 String[] contents = targetDir.list();
                 if (contents != null && contents.length > 0) {
-                    throw new IOException(String.format("Directory is not empty: '%s'", targetDir));
+                    throw new IOException(String.format("Directory is not empty: '%s'.", targetDir));
                 }
             }
         } else {
             if (!overwriteMode) {
-                throw new IOException(String.format("Directory does not exist: '%s'", targetDir));
+                throw new IOException(String.format("Directory does not exist: '%s'.", targetDir));
             } else {
                 if (!targetDir.mkdirs()) {
-                    throw new IOException(String.format("Failed to create directory '%s'", targetDir));
+                    throw new IOException(String.format("Failed to create directory '%s'.", targetDir));
                 }
             }
         }

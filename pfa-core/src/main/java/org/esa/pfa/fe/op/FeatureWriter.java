@@ -58,10 +58,12 @@ public abstract class FeatureWriter extends Operator {
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
 
-    @Parameter(description = "The output folder to which the data is written.", label = "Output Folder", notNull = true, notEmpty = true)
-    private File targetPath;
+    @Parameter(description = "The output folder to which the data is written.", label = "Target Folder", notNull = true,
+               notEmpty = true)
+    private File targetDir;
 
-    @Parameter(defaultValue = "false", description = "Disposes all global image caches after a patch has been completed")
+    @Parameter(defaultValue = "false",
+               description = "Disposes all global image caches after a patch has been completed")
     protected boolean disposeGlobalCaches;
 
     @Parameter(defaultValue = "true")
@@ -78,19 +80,54 @@ public abstract class FeatureWriter extends Operator {
 
     protected HashMap<String, Object> patchWriterConfig;
 
-    private String patchWriterFactoryClassName = "org.esa.pfa.fe.op.out.DefaultPatchWriterFactory";
-
-    private transient PatchWriterFactory patchWriterFactory;
-    private PatchWriter patchWriter = null;
+    @Parameter(defaultValue = "org.esa.pfa.fe.op.out.DefaultPatchWriterFactory")
+    private String patchWriterFactoryClassName;
 
     @Parameter(description = "Patch size in km", interval = "(0, *)", defaultValue = "12.0", label = "Patch Size (km)")
     private double patchSizeKm = 12.0;
 
-    @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)", defaultValue = "0.1")
+    @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)",
+               defaultValue = "0.1")
     protected float minValidPixels = 0.1f;
 
     protected int patchWidth = 0;
     protected int patchHeight = 0;
+
+    private transient PatchWriterFactory patchWriterFactory;
+    private transient PatchWriter patchWriter;
+
+
+    public void setTargetDir(File targetDir) {
+        this.targetDir = targetDir;
+    }
+
+    public void setOverwriteMode(boolean overwriteMode) {
+        this.overwriteMode = overwriteMode;
+    }
+
+    public void setSkipFeaturesOutput(boolean skipFeaturesOutput) {
+        this.skipFeaturesOutput = skipFeaturesOutput;
+    }
+
+    public void setSkipProductOutput(boolean skipProductOutput) {
+        this.skipProductOutput = skipProductOutput;
+    }
+
+    public void setSkipQuicklookOutput(boolean skipQuicklookOutput) {
+        this.skipQuicklookOutput = skipQuicklookOutput;
+    }
+
+    public void setPatchWidth(int patchWidth) {
+        this.patchWidth = patchWidth;
+    }
+
+    public void setPatchHeight(int patchHeight) {
+        this.patchHeight = patchHeight;
+    }
+
+    public void setPatchWriterFactory(PatchWriterFactory patchWriterFactory) {
+        this.patchWriterFactory = patchWriterFactory;
+    }
 
     public static final AttributeType[] STX_ATTRIBUTE_TYPES = new AttributeType[]{
             new AttributeType("mean", "Mean value of valid feature pixels", Double.class),
@@ -98,10 +135,16 @@ public abstract class FeatureWriter extends Operator {
             new AttributeType("cvar", "Coefficient of variation of valid feature pixels", Double.class),
             new AttributeType("min", "Minimim value of valid feature pixels", Double.class),
             new AttributeType("max", "Maximum value of valid feature pixels", Double.class),
-            new AttributeType("p10", "The threshold such that 10% of the sample values are below the threshold", Double.class),
-            new AttributeType("p50", "The threshold such that 50% of the sample values are below the threshold (=median)", Double.class),
-            new AttributeType("p90", "The threshold such that 90% of the sample values are below the threshold", Double.class),
-            new AttributeType("skewness", "A measure of the extent to which the histogram \"leans\" to one side of the mean. The skewness value can be positive or negative, or even undefined.", Double.class),
+            new AttributeType("p10", "The threshold such that 10% of the sample values are below the threshold",
+                              Double.class),
+            new AttributeType("p50",
+                              "The threshold such that 50% of the sample values are below the threshold (=median)",
+                              Double.class),
+            new AttributeType("p90", "The threshold such that 90% of the sample values are below the threshold",
+                              Double.class),
+            new AttributeType("skewness",
+                              "A measure of the extent to which the histogram \"leans\" to one side of the mean. The skewness value can be positive or negative, or even undefined.",
+                              Double.class),
             new AttributeType("count", "Sample count (number of valid feature pixels)", Integer.class),
     };
 
@@ -115,53 +158,50 @@ public abstract class FeatureWriter extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+        if (targetDir == null || !targetDir.isAbsolute()) {
+            throw new OperatorException("Please specify a target folder.");
+        }
+
+        getLogger().info("Processing source product " + sourceProduct.getFileLocation());
+
+        if (patchWriterFactory == null) {
+            initPatchWriterFactory();
+        }
+
+        if (patchWriterConfig == null) {
+            patchWriterConfig = new HashMap<>(5);
+        }
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetDir.getAbsolutePath());
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode);
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput);
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput);
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput);
+        patchWriterFactory.configure(patchWriterConfig);
+
+        if (overwriteMode) {
+            getLogger().warning("FexOperator: Overwrite mode is on.");
+        }
+        if (skipFeaturesOutput) {
+            getLogger().warning("FexOperator: Feature output skipped.");
+        }
+        if (skipProductOutput) {
+            getLogger().warning("FexOperator: Product output skipped.");
+        }
+        if (skipQuicklookOutput) {
+            getLogger().warning("FexOperator: RGB image output skipped.");
+        }
+
+        setTargetProduct(sourceProduct);
+
+        computePatchDimension();
+
+        getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
+
         try {
-            if (targetPath == null || !targetPath.isAbsolute()) {
-                throw new OperatorException("Please specify an output folder");
-            }
-
-            getLogger().warning("Processing source product " + sourceProduct.getFileLocation());
-
-            if (patchWriterFactory == null) {
-                initPatchWriterFactory();
-            }
-
-            if (patchWriterConfig == null) {
-                patchWriterConfig = new HashMap<>(5);
-            }
-            patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetPath.getAbsolutePath());
-            patchWriterConfig.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode);
-            patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput);
-            patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput);
-            patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput);
-            patchWriterFactory.configure(patchWriterConfig);
-
-            if (overwriteMode) {
-                getLogger().warning("FexOperator: Overwrite mode is on.");
-            }
-            if (skipFeaturesOutput) {
-                getLogger().warning("FexOperator: Feature output skipped.");
-            }
-            if (skipProductOutput) {
-                getLogger().warning("FexOperator: Product output skipped.");
-            }
-            if (skipQuicklookOutput) {
-                getLogger().warning("FexOperator: RGB image output skipped.");
-            }
-
-            setTargetProduct(sourceProduct);
-
-            computePatchDimension();
-
-            getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
-
-            final FeatureType[] featureTypes = getFeatureTypes();
-
             patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct);
-            patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), featureTypes);
-
-        } catch (Throwable t) {
-            throw new OperatorException(t);
+            patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), getFeatureTypes());
+        } catch (IOException e) {
+            throw new OperatorException(e);
         }
     }
 
@@ -194,11 +234,14 @@ public abstract class FeatureWriter extends Operator {
      * @param targetTiles     The current tiles to be computed for each target band.
      * @param targetRectangle The area in pixel coordinates to be computed (same for all rasters in <code>targetRasters</code>).
      * @param pm              A progress monitor which should be used to determine computation cancelation requests.
+     *
      * @throws org.esa.beam.framework.gpf.OperatorException if an error occurs during computation of the target rasters.
      */
     @Override
-    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws
+                                                                                                             OperatorException {
         try {
+
             final Product patchProduct = createSubset(sourceProduct, targetRectangle);
             patchProduct.setName("patch");
 
@@ -206,6 +249,7 @@ public abstract class FeatureWriter extends Operator {
             final int patchY = (int) (targetRectangle.getMinY() / targetRectangle.getHeight());
 
             final Patch patch = new Patch(patchX, patchY, targetRectangle, patchProduct);
+
             processPatch(patch, patchWriter);
 
             patchProduct.dispose();
@@ -214,14 +258,22 @@ public abstract class FeatureWriter extends Operator {
                 ImageManager.getInstance().dispose();
                 JAI.getDefaultInstance().getTileCache().flush();
             }
+        } catch (IOException e) {
+            throw new OperatorException(e);
+        }
+    }
 
-        } catch (Exception e) {
-            if (e instanceof OperatorException) {
-                throw (OperatorException) e;
-            } else {
-                throw new OperatorException(e);
+    @Override
+    public void dispose() {
+        if (patchWriter != null) {
+            try {
+                patchWriter.close();
+            } catch (IOException ignored) {
             }
         }
+        patchWriter = null;
+        patchWriterFactory = null;
+        super.dispose();
     }
 
     public static Product createSubset(Product sourceProduct, Rectangle subsetRegion) throws IOException {
@@ -237,7 +289,8 @@ public abstract class FeatureWriter extends Operator {
     }
 
     protected static RenderedImage createColoredBandImage(RasterDataNode band, double minSample, double maxSample) {
-        return ImageManager.getInstance().createColoredBandImage(new RasterDataNode[]{band}, new ImageInfo(new ColorPaletteDef(minSample, maxSample)), 0);
+        return ImageManager.getInstance().createColoredBandImage(new RasterDataNode[]{band}, new ImageInfo(
+                new ColorPaletteDef(minSample, maxSample)), 0);
     }
 
     protected static Feature createStxFeature(FeatureType featureType, Band band) {

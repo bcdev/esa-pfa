@@ -127,40 +127,12 @@ public abstract class FexOperator extends Operator {
         this.patchWriterFactory = patchWriterFactory;
     }
 
-    protected Feature createStxFeature(FeatureType featureType, Product product) {
-        RasterDataNode band = product.getBand(featureType.getName());
-        return createStxFeature(featureType, band);
-    }
-
-    protected Feature createStxFeature(FeatureType featureType, RasterDataNode rasterDataNode) {
-        Guardian.assertSame("invalid feature type", featureType.getAttributeTypes(), STX_ATTRIBUTE_TYPES);
-        final Stx stx = rasterDataNode.getStx(true, ProgressMonitor.NULL);
-        double p10 = stx.getHistogram().getPTileThreshold(0.1)[0];
-        double p50 = stx.getHistogram().getPTileThreshold(0.5)[0];
-        double p90 = stx.getHistogram().getPTileThreshold(0.9)[0];
-        double mean = stx.getMean();
-        double skewness = (p90 - 2 * p50 + p10) / (p90 - p10);
-        return new Feature(featureType,
-                           null,
-                           mean,
-                           stx.getStandardDeviation(),
-                           stx.getStandardDeviation() / mean,
-                           stx.getMinimum(),
-                           stx.getMaximum(),
-                           p10,
-                           p50,
-                           p90,
-                           skewness,
-                           stx.getSampleCount());
-    }
-
     protected abstract FeatureType[] getFeatureTypes();
 
     protected abstract boolean processPatch(Patch patch, PatchOutput sink) throws IOException;
 
     @Override
     public void initialize() throws OperatorException {
-
         if (targetPath == null) {
             throw new OperatorException("'targetPath' is a mandatory parameter");
         }

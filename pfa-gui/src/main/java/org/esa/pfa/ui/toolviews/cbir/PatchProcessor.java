@@ -166,7 +166,6 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             DomElement configuration = lastNode.getConfiguration();
             configuration.getChild("targetPath").setValue(targetFolder.getAbsolutePath());
         }
-
     }
 
     private Node findNode(final Graph graph, final String alias) {

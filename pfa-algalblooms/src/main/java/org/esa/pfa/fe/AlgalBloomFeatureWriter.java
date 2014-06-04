@@ -16,6 +16,8 @@
 
 package org.esa.pfa.fe;
 
+import com.bc.ceres.binding.dom.DefaultDomElement;
+import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
@@ -38,7 +40,12 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.main.GPT;
+import org.esa.beam.framework.gpf.graph.Graph;
+import org.esa.beam.framework.gpf.graph.GraphException;
+import org.esa.beam.framework.gpf.graph.GraphIO;
+import org.esa.beam.framework.gpf.graph.GraphProcessor;
+import org.esa.beam.framework.gpf.graph.Node;
+import org.esa.beam.gpf.operators.standard.ReadOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
@@ -57,6 +64,8 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,8 +78,8 @@ import java.util.List;
  * @author Norman Fomferra
  * @author Ralf Quast
  */
-@OperatorMetadata(alias = "AlgalBloomFex", version = "1.1", autoWriteDisabled = true)
-public class AlgalBloomFexOperator extends FeatureWriter {
+@OperatorMetadata(alias = "AlgalBloomFeatureWriter", version = "1.1", autoWriteDisabled = true)
+public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
@@ -97,31 +106,74 @@ public class AlgalBloomFexOperator extends FeatureWriter {
         System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        if (file.isDirectory()) {
-            final File[] sourceFiles = file.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".N1");
-                }
-            });
-            if (sourceFiles != null) {
-                for (final File sourceFile : sourceFiles) {
-                    args[0] = sourceFile.getPath();
-                    runGPT(args);
-                }
-            }
-        } else {
-            runGPT(args);
-        }
-    }
-
-    private static void runGPT(String[] args) {
         try {
-            GPT.main(appendArgs("AlgalBloomFex", args));
-        } catch (Exception e) {
+            if (file.isDirectory()) {
+                final File[] sourceFiles = file.listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith(".N1");
+                    }
+                });
+                if (sourceFiles != null) {
+                    for (final File sourceFile : sourceFiles) {
+                        args[0] = sourceFile.getPath();
+                        processGraph(args);
+                    }
+                }
+            } else {
+                processGraph(args);
+            }
+        } catch (GraphException e) {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private static void processGraph(String[] args) throws GraphException {
+        final AlgalBloomApplicationDescriptor applicationDescriptor = new AlgalBloomApplicationDescriptor();
+        Graph graph;
+        Reader graphReader = null;
+        try {
+            graphReader = new InputStreamReader(applicationDescriptor.getGraphFileAsStream());
+            graph = GraphIO.read(graphReader, null);
+        } finally {
+            if (graphReader != null) {
+                try {
+                    graphReader.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        setIO(graph, new File(args[0]), new File(args[1]));
+
+        final GraphProcessor processor = new GraphProcessor();
+        processor.executeGraph(graph, ProgressMonitor.NULL);
+    }
+
+    private static void setIO(final Graph graph, final File sourceFile, final File targetFolder) {
+        final String readOperatorAlias = OperatorSpi.getOperatorAlias(ReadOp.class);
+        final Node readerNode = findNode(graph, readOperatorAlias);
+        if (readerNode != null) {
+            final DomElement param = new DefaultDomElement("parameters");
+            param.createChild("file").setValue(sourceFile.getAbsolutePath());
+            readerNode.setConfiguration(param);
+        }
+
+        Node[] nodes = graph.getNodes();
+        if (nodes.length > 0) {
+            Node lastNode = nodes[nodes.length - 1];
+            DomElement configuration = lastNode.getConfiguration();
+            configuration.getChild("targetDir").setValue(targetFolder.getAbsolutePath());
+        }
+    }
+
+    private static Node findNode(final Graph graph, final String alias) {
+        for (Node n : graph.getNodes()) {
+            if (n.getOperatorName().equals(alias)) {
+                return n;
+            }
+        }
+        return null;
     }
 
 
@@ -555,7 +607,7 @@ public class AlgalBloomFexOperator extends FeatureWriter {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AlgalBloomFexOperator.class);
+            super(AlgalBloomFeatureWriter.class);
         }
     }
 

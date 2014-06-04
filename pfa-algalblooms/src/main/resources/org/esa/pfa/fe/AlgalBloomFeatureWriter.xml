@@ -7,13 +7,13 @@
       <file/>
     </parameters>
   </node>
-  <node id="AlgalBloomFex">
-    <operator>AlgalBloomFex</operator>
+  <node id="AlgalBloomFeatureWriter">
+    <operator>AlgalBloomFeatureWriter</operator>
     <sources>
       <sourceProduct refid="Read"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetPath/>
+      <targetDir/>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
