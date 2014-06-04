@@ -1,25 +1,31 @@
 <graph id="Graph">
-    <version>1.0</version>
-    <node id="Read">
-        <operator>Read</operator>
-        <sources/>
-        <parameters>
-            <file/>
-        </parameters>
-    </node>
-    <node id="AlgalBloomFex">
-        <operator>AlgalBloomFex</operator>
-        <sources>
-            <sourceProduct refid="Read"/>
-        </sources>
-        <parameters>
-            <targetPath/>
-            <disposeGlobalCaches>false</disposeGlobalCaches>
-            <overwriteMode>true</overwriteMode>
-            <skipFeaturesOutput>false</skipFeaturesOutput>
-            <skipQuicklookOutput>false</skipQuicklookOutput>
-            <skipProductOutput>false</skipProductOutput>
-            <minValidPixelRatio>0.2</minValidPixelRatio>
-        </parameters>
-    </node>
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file/>
+    </parameters>
+  </node>
+  <node id="AlgalBloomFex">
+    <operator>AlgalBloomFex</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <targetPath/>
+      <disposeGlobalCaches>false</disposeGlobalCaches>
+      <overwriteMode>true</overwriteMode>
+      <skipFeaturesOutput>false</skipFeaturesOutput>
+      <skipQuicklookOutput>false</skipQuicklookOutput>
+      <skipProductOutput>false</skipProductOutput>
+      <patchSizeKm>12.0</patchSizeKm>
+      <minValidPixels>0.1</minValidPixels>
+      <minValidPixelRatio>0.2</minValidPixelRatio>
+      <minClumpiness>0.0</minClumpiness>
+      <cloudCorrectionFactor>1.005</cloudCorrectionFactor>
+      <frontsCloudMaskThreshold>8</frontsCloudMaskThreshold>
+      <flhGradientThreshold>5.0E-5</flhGradientThreshold>
+    </parameters>
+  </node>
 </graph>
