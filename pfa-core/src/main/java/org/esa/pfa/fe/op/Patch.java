@@ -44,7 +44,7 @@ public final class Patch {
         this.uid = createUniqueID();
         this.patchX = patchX;
         this.patchY = patchY;
-        this.patchName = String.format("x%02dy%02d", patchX, patchY);
+        this.patchName = String.format("x%03dy%03d", patchX, patchY);
         this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
         this.label = LABEL_NONE;
