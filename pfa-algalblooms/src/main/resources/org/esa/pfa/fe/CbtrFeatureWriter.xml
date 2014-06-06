@@ -108,7 +108,7 @@
     <!--
         TODO:
         Re-projection requires a change in the ROI expression due to zero values in flag bands.
-        Add e.g. "!isnan(lat) && !isnan(lon)" to ROI expression.
+        Add e.g. "!isnan(lat) && !isnan(lon)" to the original ROI expression.
     -->
 
     <node id="CbtrFeatureWriter">
