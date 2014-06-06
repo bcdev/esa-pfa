@@ -1,2 +1,3 @@
 org.esa.pfa.fe.AlgalBloomFeatureWriter$Spi
+org.esa.pfa.fe.CbtrFeatureWriter$Spi
 org.esa.pfa.fe.FrontsCloudMaskOperator$Spi

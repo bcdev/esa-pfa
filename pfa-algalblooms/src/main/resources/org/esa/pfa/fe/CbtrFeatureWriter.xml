@@ -1,0 +1,132 @@
+<graph id="CBTR">
+    <version>1.0</version>
+
+    <node id="Read">
+        <operator>Read</operator>
+        <sources/>
+        <parameters>
+            <file>/Users/ralf/scratch/pfa/algal_blooms/benchmarking/input/MER_RR__1PRACR20090502_102011_000026382078_00366_37494_0000.N1</file>
+        </parameters>
+    </node>
+
+    <node id="Subset">
+        <operator>Subset</operator>
+        <sources>
+            <sourceProduct refid="Read"/>
+        </sources>
+        <parameters>
+            <!--
+                TODO: implement tile boundaries for subset region
+            -->
+            <geoRegion>POLYGON((-30.0 70.0, -30.0 30.0, 50.0 -30.0, 50.0 70.0, -30.0 70.0))</geoRegion>
+            <subSamplingX>1</subSamplingX>
+            <subSamplingY>1</subSamplingY>
+            <fullSwath>true</fullSwath>
+            <copyMetadata>true</copyMetadata>
+        </parameters>
+    </node>
+
+    <node id="Correct">
+        <operator>Meris.CorrectRadiometry</operator>
+        <sources>
+            <sourceProduct refid="Subset"/>
+        </sources>
+        <parameters>
+            <doCalibration>false</doCalibration>
+            <doSmile>true</doSmile>
+            <doEqualization>true</doEqualization>
+            <reproVersion>REPROCESSING_3</reproVersion>
+            <doRadToRefl>true</doRadToRefl>
+        </parameters>
+    </node>
+
+    <node id="Clear">
+        <operator>Meris.Fronts.CloudMask</operator>
+        <sources>
+            <sourceProduct refid="Correct"/>
+        </sources>
+        <parameters>
+            <roiExpr>NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN)</roiExpr>
+            <threshold>8</threshold>
+        </parameters>
+    </node>
+
+    <node id="Merge">
+        <operator>Merge</operator>
+        <sources>
+            <masterProduct refid="Correct"/>
+            <sourceProduct refid="Clear"/>
+        </sources>
+        <parameters>
+            <includes>
+                <include>
+                    <productId>sourceProduct</productId>
+                    <name>cloud_data_ori_or_flag</name>
+                    <newName>cloud_mask</newName>
+                </include>
+            </includes>
+            <geographicError>0.0</geographicError>
+        </parameters>
+    </node>
+
+    <node id="Reproject">
+        <operator>Reproject</operator>
+        <sources>
+            <sourceProduct refid="Merge"/>
+        </sources>
+        <parameters>
+            <crs>GEOGCS["WGS84(DD)",
+                DATUM["WGS84",
+                SPHEROID["WGS84", 6378137.0, 298.257223563]],
+                PRIMEM["Greenwich", 0.0],
+                UNIT["degree", 0.017453292519943295],
+                AXIS["Geodetic longitude", EAST],
+                AXIS["Geodetic latitude", NORTH]]
+            </crs>
+            <resampling>Nearest</resampling>
+            <orthorectify>false</orthorectify>
+            <noDataValue>NaN</noDataValue>
+            <includeTiePointGrids>true</includeTiePointGrids>
+            <addDeltaBands>false</addDeltaBands>
+            <!--
+                TODO: implement tile boundaries for subset region
+            -->
+            <tileSizeX>200</tileSizeX>
+            <tileSizeY>200</tileSizeY>
+            <referencePixelX>0.0</referencePixelX>
+            <referencePixelY>0.0</referencePixelY>
+            <easting>-30.0</easting>
+            <northing>70.0</northing>
+            <orientation>0.0</orientation>
+            <pixelSizeX>0.01</pixelSizeX>
+            <pixelSizeY>0.01</pixelSizeY>
+            <width>8000</width>
+            <height>4000</height>
+        </parameters>
+    </node>
+
+    <!--
+        TODO:
+        Re-projection requires a change in the ROI expression due to zero values in flag bands.
+        Add e.g. "!isnan(lat) && !isnan(lon)" to ROI expression.
+    -->
+
+    <node id="CbtrFeatureWriter">
+        <operator>CbtrFeatureWriter</operator>
+        <sources>
+            <sourceProduct refid="Reproject"/>
+        </sources>
+        <parameters>
+            <targetDir>/Users/ralf/scratch/pfa/algal_blooms/benchmarking/output</targetDir>
+            <disposeGlobalCaches>false</disposeGlobalCaches>
+            <overwriteMode>true</overwriteMode>
+            <skipFeaturesOutput>true</skipFeaturesOutput>
+            <skipQuicklookOutput>true</skipQuicklookOutput>
+            <skipProductOutput>false</skipProductOutput>
+            <patchWidth>200</patchWidth>
+            <patchHeight>200</patchHeight>
+            <acceptanceThreshold>0.9</acceptanceThreshold>
+        </parameters>
+    </node>
+
+</graph>
