@@ -2,9 +2,8 @@
     <version>1.0</version>
     <node id="Read">
         <operator>Read</operator>
-        <sources/>
-        <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-            <file/>
+        <parameters>
+            <file>${sourcePath}</file>
         </parameters>
     </node>
     <node id="AlgalBloomFeatureWriter">
@@ -12,8 +11,8 @@
         <sources>
             <sourceProduct refid="Read"/>
         </sources>
-        <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-            <targetDir/>
+        <parameters>
+            <targetDir>${targetDir}</targetDir>
             <disposeGlobalCaches>false</disposeGlobalCaches>
             <overwriteMode>true</overwriteMode>
             <skipFeaturesOutput>false</skipFeaturesOutput>
@@ -27,6 +26,8 @@
             <cloudCorrectionFactor>1.005</cloudCorrectionFactor>
             <frontsCloudMaskThreshold>8</frontsCloudMaskThreshold>
             <flhGradientThreshold>5.0E-5</flhGradientThreshold>
+            <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.HadoopPatchWriterFactory</patchWriterFactoryClassName>
+            <patchWriterConfigExtra>foo = bar</patchWriterConfigExtra>
         </parameters>
     </node>
 </graph>

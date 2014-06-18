@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -100,6 +101,11 @@ public final class Patch {
 
     public void addFeature(final Feature fea) {
         featureList.add(fea);
+    }
+
+    public void setFeatures(final Feature ... features) {
+        featureList.clear();
+        Collections.addAll(featureList, features);
     }
 
     public Feature[] getFeatures() {

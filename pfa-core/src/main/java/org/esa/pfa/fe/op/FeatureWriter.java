@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.annotations.TargetProperty;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchOutput;
@@ -43,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -101,6 +103,9 @@ public abstract class FeatureWriter extends Operator {
     @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)",
                defaultValue = "0.1")
     protected float minValidPixels = 0.1f;
+
+    @TargetProperty
+    protected List<Patch> patches;
 
     private transient PatchWriterFactory patchWriterFactory;
     private transient PatchWriter patchWriter;
