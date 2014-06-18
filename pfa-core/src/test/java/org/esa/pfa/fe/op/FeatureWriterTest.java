@@ -34,7 +34,7 @@ public class FeatureWriterTest {
         assertEquals(null, outputFactory.featureOutput);
 
         FeatureWriter featureWriter = new MyFeatureWriter();
-        featureWriter.setTargetDir(new File("/test"));
+        featureWriter.setTargetDir(new File("test"));
         featureWriter.setOverwriteMode(true);
         featureWriter.setSkipProductOutput(true);
         featureWriter.setPatchWidth(100);
@@ -43,7 +43,7 @@ public class FeatureWriterTest {
         featureWriter.setPatchWriterFactory(outputFactory);
         Product targetProduct = featureWriter.getTargetProduct();
 
-        assertEquals("/test", outputFactory.getTargetPath());
+        assertEquals("test", outputFactory.getTargetPath());
         assertEquals(true, outputFactory.isOverwriteMode());
         assertEquals(false, outputFactory.getSkipFeatureOutput());
         assertEquals(true, outputFactory.getSkipProductOutput());

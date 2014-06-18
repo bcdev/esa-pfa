@@ -41,8 +41,11 @@ import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Output features into patches
@@ -58,8 +61,8 @@ public abstract class FeatureWriter extends Operator {
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
 
-    @Parameter(description = "The output folder to which the data is written.", label = "Target Folder", notNull = true,
-               notEmpty = true)
+    @Parameter(description = "The output folder to which the data is written.", label = "Target folder",
+               defaultValue = ".", notNull = true, notEmpty = true)
     private File targetDir;
 
     @Parameter(defaultValue = "false",
@@ -78,6 +81,10 @@ public abstract class FeatureWriter extends Operator {
     @Parameter(defaultValue = "false")
     protected boolean skipProductOutput;
 
+    @Parameter(description="Extra patch writer configuration properties. Uses Java Properties File format.")
+    protected String patchWriterConfigExtra;
+
+    @Parameter
     protected HashMap<String, Object> patchWriterConfig;
 
     @Parameter(defaultValue = "org.esa.pfa.fe.op.out.DefaultPatchWriterFactory")
@@ -160,7 +167,7 @@ public abstract class FeatureWriter extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        if (targetDir == null || !targetDir.isAbsolute()) {
+        if (targetDir == null) {
             throw new OperatorException("Please specify a target folder.");
         }
 
@@ -173,11 +180,24 @@ public abstract class FeatureWriter extends Operator {
         if (patchWriterConfig == null) {
             patchWriterConfig = new HashMap<>(5);
         }
-        patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetDir.getAbsolutePath());
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_TARGET_PATH, targetDir.getPath());
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_OVERWRITE_MODE, overwriteMode);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput);
+        if (patchWriterConfigExtra != null) {
+            StringReader stringReader = new StringReader(patchWriterConfigExtra);
+            Properties properties = new Properties();
+            try {
+                properties.load(stringReader);
+            } catch (IOException e) {
+                throw new OperatorException(e.getMessage(), e);
+            }
+            Set<String> propertyNames = properties.stringPropertyNames();
+            for (String propertyName : propertyNames) {
+                patchWriterConfig.put(propertyName, properties.getProperty(propertyName));
+            }
+        }
         patchWriterFactory.configure(patchWriterConfig);
 
         if (overwriteMode) {
