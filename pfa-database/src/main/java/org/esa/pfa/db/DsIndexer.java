@@ -51,7 +51,7 @@ public class DsIndexer {
 
     static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
 
-    public static final Version LUCENE_VERSION = Version.LUCENE_46;
+    public static final Version LUCENE_VERSION = Version.LUCENE_47;
     //public static final Analyzer LUCENE_ANALYZER = new SimpleAnalyzer(LUCENE_VERSION);
     public static final Analyzer LUCENE_ANALYZER = new ProductNameAnalyzer(LUCENE_VERSION);
     public static final String DEFAULT_INDEX_NAME = "lucene-index";
