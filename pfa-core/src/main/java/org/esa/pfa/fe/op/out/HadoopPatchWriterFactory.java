@@ -15,7 +15,7 @@ import java.io.IOException;
  */
 public class HadoopPatchWriterFactory extends PatchWriterFactory {
     @Override
-    public PatchWriter createFeatureOutput(Product sourceProduct) throws IOException {
+    public PatchWriter createPatchWriter(Product sourceProduct) throws IOException {
         return new MyPatchWriter(this, sourceProduct);
     }
 

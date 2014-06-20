@@ -6,9 +6,9 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterOp;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.fe.op.out.PatchOutput;
+import org.esa.pfa.fe.op.out.PatchSink;
 
 import java.io.IOException;
 
@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author Ralf Quast
  */
 @OperatorMetadata(alias = "CbtrFeatureWriter", version = "0.1", autoWriteDisabled = true)
-public class CbtrFeatureWriter extends FeatureWriter {
+public class CbtrFeatureWriterOp extends FeatureWriterOp {
 
     @Parameter(defaultValue = "0.0")
     private double acceptanceThreshold;
@@ -34,7 +34,7 @@ public class CbtrFeatureWriter extends FeatureWriter {
     }
 
     @Override
-    protected boolean processPatch(Patch patch, PatchOutput sink) throws IOException {
+    protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
         if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
             return false;
         }
@@ -63,7 +63,7 @@ public class CbtrFeatureWriter extends FeatureWriter {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CbtrFeatureWriter.class);
+            super(CbtrFeatureWriterOp.class);
         }
     }
 

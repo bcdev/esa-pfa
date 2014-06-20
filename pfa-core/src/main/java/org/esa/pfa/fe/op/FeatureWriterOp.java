@@ -33,7 +33,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProperty;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
-import org.esa.pfa.fe.op.out.PatchOutput;
+import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
 
@@ -58,7 +58,7 @@ import java.util.Set;
                   autoWriteDisabled = true,
                   description = "Writes features into patches.",
                   category = "Classification\\Feature Extraction")
-public abstract class FeatureWriter extends Operator {
+public abstract class FeatureWriterOp extends Operator {
 
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
@@ -166,13 +166,13 @@ public abstract class FeatureWriter extends Operator {
             new AttributeType("count", "Sample count (number of valid feature pixels)", Integer.class),
     };
 
-    public FeatureWriter() {
+    public FeatureWriterOp() {
         setRequiresAllBands(true);
     }
 
     protected abstract FeatureType[] getFeatureTypes();
 
-    protected abstract boolean processPatch(Patch patch, PatchOutput sink) throws IOException;
+    protected abstract boolean processPatch(Patch patch, PatchSink sink) throws IOException;
 
     @Override
     public void initialize() throws OperatorException {
@@ -230,7 +230,7 @@ public abstract class FeatureWriter extends Operator {
         getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
 
         try {
-            patchWriter = patchWriterFactory.createFeatureOutput(sourceProduct);
+            patchWriter = patchWriterFactory.createPatchWriter(sourceProduct);
             patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), getFeatureTypes());
         } catch (IOException e) {
             throw new OperatorException(e);

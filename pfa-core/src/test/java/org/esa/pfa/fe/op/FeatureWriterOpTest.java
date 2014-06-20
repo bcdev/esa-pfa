@@ -3,7 +3,7 @@ package org.esa.pfa.fe.op;
 import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.pfa.fe.op.out.PatchOutput;
+import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman Fomferra
  */
-public class FeatureWriterTest {
+public class FeatureWriterOpTest {
 
     static {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -33,15 +33,15 @@ public class FeatureWriterTest {
         MyPatchWriterFactory outputFactory = new MyPatchWriterFactory();
         assertEquals(null, outputFactory.featureOutput);
 
-        FeatureWriter featureWriter = new MyFeatureWriter();
-        featureWriter.setTargetDir(new File("test"));
-        featureWriter.setOverwriteMode(true);
-        featureWriter.setSkipProductOutput(true);
-        featureWriter.setPatchWidth(100);
-        featureWriter.setPatchHeight(100);
-        featureWriter.setSourceProduct(sourceProduct);
-        featureWriter.setPatchWriterFactory(outputFactory);
-        Product targetProduct = featureWriter.getTargetProduct();
+        FeatureWriterOp featureWriterOp = new MyFeatureWriterOp();
+        featureWriterOp.setTargetDir(new File("test"));
+        featureWriterOp.setOverwriteMode(true);
+        featureWriterOp.setSkipProductOutput(true);
+        featureWriterOp.setPatchWidth(100);
+        featureWriterOp.setPatchHeight(100);
+        featureWriterOp.setSourceProduct(sourceProduct);
+        featureWriterOp.setPatchWriterFactory(outputFactory);
+        Product targetProduct = featureWriterOp.getTargetProduct();
 
         assertEquals("test", outputFactory.getTargetPath());
         assertEquals(true, outputFactory.isOverwriteMode());
@@ -54,12 +54,12 @@ public class FeatureWriterTest {
         assertTrue(outputFactory.featureOutput.initialized);
         assertEquals(0, outputFactory.featureOutput.patchOutputs.size());
 
-        featureWriter.dispose();
+        featureWriterOp.dispose();
         assertTrue(outputFactory.featureOutput.closed);
     }
 
 
-    private static class MyFeatureWriter extends FeatureWriter {
+    private static class MyFeatureWriterOp extends FeatureWriterOp {
         public static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
                 new FeatureType("f1", "d1", String.class),
                 new FeatureType("f2", "d2", Double.class)
@@ -71,7 +71,7 @@ public class FeatureWriterTest {
         }
 
         @Override
-        protected boolean processPatch(Patch patch, PatchOutput sink) throws IOException {
+        protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
             Feature[] bibos = {
                     new Feature(FEATURE_TYPES[0], "bibo"),
                     new Feature(FEATURE_TYPES[1], 3.14),
@@ -88,7 +88,7 @@ public class FeatureWriterTest {
         String targetPath;
 
         @Override
-        public PatchWriter createFeatureOutput(Product sourceProduct) {
+        public PatchWriter createPatchWriter(Product sourceProduct) {
             featureOutput = new MyPatchWriter();
             return featureOutput;
         }

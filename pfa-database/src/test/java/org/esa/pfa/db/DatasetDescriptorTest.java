@@ -2,7 +2,7 @@ package org.esa.pfa.db;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterOp;
 import org.junit.Test;
 
 import java.awt.image.RenderedImage;
@@ -35,13 +35,13 @@ public class DatasetDescriptorTest {
                         /*03*/ new FeatureType("flh_ql", "Grey-scale quicklook for 'flh' [" + minSampleFlh + ", " + maxSampleFlh + "]", RenderedImage.class),
                         /*04*/ new FeatureType("mci_ql", "Grey-scale quicklook for 'mci' [" + minSampleMci + ", " + maxSampleMci + "]", RenderedImage.class),
                         /*05*/ new FeatureType("chl_ql", "Grey-scale quicklook for 'chl' [" + minSampleChl + ", " + maxSampleChl + "]", RenderedImage.class),
-                        /*06*/ new FeatureType("flh", "Fluorescence Line Height", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*07*/ new FeatureType("mci", "Maximum Chlorophyll Index", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*08*/ new FeatureType("chl", "Chlorophyll Concentration", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*09*/ new FeatureType("red", "Red channel (" + R_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*10*/ new FeatureType("green", "Green channel (" + G_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*11*/ new FeatureType("blue", "Blue channel (" + B_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                        /*12*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                        /*06*/ new FeatureType("flh", "Fluorescence Line Height", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*07*/ new FeatureType("mci", "Maximum Chlorophyll Index", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*08*/ new FeatureType("chl", "Chlorophyll Concentration", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*09*/ new FeatureType("red", "Red channel (" + R_EXPR + ")", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*10*/ new FeatureType("green", "Green channel (" + G_EXPR + ")", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*11*/ new FeatureType("blue", "Blue channel (" + B_EXPR + ")", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
+                        /*12*/ new FeatureType("coast_dist", "Distance from next coast pixel (km)", FeatureWriterOp.STX_ATTRIBUTE_TYPES),
                         /*13*/ new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
                         /*14*/ new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
                         /*15*/ new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),

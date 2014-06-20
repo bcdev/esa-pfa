@@ -24,9 +24,9 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterOp;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.fe.op.out.PatchOutput;
+import org.esa.pfa.fe.op.out.PatchSink;
 
 import java.awt.*;
 import java.awt.image.RenderedImage;
@@ -40,7 +40,7 @@ import java.io.IOException;
         copyright = "Copyright (C) 2013 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
         category = "Classification\\Feature Extraction")
-public class UrbanAreaFeatureWriter extends FeatureWriter {
+public class UrbanAreaFeatureWriterOp extends FeatureWriterOp {
 
     public static final String featureBandName = "_speckle_divergence";
 
@@ -48,7 +48,7 @@ public class UrbanAreaFeatureWriter extends FeatureWriter {
 
     private FeatureType[] featureTypes;
 
-    public UrbanAreaFeatureWriter() {
+    public UrbanAreaFeatureWriterOp() {
         setRequiresAllBands(true);
     }
 
@@ -68,7 +68,7 @@ public class UrbanAreaFeatureWriter extends FeatureWriter {
     }
 
     @Override
-    protected boolean processPatch(Patch patch, PatchOutput patchOutput) throws IOException {
+    protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
         if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
             return false;
         }
@@ -121,7 +121,7 @@ public class UrbanAreaFeatureWriter extends FeatureWriter {
                 new Feature(featureTypes[5], maxClusterSize/patchSize),
         };
 
-        patchOutput.writePatch(patch, features);
+        sink.writePatch(patch, features);
 
         return true;
     }
@@ -138,7 +138,7 @@ public class UrbanAreaFeatureWriter extends FeatureWriter {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(UrbanAreaFeatureWriter.class);
+            super(UrbanAreaFeatureWriterOp.class);
         }
     }
 }

@@ -6,7 +6,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.pfa.fe.op.Feature;
-import org.esa.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.operator.FileStoreDescriptor;
@@ -23,40 +22,40 @@ import java.nio.file.Path;
 public class DefaultPatchWriterFactory extends PatchWriterFactory {
 
     static {
-        ExtensionManager.getInstance().register(Feature.class, new FeatureOutputFactory());
+        ExtensionManager.getInstance().register(Feature.class, new FeatureWriterFactory());
     }
 
     public static final String IMAGE_FORMAT_NAME = "PNG";
     public static final String IMAGE_FILE_EXT = ".png";
 
     @Override
-    public PatchWriter createFeatureOutput(Product sourceProduct) throws IOException {
+    public PatchWriter createPatchWriter(Product sourceProduct) throws IOException {
         return new DefaultPatchWriter(this, sourceProduct);
     }
 
-    private static class FeatureOutputFactory implements ExtensionFactory {
+    private static class FeatureWriterFactory implements ExtensionFactory {
 
         @Override
-        public FeatureOutput getExtension(Object object, Class<?> extensionType) {
+        public FeatureWriter getExtension(Object object, Class<?> extensionType) {
             Feature feature = (Feature) object;
             Object value = feature.getValue();
             if (value instanceof Product) {
-                return new ProductFeatureOutput();
+                return new ProductFeatureWriter();
             } else if (value instanceof RenderedImage) {
-                return new RenderedImageFeatureOutput();
+                return new RenderedImageFeatureWriter();
             }
             return null;
         }
 
         @Override
         public Class<?>[] getExtensionTypes() {
-            return new Class<?>[]{FeatureOutput.class};
+            return new Class<?>[]{FeatureWriter.class};
         }
 
-        private static class ProductFeatureOutput implements FeatureOutput {
+        private static class ProductFeatureWriter implements FeatureWriter {
 
             @Override
-            public String writeFeature(Patch patch, Feature feature, Path targetDirPath) throws IOException {
+            public String writeFeature(Feature feature, Path targetDirPath) throws IOException {
                 try {
                     final File targetDir = targetDirPath.toFile();
                     final String targetFilePathString = new File(targetDir, feature.getName() + ".dim").getPath();
@@ -73,10 +72,10 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
             }
         }
 
-        private static class RenderedImageFeatureOutput implements FeatureOutput {
+        private static class RenderedImageFeatureWriter implements FeatureWriter {
 
             @Override
-            public String writeFeature(Patch patch, Feature feature, Path targetDirPath) throws IOException {
+            public String writeFeature(Feature feature, Path targetDirPath) throws IOException {
                 final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(),
                                                                                   feature.getName() + IMAGE_FILE_EXT);
                 final RenderedImage image = (RenderedImage) feature.getValue();
@@ -91,7 +90,8 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
                 try {
                     final File targetFile = path.toFile();
                     FileStoreDescriptor.create(image, targetFile.getPath(), IMAGE_FORMAT_NAME, null, null, null);
-                } catch (UnsupportedOperationException e) { // file system does not support {@code toFile()}
+                } catch (UnsupportedOperationException e) {
+                    // file system does not support path.toFile() method
                     try (final OutputStream outputStream = Files.newOutputStream(path)) {
                         ImageIO.write(image, IMAGE_FORMAT_NAME, outputStream);
                     }

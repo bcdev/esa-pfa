@@ -68,5 +68,5 @@ public abstract class PatchWriterFactory {
                 : defaultValue;
     }
 
-    public abstract PatchWriter createFeatureOutput(Product sourceProduct) throws IOException;
+    public abstract PatchWriter createPatchWriter(Product sourceProduct) throws IOException;
 }

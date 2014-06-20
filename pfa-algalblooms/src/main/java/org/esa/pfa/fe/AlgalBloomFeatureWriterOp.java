@@ -34,7 +34,6 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.datamodel.StxFactory;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
@@ -44,8 +43,6 @@ import org.esa.beam.framework.gpf.graph.GraphContext;
 import org.esa.beam.framework.gpf.graph.GraphException;
 import org.esa.beam.framework.gpf.graph.GraphIO;
 import org.esa.beam.framework.gpf.graph.GraphProcessor;
-import org.esa.beam.framework.gpf.graph.Node;
-import org.esa.beam.framework.gpf.graph.NodeContext;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
@@ -54,9 +51,9 @@ import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterOp;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.fe.op.out.PatchOutput;
+import org.esa.pfa.fe.op.out.PatchSink;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
@@ -71,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An operator for extracting algal bloom features.
@@ -80,7 +76,7 @@ import java.util.Map;
  * @author Ralf Quast
  */
 @OperatorMetadata(alias = "AlgalBloomFeatureWriter", version = "1.1", autoWriteDisabled = true)
-public class AlgalBloomFeatureWriter extends FeatureWriter {
+public class AlgalBloomFeatureWriterOp extends FeatureWriterOp {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
@@ -294,7 +290,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     }
 
     @Override
-    protected boolean processPatch(Patch patch, PatchOutput patchOutput) throws IOException {
+    protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
         int patchX = patch.getPatchX();
         int patchY = patch.getPatchY();
         Product patchProduct = patch.getPatchProduct();
@@ -365,7 +361,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
         patch.setFeatures(features);
 
-        patchOutput.writePatch(patch, features);
+        sink.writePatch(patch, features);
 
         disposeProducts(featureProduct, wasteProduct);
 
@@ -603,7 +599,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AlgalBloomFeatureWriter.class);
+            super(AlgalBloomFeatureWriterOp.class);
         }
     }
 

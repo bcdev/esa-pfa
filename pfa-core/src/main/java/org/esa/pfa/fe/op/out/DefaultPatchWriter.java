@@ -114,15 +114,11 @@ public class DefaultPatchWriter implements PatchWriter {
         }
 
         for (Feature feature : features) {
-            if (skipProductOutput && feature.getFeatureType().getValueType() == Product.class) {
-                continue;
-            }
-            FeatureOutput featureOutput = feature.getExtension(FeatureOutput.class);
-            if (featureOutput != null) {
-                featureOutput.writeFeature(patch, feature, patchTargetPath);
+            final FeatureWriter featureWriter = feature.getExtension(FeatureWriter.class);
+            if (featureWriter != null) {
+                featureWriter.writeFeature(feature, patchTargetPath);
             }
         }
-
         for (PatchWriter patchWriter : patchWriters) {
             patchWriter.writePatch(patch, features);
         }
