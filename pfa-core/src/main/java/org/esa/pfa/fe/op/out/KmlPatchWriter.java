@@ -9,9 +9,10 @@ import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,19 +23,23 @@ import java.util.List;
  */
 public class KmlPatchWriter implements PatchWriter {
 
-    private final File productTargetDir;
+    private final Path targetDirPath;
     private List<KmlWriter> kmlWriters;
 
-    public KmlPatchWriter(File productTargetDir) throws IOException {
-        this.productTargetDir = productTargetDir;
+    public KmlPatchWriter(Path targetDirPath) throws IOException {
+        this.targetDirPath = targetDirPath;
     }
 
     @Override
-    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        kmlWriters = new ArrayList<KmlWriter>();
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws
+                                                                                                          IOException {
+        kmlWriters = new ArrayList<>();
         for (FeatureType featureType : featureTypes) {
             if (PatchWriterHelpers.isImageFeatureType(featureType)) {
-                KmlWriter kmlWriter = new KmlWriter(new FileWriter(new File(productTargetDir, featureType.getName() + "-overview.kml")),
+                final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(),
+                                                                                  featureType.getName() + "-overview.kml");
+                final Writer writer = Files.newBufferedWriter(targetFilePath);
+                KmlWriter kmlWriter = new KmlWriter(writer,
                                                     sourceProduct.getName(),
                                                     "RGB tiles from reflectances of " + sourceProduct.getName());
                 kmlWriters.add(kmlWriter);
@@ -47,7 +52,7 @@ public class KmlPatchWriter implements PatchWriter {
         final Product patchProduct = patch.getPatchProduct();
         final GeoCoding geoCoding = patchProduct.getGeoCoding();
         int kmlWriterIndex = 0;
-        for (Feature feature : features) {
+        for (final Feature feature : features) {
             if (PatchWriterHelpers.isImageFeatureType(feature.getFeatureType())) {
                 float w = patchProduct.getSceneRasterWidth();
                 float h = patchProduct.getSceneRasterHeight();
@@ -58,7 +63,7 @@ public class KmlPatchWriter implements PatchWriter {
                         geoCoding.getGeoPos(new PixelPos(w, 0), null),
                         geoCoding.getGeoPos(new PixelPos(0, 0), null),
                 };
-                String imagePath = patch.getPatchName() + "/" + feature.getName() + ".png";
+                final String imagePath = patch.getPatchName() + "/" + feature.getName() + ".png";
                 kmlWriters.get(kmlWriterIndex).writeGroundOverlayEx(patch.getPatchName(), quadPositions, imagePath);
                 kmlWriterIndex++;
             }
@@ -67,7 +72,7 @@ public class KmlPatchWriter implements PatchWriter {
 
     @Override
     public void close() throws IOException {
-        for (KmlWriter kmlWriter : kmlWriters) {
+        for (final KmlWriter kmlWriter : kmlWriters) {
             kmlWriter.close();
         }
     }

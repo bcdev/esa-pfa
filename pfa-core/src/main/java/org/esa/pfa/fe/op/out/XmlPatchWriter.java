@@ -7,10 +7,10 @@ import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Writes a single XML file "fex-metadata.xml" for each product.
@@ -23,26 +23,25 @@ public class XmlPatchWriter implements PatchWriter {
     private static final String OVERVIEW_XSL_FILE_NAME = "fex-overview.xsl";
     private static final String OVERVIEW_CSS_FILE_NAME = "fex-overview.css";
 
-    private final File productTargetDir;
+    private final Path targetDirPath;
     private Writer xmlWriter;
-    private Product sourceProduct;
     private FeatureType[] featureTypes;
 
-    public XmlPatchWriter(File productTargetDir) throws IOException {
-        this.productTargetDir = productTargetDir;
+    public XmlPatchWriter(Path targetDirPath) throws IOException {
+        this.targetDirPath = targetDirPath;
     }
 
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        this.sourceProduct = sourceProduct;
         this.featureTypes = featureTypes;
-        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_XSL_FILE_NAME, productTargetDir);
-        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, productTargetDir);
+        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_XSL_FILE_NAME, targetDirPath);
+        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, targetDirPath);
 
-        xmlWriter = new FileWriter(new File(productTargetDir, OVERVIEW_XML_FILE_NAME));
+        final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), OVERVIEW_XML_FILE_NAME);
+        xmlWriter = Files.newBufferedWriter(targetFilePath);
         xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xmlWriter.write("<?xml-stylesheet type=\"text/xsl\" href=\"fex-overview.xsl\"?>\n");
-        xmlWriter.write("<featureExtraction source=\"" + this.sourceProduct.getName() + "\">\n");
+        xmlWriter.write("<featureExtraction source=\"" + sourceProduct.getName() + "\">\n");
         writeFeatureTypeXml();
     }
 

@@ -80,8 +80,12 @@ public abstract class FeatureWriter extends Operator {
     @Parameter(defaultValue = "false")
     protected boolean skipQuicklookOutput;
 
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     protected boolean skipProductOutput;
+
+    @Parameter(defaultValue = "false")
+    protected boolean zipAllOutput;
+
 
     @Parameter(description="Extra patch writer configuration properties. Uses Java Properties File format.")
     protected String patchWriterConfigExtra;
@@ -190,6 +194,7 @@ public abstract class FeatureWriter extends Operator {
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_QUICKLOOK_OUTPUT, skipQuicklookOutput);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT, skipProductOutput);
         patchWriterConfig.put(PatchWriterFactory.PROPERTY_SKIP_FEATURE_OUTPUT, skipFeaturesOutput);
+        patchWriterConfig.put(PatchWriterFactory.PROPERTY_ZIP_ALL_OUTPUT, zipAllOutput);
         if (patchWriterConfigExtra != null) {
             StringReader stringReader = new StringReader(patchWriterConfigExtra);
             Properties properties = new Properties();

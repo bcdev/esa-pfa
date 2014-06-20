@@ -8,10 +8,14 @@ import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.operator.FileStoreDescriptor;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * @author Norman Fomferra
@@ -24,8 +28,6 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
 
     public static final String IMAGE_FORMAT_NAME = "PNG";
     public static final String IMAGE_FILE_EXT = ".png";
-//    public static final String IMAGE_FORMAT_NAME = "JPEG";
-//    public static final String IMAGE_FILE_EXT = ".jpg";
 
     @Override
     public PatchWriter createFeatureOutput(Product sourceProduct) throws IOException {
@@ -33,6 +35,7 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
     }
 
     private static class FeatureOutputFactory implements ExtensionFactory {
+
         @Override
         public FeatureOutput getExtension(Object object, Class<?> extensionType) {
             Feature feature = (Feature) object;
@@ -51,31 +54,58 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
         }
 
         private static class ProductFeatureOutput implements FeatureOutput {
+
             @Override
-            public String writeFeature(Patch patch, Feature feature, String dirPath) throws IOException {
-                Product patchProduct = (Product) feature.getValue();
-                String path = new File(dirPath, feature.getName() + ".dim").getPath();
-                long t1 = System.currentTimeMillis();
-                ProductIO.writeProduct(patchProduct, path, "BEAM-DIMAP");
-                long t2 = System.currentTimeMillis();
-                BeamLogManager.getSystemLogger().info(String.format("Written %s (%d ms)", path, t2 - t1));
-                return path;
+            public String writeFeature(Patch patch, Feature feature, Path targetDirPath) throws IOException {
+                try {
+                    final File targetDir = targetDirPath.toFile();
+                    final String targetFilePathString = new File(targetDir, feature.getName() + ".dim").getPath();
+                    final Product patchProduct = (Product) feature.getValue();
+                    final long t1 = System.currentTimeMillis();
+                    ProductIO.writeProduct(patchProduct, targetFilePathString, "BEAM-DIMAP");
+                    final long t2 = System.currentTimeMillis();
+                    logInfo(String.format("Written %s (%d ms)", targetFilePathString, t2 - t1));
+                    return targetFilePathString;
+                } catch (UnsupportedOperationException e) {
+                    logWarning("Skipping product output because target file system is not supported.");
+                    return null;
+                }
             }
         }
 
         private static class RenderedImageFeatureOutput implements FeatureOutput {
+
             @Override
-            public String writeFeature(Patch patch, Feature feature, String dirPath) throws IOException {
-                RenderedImage image = (RenderedImage) feature.getValue();
-                File output = new File(dirPath, feature.getName() + IMAGE_FILE_EXT);
-                long t1 = System.currentTimeMillis();
-                // Note: ImageIO is VERY slow with 'PNG', it's 5x to 10x slower than the JAI codec (on Windows)!
-                //ImageIO.write(image, IMAGE_FORMAT_NAME, output);
-                FileStoreDescriptor.create(image, output.getPath(), IMAGE_FORMAT_NAME, null, null, null);
-                long t2 = System.currentTimeMillis();
-                BeamLogManager.getSystemLogger().info(String.format("Written %s (%d ms)", output, t2 - t1));
-                return output.getPath();
+            public String writeFeature(Patch patch, Feature feature, Path targetDirPath) throws IOException {
+                final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(),
+                                                                                  feature.getName() + IMAGE_FILE_EXT);
+                final RenderedImage image = (RenderedImage) feature.getValue();
+                final long t1 = System.currentTimeMillis();
+                writeImage(targetFilePath, image);
+                final long t2 = System.currentTimeMillis();
+                logInfo(String.format("Written %s (%d ms)", targetFilePath, t2 - t1));
+                return targetFilePath.toString();
+            }
+
+            private static void writeImage(Path path, RenderedImage image) throws IOException {
+                try {
+                    final File targetFile = path.toFile();
+                    FileStoreDescriptor.create(image, targetFile.getPath(), IMAGE_FORMAT_NAME, null, null, null);
+                } catch (UnsupportedOperationException e) { // file system does not support {@code toFile()}
+                    try (final OutputStream outputStream = Files.newOutputStream(path)) {
+                        ImageIO.write(image, IMAGE_FORMAT_NAME, outputStream);
+                    }
+                }
             }
         }
+
+        private static void logInfo(String msg) {
+            BeamLogManager.getSystemLogger().info(msg);
+        }
+
+        private static void logWarning(String msg) {
+            BeamLogManager.getSystemLogger().warning(msg);
+        }
+
     }
 }

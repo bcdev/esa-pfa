@@ -6,8 +6,17 @@ import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * @author Norman Fomferra
@@ -16,75 +25,101 @@ public class DefaultPatchWriter implements PatchWriter {
 
     private static final String PRODUCT_DIR_NAME_EXTENSION = ".fex";
 
-    private final File productTargetDir;
+    private final Path productTargetDirPath;
     private final PatchWriter[] patchWriters;
+    private boolean skipProductOutput;
+    private final FileSystem zipFileSystem;
 
     public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, Product product) throws IOException {
-        String targetPath = patchWriterFactory.getTargetPath();
-        if (targetPath == null) {
-            targetPath = ".";
+        String targetPathString = patchWriterFactory.getTargetPath();
+        if (targetPathString == null) {
+            targetPathString = ".";
         }
 
-        File targetDir = new File(targetPath).getAbsoluteFile();
-
-        boolean overwriteMode = patchWriterFactory.isOverwriteMode();
-        if (targetDir.exists()) {
+        final Path path = Paths.get(targetPathString);
+        final boolean overwriteMode = patchWriterFactory.isOverwriteMode();
+        if (Files.exists(path)) {
             if (!overwriteMode) {
-                String[] contents = targetDir.list();
-                if (contents != null && contents.length > 0) {
-                    throw new IOException(String.format("Directory is not empty: '%s'.", targetDir));
+                final Stream<Path> contents = Files.list(path);
+                if (contents != null && contents.count() > 0) {
+                    throw new IOException(String.format("Directory is not empty: '%s'.", path));
                 }
             }
         } else {
             if (!overwriteMode) {
-                throw new IOException(String.format("Directory does not exist: '%s'.", targetDir));
+                throw new IOException(String.format("Directory does not exist: '%s'.", path));
             } else {
-                if (!targetDir.mkdirs()) {
-                    throw new IOException(String.format("Failed to create directory '%s'.", targetDir));
+                try {
+                    Files.createDirectory(path);
+                } catch (FileAlreadyExistsException e) {
+                    throw new IOException(String.format("Failed to create directory '%s'.", path), e);
                 }
             }
         }
 
-        File productTargetDir = new File(targetDir, product.getName() + PRODUCT_DIR_NAME_EXTENSION);
-        if (!productTargetDir.exists()) {
-            if (!productTargetDir.mkdir()) {
-                throw new IOException(String.format("Failed to create directory '%s'", productTargetDir));
+        final boolean zipAllOutput = patchWriterFactory.getZipAllOutput();
+
+        final Path productTargetDirPath;
+        if (zipAllOutput) {
+            final Map<String, String> env = new HashMap<>();
+            env.put("create", "true");
+            final Path zipFilePath = Paths.get(targetPathString,
+                                               product.getName() + PRODUCT_DIR_NAME_EXTENSION + ".zip");
+            final URI uri = URI.create("jar:file:" + zipFilePath.toString());
+            zipFileSystem = FileSystems.newFileSystem(uri, env);
+            productTargetDirPath = zipFileSystem.getPath("/");
+        } else {
+            zipFileSystem = null;
+            productTargetDirPath = Paths.get(targetPathString, product.getName() + PRODUCT_DIR_NAME_EXTENSION);
+            if (!Files.exists(productTargetDirPath)) {
+                try {
+                    Files.createDirectory(productTargetDirPath);
+                } catch (FileAlreadyExistsException e) {
+                    throw new IOException(String.format("Failed to create directory '%s'", productTargetDirPath), e);
+                }
             }
         }
 
-        this.productTargetDir = productTargetDir;
+        this.productTargetDirPath = productTargetDirPath;
 
         patchWriters = new PatchWriter[]{
-                new PropertiesPatchWriter(productTargetDir),
-                new CsvPatchWriter(productTargetDir),
-                new HtmlPatchWriter(productTargetDir),
-                new XmlPatchWriter(productTargetDir),
-                new KmlPatchWriter(productTargetDir),
+                new PropertiesPatchWriter(productTargetDirPath),
+                new CsvPatchWriter(productTargetDirPath),
+                new HtmlPatchWriter(productTargetDirPath),
+                new XmlPatchWriter(productTargetDirPath),
+                new KmlPatchWriter(productTargetDirPath),
         };
     }
 
 
     @Override
-    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws
+                                                                                                          IOException {
         for (PatchWriter patchWriter : patchWriters) {
             patchWriter.initialize(configuration, sourceProduct, featureTypes);
         }
+        skipProductOutput = configuration.getValue(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT);
     }
 
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
-
-        final File patchTargetDir = new File(productTargetDir, patch.getPatchName());
-        if (!patchTargetDir.exists()) {
-            if (!patchTargetDir.mkdir()) {
-                throw new IOException(String.format("Failed to create directory '%s'", patchTargetDir));
+        final Path patchTargetPath = productTargetDirPath.getFileSystem().getPath(productTargetDirPath.toString(),
+                                                                                  patch.getPatchName());
+        if (!Files.exists(patchTargetPath)) {
+            try {
+                Files.createDirectory(patchTargetPath);
+            } catch (FileAlreadyExistsException e) {
+                throw new IOException(String.format("Failed to create directory '%s'", patchTargetPath), e);
             }
         }
 
         for (Feature feature : features) {
+            if (skipProductOutput && feature.getFeatureType().getValueType() == Product.class) {
+                continue;
+            }
             FeatureOutput featureOutput = feature.getExtension(FeatureOutput.class);
             if (featureOutput != null) {
-                featureOutput.writeFeature(patch, feature, patchTargetDir.getPath());
+                featureOutput.writeFeature(patch, feature, patchTargetPath);
             }
         }
 
@@ -104,6 +139,9 @@ public class DefaultPatchWriter implements PatchWriter {
                     firstIoe = e;
                 }
             }
+        }
+        if (zipFileSystem != null) {
+            zipFileSystem.close();
         }
         if (firstIoe != null) {
             throw firstIoe;

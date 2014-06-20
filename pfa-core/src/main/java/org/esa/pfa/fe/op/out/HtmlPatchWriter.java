@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Writes a single HTML file "fex-metadata.html" for each product.
@@ -25,14 +27,14 @@ public class HtmlPatchWriter implements PatchWriter {
     private static final String OVERVIEW_JS_FILE_NAME = "fex-overview.js";
     private static final String OVERVIEW_CSS_FILE_NAME = "fex-overview.css";
 
-    private final File productTargetDir;
+    private final Path targetDirPath;
     private Writer htmlWriter;
     private String[][] labelValues;
     private FeatureType[] featureTypes;
     private int patchIndex;
 
-    public HtmlPatchWriter(File productTargetDir) throws IOException {
-        this.productTargetDir = productTargetDir;
+    public HtmlPatchWriter(Path targetDirPath) throws IOException {
+        this.targetDirPath = targetDirPath;
     }
 
     @Override
@@ -40,10 +42,11 @@ public class HtmlPatchWriter implements PatchWriter {
         this.labelValues = configuration.getValue("html.labelValues");
         this.featureTypes = featureTypes;
 
-        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_JS_FILE_NAME, productTargetDir);
-        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, productTargetDir);
+        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_JS_FILE_NAME, targetDirPath);
+        PatchWriterHelpers.copyResource(getClass(), OVERVIEW_CSS_FILE_NAME, targetDirPath);
 
-        htmlWriter = new FileWriter(new File(productTargetDir, OVERVIEW_HTML_FILE_NAME));
+        final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), OVERVIEW_HTML_FILE_NAME);
+        htmlWriter = Files.newBufferedWriter(targetFilePath);
         htmlWriter.write("<!DOCTYPE HTML>\n");
         htmlWriter.write("<html>\n");
 

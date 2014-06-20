@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Writes a single CSV file "fex-overview.csv" for all feature of a product.
@@ -22,18 +24,19 @@ public class CsvPatchWriter implements PatchWriter {
     private static final String CSV_FILE_NAME = "fex-overview.csv";
     private static final char SEPARATOR = '\t';
 
-    private final File productTargetDir;
+    private final Path targetDirPath;
     private Writer csvWriter;
     private int columnIndex;
     private int rowIndex;
 
-    public CsvPatchWriter(File productTargetDir) throws IOException {
-        this.productTargetDir = productTargetDir;
+    public CsvPatchWriter(Path targetDirPath) throws IOException {
+        this.targetDirPath = targetDirPath;
     }
 
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        csvWriter = new FileWriter(new File(productTargetDir, CSV_FILE_NAME));
+        final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), CSV_FILE_NAME);
+        csvWriter = Files.newBufferedWriter(targetFilePath);
 
         startRow();
         writeValue("index");

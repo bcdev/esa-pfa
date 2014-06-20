@@ -19,6 +19,7 @@ public abstract class PatchWriterFactory {
     public static final String PROPERTY_SKIP_FEATURE_OUTPUT = "skipFeatureOutput";
     public static final String PROPERTY_SKIP_PRODUCT_OUTPUT = "skipProductOutput";
     public static final String PROPERTY_SKIP_QUICKLOOK_OUTPUT = "skipQuicklookOutput";
+    public static final String PROPERTY_ZIP_ALL_OUTPUT = "zipAllOutput";
 
     private PropertySet configuration;
 
@@ -48,6 +49,10 @@ public abstract class PatchWriterFactory {
 
     public boolean getSkipQuicklookOutput() {
         return getProperty(PROPERTY_SKIP_QUICKLOOK_OUTPUT, false);
+    }
+
+    public boolean getZipAllOutput() {
+        return getProperty(PROPERTY_ZIP_ALL_OUTPUT, false);
     }
 
     protected String getProperty(String key, String defaultValue) {

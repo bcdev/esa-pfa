@@ -17,7 +17,8 @@
             <overwriteMode>true</overwriteMode>
             <skipFeaturesOutput>false</skipFeaturesOutput>
             <skipQuicklookOutput>false</skipQuicklookOutput>
-            <skipProductOutput>false</skipProductOutput>
+            <skipProductOutput>true</skipProductOutput>
+            <zipAllOutput>true</zipAllOutput>
             <patchWidth>200</patchWidth>
             <patchHeight>200</patchHeight>
             <minValidPixels>0.1</minValidPixels>
@@ -26,7 +27,7 @@
             <cloudCorrectionFactor>1.005</cloudCorrectionFactor>
             <frontsCloudMaskThreshold>8</frontsCloudMaskThreshold>
             <flhGradientThreshold>5.0E-5</flhGradientThreshold>
-            <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.HadoopPatchWriterFactory</patchWriterFactoryClassName>
+            <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.DefaultPatchWriterFactory</patchWriterFactoryClassName>
             <patchWriterConfigExtra>foo = bar</patchWriterConfigExtra>
         </parameters>
     </node>

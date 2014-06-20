@@ -4,36 +4,36 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.pfa.fe.op.FeatureType;
 
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * @author Norman Fomferra
  */
 class PatchWriterHelpers {
 
-    public static void copyResource(Class<?> aClass, String resourceName, File targetDir) throws IOException {
+    public static void copyResource(Class<?> aClass, String resourceName, Path targetDirPath) throws IOException {
         final InputStream is = aClass.getResourceAsStream(resourceName);
         if (is == null) {
             throw new IllegalArgumentException(
                     String.format("resource not found: class %s: resource %s", aClass.getName(), resourceName));
         }
-        try {
-            final OutputStream os = new FileOutputStream(new File(targetDir, resourceName));
+        final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), resourceName);
+        if (!Files.exists(targetFilePath)) {
             try {
-                byte[] bytes = new byte[16 * 1024];
-                int len;
-                while ((len = is.read(bytes)) > 0) {
-                    os.write(bytes, 0, len);
+                try (final OutputStream os = Files.newOutputStream(targetFilePath)) {
+                    byte[] bytes = new byte[16 * 1024];
+                    int len;
+                    while ((len = is.read(bytes)) > 0) {
+                        os.write(bytes, 0, len);
+                    }
                 }
             } finally {
-                os.close();
+                is.close();
             }
-        } finally {
-            is.close();
         }
     }
 

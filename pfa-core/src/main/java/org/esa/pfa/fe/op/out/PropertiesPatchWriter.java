@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Writes a single Java properties file "fex-metadata.txt" and for each patch a "features.txt" into the patch directory of a product.
@@ -22,34 +24,28 @@ public class PropertiesPatchWriter implements PatchWriter {
     private static final String METADATA_FILE_NAME = "fex-metadata.txt";
     public static final String FEATURES_FILE_NAME = "features.txt";
 
-    private final File productTargetDir;
+    private final Path targetDirPath;
 
-    public PropertiesPatchWriter(File productTargetDir) throws IOException {
-        this.productTargetDir = productTargetDir;
+    public PropertiesPatchWriter(Path targetDirPath) throws IOException {
+        this.targetDirPath = targetDirPath;
     }
 
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
-        final Writer writer = new FileWriter(new File(productTargetDir, METADATA_FILE_NAME));
-        try {
+        final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), METADATA_FILE_NAME);
+        try (final Writer writer = Files.newBufferedWriter(targetFilePath)) {
             writeFeatureTypes(featureTypes, writer);
-        } finally {
-            writer.close();
         }
     }
 
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
-        final File patchTargetDir = new File(productTargetDir, patch.getPatchName());
-        final File file = new File(patchTargetDir, FEATURES_FILE_NAME);
+        final Path patchFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), patch.getPatchName(), FEATURES_FILE_NAME);
 
-        final Writer writer = new FileWriter(file);
-        try {
+        try (final Writer writer = Files.newBufferedWriter(patchFilePath)) {
             for (Feature feature : features) {
                 writeFeatureProperties(feature, writer);
             }
-        } finally {
-            writer.close();
         }
     }
 

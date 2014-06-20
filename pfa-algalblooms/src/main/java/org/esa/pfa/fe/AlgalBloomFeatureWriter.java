@@ -152,6 +152,8 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
         GraphContext graphContext = new GraphContext(graph);
         new GraphProcessor().executeGraph(graphContext, pm);
+        /*
+        TODO - ask Norman what the hell this is
         Node fexOpNode = graph.getNode("fexOp");
         NodeContext fexOpNodeCtx = graphContext.getNodeContext(fexOpNode);
         Operator fexOp = fexOpNodeCtx.getOperator();
@@ -159,6 +161,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         if (fexFeatures != null) {
             // emit sourcePath + Patch --> Feature[]
         }
+        */
         graphContext.dispose();
     }
 
