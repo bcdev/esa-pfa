@@ -58,15 +58,9 @@ public class DefaultPatchWriter implements PatchWriter {
         }
 
         final boolean zipAllOutput = patchWriterFactory.getZipAllOutput();
-
         final Path productTargetDirPath;
         if (zipAllOutput) {
-            final Map<String, String> env = new HashMap<>();
-            env.put("create", "true");
-            final Path zipFilePath = Paths.get(targetPathString,
-                                               product.getName() + PRODUCT_DIR_NAME_EXTENSION + ".zip");
-            final URI uri = URI.create("jar:file:" + zipFilePath.toString());
-            zipFileSystem = FileSystems.newFileSystem(uri, env);
+            zipFileSystem = createZipFileSystem(targetPathString, product);
             productTargetDirPath = zipFileSystem.getPath("/");
         } else {
             zipFileSystem = null;
@@ -79,7 +73,6 @@ public class DefaultPatchWriter implements PatchWriter {
                 }
             }
         }
-
         this.productTargetDirPath = productTargetDirPath;
 
         patchWriters = new PatchWriter[]{
@@ -91,7 +84,6 @@ public class DefaultPatchWriter implements PatchWriter {
         };
     }
 
-
     @Override
     public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws
                                                                                                           IOException {
@@ -100,6 +92,7 @@ public class DefaultPatchWriter implements PatchWriter {
         }
         skipProductOutput = configuration.getValue(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT);
     }
+
 
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
@@ -142,5 +135,14 @@ public class DefaultPatchWriter implements PatchWriter {
         if (firstIoe != null) {
             throw firstIoe;
         }
+    }
+
+    private static FileSystem createZipFileSystem(String targetPathString, Product product) throws IOException {
+        final Map<String, String> env = new HashMap<>();
+        env.put("create", "true");
+        final Path zipFilePath = Paths.get(targetPathString,
+                                           product.getName() + PRODUCT_DIR_NAME_EXTENSION + ".zip");
+        final URI uri = URI.create("jar:file:" + zipFilePath.toString());
+        return FileSystems.newFileSystem(uri, env);
     }
 }
