@@ -9,6 +9,6 @@ import java.nio.file.Path;
 /**
  * @author Norman Fomferra
  */
-public interface FeatureWriter {
+public interface FeatureSink {
     String writeFeature(Feature feature, Path targetDirPath) throws IOException;
 }

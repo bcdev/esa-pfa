@@ -105,9 +105,9 @@ public class DefaultPatchWriter implements PatchWriter {
         }
 
         for (Feature feature : features) {
-            final FeatureWriter featureWriter = feature.getExtension(FeatureWriter.class);
-            if (featureWriter != null) {
-                featureWriter.writeFeature(feature, patchTargetPath);
+            final FeatureSink featureSink = feature.getExtension(FeatureSink.class);
+            if (featureSink != null) {
+                featureSink.writeFeature(feature, patchTargetPath);
             }
         }
         for (PatchWriter patchWriter : patchWriters) {

@@ -24,7 +24,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriterOp;
+import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
 
@@ -40,7 +40,7 @@ import java.io.IOException;
         copyright = "Copyright (C) 2013 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
         category = "Classification\\Feature Extraction")
-public class UrbanAreaFeatureWriterOp extends FeatureWriterOp {
+public class UrbanAreaFeatureWriter extends FeatureWriter {
 
     public static final String featureBandName = "_speckle_divergence";
 
@@ -48,7 +48,7 @@ public class UrbanAreaFeatureWriterOp extends FeatureWriterOp {
 
     private FeatureType[] featureTypes;
 
-    public UrbanAreaFeatureWriterOp() {
+    public UrbanAreaFeatureWriter() {
         setRequiresAllBands(true);
     }
 
@@ -138,7 +138,7 @@ public class UrbanAreaFeatureWriterOp extends FeatureWriterOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(UrbanAreaFeatureWriterOp.class);
+            super(UrbanAreaFeatureWriter.class);
         }
     }
 }

@@ -51,7 +51,7 @@ import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriterOp;
+import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
 
@@ -76,7 +76,7 @@ import java.util.List;
  * @author Ralf Quast
  */
 @OperatorMetadata(alias = "AlgalBloomFeatureWriter", version = "1.1", autoWriteDisabled = true)
-public class AlgalBloomFeatureWriterOp extends FeatureWriterOp {
+public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
@@ -599,7 +599,7 @@ public class AlgalBloomFeatureWriterOp extends FeatureWriterOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AlgalBloomFeatureWriterOp.class);
+            super(AlgalBloomFeatureWriter.class);
         }
     }
 

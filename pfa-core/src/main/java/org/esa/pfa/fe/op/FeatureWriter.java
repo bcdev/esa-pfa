@@ -58,7 +58,7 @@ import java.util.Set;
                   autoWriteDisabled = true,
                   description = "Writes features into patches.",
                   category = "Classification\\Feature Extraction")
-public abstract class FeatureWriterOp extends Operator {
+public abstract class FeatureWriter extends Operator {
 
     @SourceProduct(alias = "source", description = "The source product to be written.")
     private Product sourceProduct;
@@ -166,7 +166,7 @@ public abstract class FeatureWriterOp extends Operator {
             new AttributeType("count", "Sample count (number of valid feature pixels)", Integer.class),
     };
 
-    public FeatureWriterOp() {
+    public FeatureWriter() {
         setRequiresAllBands(true);
     }
 

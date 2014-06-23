@@ -30,7 +30,7 @@ import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.visat.VisatApp;
-import org.esa.pfa.fe.op.FeatureWriterOp;
+import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 
@@ -67,7 +67,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             final Rectangle productRegion = new Rectangle(parentImage.getWidth(), parentImage.getHeight()).
                     intersection(region);
 
-            final Product subset = FeatureWriterOp.createSubset(product, productRegion);
+            final Product subset = FeatureWriter.createSubset(product, productRegion);
             final int patchX = region.x / region.width;
             final int patchY = region.y / region.height;
 

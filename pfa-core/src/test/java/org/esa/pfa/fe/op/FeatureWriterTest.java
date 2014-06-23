@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman Fomferra
  */
-public class FeatureWriterOpTest {
+public class FeatureWriterTest {
 
     static {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -33,15 +33,15 @@ public class FeatureWriterOpTest {
         MyPatchWriterFactory outputFactory = new MyPatchWriterFactory();
         assertEquals(null, outputFactory.featureOutput);
 
-        FeatureWriterOp featureWriterOp = new MyFeatureWriterOp();
-        featureWriterOp.setTargetDir(new File("test"));
-        featureWriterOp.setOverwriteMode(true);
-        featureWriterOp.setSkipProductOutput(true);
-        featureWriterOp.setPatchWidth(100);
-        featureWriterOp.setPatchHeight(100);
-        featureWriterOp.setSourceProduct(sourceProduct);
-        featureWriterOp.setPatchWriterFactory(outputFactory);
-        Product targetProduct = featureWriterOp.getTargetProduct();
+        FeatureWriter featureWriter = new MyFeatureWriter();
+        featureWriter.setTargetDir(new File("test"));
+        featureWriter.setOverwriteMode(true);
+        featureWriter.setSkipProductOutput(true);
+        featureWriter.setPatchWidth(100);
+        featureWriter.setPatchHeight(100);
+        featureWriter.setSourceProduct(sourceProduct);
+        featureWriter.setPatchWriterFactory(outputFactory);
+        Product targetProduct = featureWriter.getTargetProduct();
 
         assertEquals("test", outputFactory.getTargetPath());
         assertEquals(true, outputFactory.isOverwriteMode());
@@ -54,12 +54,12 @@ public class FeatureWriterOpTest {
         assertTrue(outputFactory.featureOutput.initialized);
         assertEquals(0, outputFactory.featureOutput.patchOutputs.size());
 
-        featureWriterOp.dispose();
+        featureWriter.dispose();
         assertTrue(outputFactory.featureOutput.closed);
     }
 
 
-    private static class MyFeatureWriterOp extends FeatureWriterOp {
+    private static class MyFeatureWriter extends FeatureWriter {
         public static final FeatureType[] FEATURE_TYPES = new FeatureType[]{
                 new FeatureType("f1", "d1", String.class),
                 new FeatureType("f2", "d2", Double.class)

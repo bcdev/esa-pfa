@@ -22,7 +22,7 @@ import java.nio.file.Path;
 public class DefaultPatchWriterFactory extends PatchWriterFactory {
 
     static {
-        ExtensionManager.getInstance().register(Feature.class, new FeatureWriterFactory());
+        ExtensionManager.getInstance().register(Feature.class, new FeatureSinkFactory());
     }
 
     public static final String IMAGE_FORMAT_NAME = "PNG";
@@ -33,26 +33,26 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
         return new DefaultPatchWriter(this, sourceProduct);
     }
 
-    private static class FeatureWriterFactory implements ExtensionFactory {
+    private static class FeatureSinkFactory implements ExtensionFactory {
 
         @Override
-        public FeatureWriter getExtension(Object object, Class<?> extensionType) {
+        public FeatureSink getExtension(Object object, Class<?> extensionType) {
             Feature feature = (Feature) object;
             Object value = feature.getValue();
             if (value instanceof Product) {
-                return new ProductFeatureWriter();
+                return new ProductFeatureSink();
             } else if (value instanceof RenderedImage) {
-                return new RenderedImageFeatureWriter();
+                return new RenderedImageFeatureSink();
             }
             return null;
         }
 
         @Override
         public Class<?>[] getExtensionTypes() {
-            return new Class<?>[]{FeatureWriter.class};
+            return new Class<?>[]{FeatureSink.class};
         }
 
-        private static class ProductFeatureWriter implements FeatureWriter {
+        private static class ProductFeatureSink implements FeatureSink {
 
             @Override
             public String writeFeature(Feature feature, Path targetDirPath) throws IOException {
@@ -72,7 +72,7 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
             }
         }
 
-        private static class RenderedImageFeatureWriter implements FeatureWriter {
+        private static class RenderedImageFeatureSink implements FeatureSink {
 
             @Override
             public String writeFeature(Feature feature, Path targetDirPath) throws IOException {
