@@ -36,6 +36,7 @@ import org.esa.beam.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
+import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
 
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
@@ -43,8 +44,9 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -87,7 +89,7 @@ public abstract class FeatureWriter extends Operator {
     protected boolean zipAllOutput;
 
 
-    @Parameter(description="Extra patch writer configuration properties. Uses Java Properties File format.")
+    @Parameter(description = "Extra patch writer configuration properties. Uses Java Properties File format.")
     protected String patchWriterConfigExtra;
 
     @Parameter
@@ -99,9 +101,11 @@ public abstract class FeatureWriter extends Operator {
     @Parameter(description = "Patch size in km", interval = "(0, *)", defaultValue = "12.0", label = "Patch Size (km)")
     private double patchSizeKm = 12.0;
 
-    @Parameter(description = "Patch width in pixels", interval = "(0, *)", defaultValue = "200", label = "Patch Width (pixels)")
+    @Parameter(description = "Patch width in pixels", interval = "(0, *)", defaultValue = "200",
+               label = "Patch Width (pixels)")
     protected int patchWidth = 0;
-    @Parameter(description = "Patch height in pixels", interval = "(0, *)", defaultValue = "200", label = "Patch Height (pixels)")
+    @Parameter(description = "Patch height in pixels", interval = "(0, *)", defaultValue = "200",
+               label = "Patch Height (pixels)")
     protected int patchHeight = 0;
 
     @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)",
@@ -109,7 +113,7 @@ public abstract class FeatureWriter extends Operator {
     protected float minValidPixels = 0.1f;
 
     @TargetProperty
-    protected List<Patch> patches;
+    protected FeatureWriterResult result;
 
     private transient PatchWriterFactory patchWriterFactory;
     private transient PatchWriter patchWriter;
@@ -229,6 +233,8 @@ public abstract class FeatureWriter extends Operator {
 
         getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
 
+        result = new FeatureWriterResult(sourceProduct.getName());
+
         try {
             patchWriter = patchWriterFactory.createPatchWriter(sourceProduct);
             patchWriter.initialize(patchWriterFactory.getConfiguration(), getSourceProduct(), getFeatureTypes());
@@ -273,7 +279,6 @@ public abstract class FeatureWriter extends Operator {
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws
                                                                                                              OperatorException {
         try {
-
             final Product patchProduct = createSubset(sourceProduct, targetRectangle);
             patchProduct.setName("patch");
 
@@ -282,7 +287,15 @@ public abstract class FeatureWriter extends Operator {
 
             final Patch patch = new Patch(patchX, patchY, targetRectangle, patchProduct);
 
-            processPatch(patch, patchWriter);
+            final boolean valid = processPatch(patch, patchWriter);
+            if (valid) {
+                try (final Writer writer = new StringWriter()) {
+                    for (final Feature feature : patch.getFeatures()) {
+                        PropertiesPatchWriter.writeFeatureProperties(feature, writer);
+                    }
+                    result.addPatchResult(patchX, patchY, writer.toString());
+                }
+            }
 
             patchProduct.dispose();
 
@@ -305,6 +318,7 @@ public abstract class FeatureWriter extends Operator {
         }
         patchWriter = null;
         patchWriterFactory = null;
+        result.getPatchResults().clear();
         super.dispose();
     }
 

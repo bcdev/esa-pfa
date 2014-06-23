@@ -7,8 +7,6 @@ import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -31,7 +29,8 @@ public class PropertiesPatchWriter implements PatchWriter {
     }
 
     @Override
-    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws IOException {
+    public void initialize(PropertySet configuration, Product sourceProduct, FeatureType... featureTypes) throws
+                                                                                                          IOException {
         final Path targetFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), METADATA_FILE_NAME);
         try (final Writer writer = Files.newBufferedWriter(targetFilePath)) {
             writeFeatureTypes(featureTypes, writer);
@@ -40,7 +39,8 @@ public class PropertiesPatchWriter implements PatchWriter {
 
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
-        final Path patchFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), patch.getPatchName(), FEATURES_FILE_NAME);
+        final Path patchFilePath = targetDirPath.getFileSystem().getPath(targetDirPath.toString(), patch.getPatchName(),
+                                                                         FEATURES_FILE_NAME);
 
         try (final Writer writer = Files.newBufferedWriter(patchFilePath)) {
             for (Feature feature : features) {
@@ -72,23 +72,27 @@ public class PropertiesPatchWriter implements PatchWriter {
             writer.write(String.format("featureTypes.%d.attributeTypes.length = %s%n", i, attributeTypes.length));
             for (int j = 0; j < attributeTypes.length; j++) {
                 AttributeType attributeType = attributeTypes[j];
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.name = %s%n", i, j, attributeType.getName()));
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.description = %s%n", i, j, attributeType.getDescription()));
-                writer.write(String.format("featureTypes.%d.attributeTypes.%d.valueType = %s%n", i, j, attributeType.getValueType().getSimpleName()));
+                writer.write(
+                        String.format("featureTypes.%d.attributeTypes.%d.name = %s%n", i, j, attributeType.getName()));
+                writer.write(String.format("featureTypes.%d.attributeTypes.%d.description = %s%n", i, j,
+                                           attributeType.getDescription()));
+                writer.write(String.format("featureTypes.%d.attributeTypes.%d.valueType = %s%n", i, j,
+                                           attributeType.getValueType().getSimpleName()));
             }
         } else {
-            writer.write(String.format("featureTypes.%d.valueType = %s%n", i, featureType.getValueType().getSimpleName()));
+            writer.write(
+                    String.format("featureTypes.%d.valueType = %s%n", i, featureType.getValueType().getSimpleName()));
         }
     }
 
 
-    private void writeFeatureProperties(Feature feature, Writer writer) throws IOException {
+    public static void writeFeatureProperties(Feature feature, Writer writer) throws IOException {
         if (feature.hasAttributes()) {
-            AttributeType[] attributeTypes = feature.getFeatureType().getAttributeTypes();
-            Object[] attributeValues = feature.getAttributeValues();
+            final AttributeType[] attributeTypes = feature.getFeatureType().getAttributeTypes();
+            final Object[] attributeValues = feature.getAttributeValues();
             for (int i = 0; i < attributeValues.length; i++) {
                 if (isSupportedType(attributeTypes[i].getValueType())) {
-                    Object attributeValue = attributeValues[i];
+                    final Object attributeValue = attributeValues[i];
                     writer.write(String.format("%s.%s = %s%n",
                                                feature.getFeatureType().getName(),
                                                attributeTypes[i].getName(),
@@ -105,8 +109,8 @@ public class PropertiesPatchWriter implements PatchWriter {
 
     private static boolean isSupportedType(Class<?> valueType) {
         return Number.class.isAssignableFrom(valueType)
-                || Boolean.class.isAssignableFrom(valueType)
-                || Character.class.isAssignableFrom(valueType)
-                || String.class.isAssignableFrom(valueType);
+               || Boolean.class.isAssignableFrom(valueType)
+               || Character.class.isAssignableFrom(valueType)
+               || String.class.isAssignableFrom(valueType);
     }
 }

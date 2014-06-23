@@ -18,7 +18,7 @@
             <skipFeaturesOutput>false</skipFeaturesOutput>
             <skipQuicklookOutput>false</skipQuicklookOutput>
             <skipProductOutput>true</skipProductOutput>
-            <zipAllOutput>true</zipAllOutput>
+            <zipAllOutput>false</zipAllOutput>
             <patchWidth>200</patchWidth>
             <patchHeight>200</patchHeight>
             <minValidPixels>0.1</minValidPixels>
