@@ -27,7 +27,6 @@ public class DefaultPatchWriter implements PatchWriter {
 
     private final Path productTargetDirPath;
     private final PatchWriter[] patchWriters;
-    private boolean skipProductOutput;
     private final FileSystem zipFileSystem;
 
     public DefaultPatchWriter(PatchWriterFactory patchWriterFactory, Product product) throws IOException {
@@ -90,7 +89,6 @@ public class DefaultPatchWriter implements PatchWriter {
         for (PatchWriter patchWriter : patchWriters) {
             patchWriter.initialize(configuration, sourceProduct, featureTypes);
         }
-        skipProductOutput = configuration.getValue(PatchWriterFactory.PROPERTY_SKIP_PRODUCT_OUTPUT);
     }
 
 
