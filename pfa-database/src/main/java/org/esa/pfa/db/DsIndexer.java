@@ -297,8 +297,10 @@ public class DsIndexer {
 
         String name = patchDir.getName();
         //Todo this needs to be smarter for datasets with more than 100x100 patches
-        int patchX = Integer.parseInt(name.substring(1, 3));
-        int patchY = Integer.parseInt(name.substring(4, 6));
+        int xi = name.indexOf("x");
+        int yi = name.indexOf("y");
+        int patchX = Integer.parseInt(name.substring(xi+1, yi));
+        int patchY = Integer.parseInt(name.substring(yi+1, name.length()));
 
         String fexDirName = patchDir.getParentFile().getName();
         String productName = fexDirName.substring(0, fexDirName.length() - 4);
