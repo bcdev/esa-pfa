@@ -66,7 +66,7 @@ public class DefaultPatchWriter implements PatchWriter {
             productTargetDirPath = Paths.get(targetPathString, product.getName() + PRODUCT_DIR_NAME_EXTENSION);
             if (!Files.exists(productTargetDirPath)) {
                 try {
-                    Files.createDirectory(productTargetDirPath);
+                    Files.createDirectories(productTargetDirPath);
                 } catch (FileAlreadyExistsException e) {
                     throw new IOException(String.format("Failed to create directory '%s'", productTargetDirPath), e);
                 }
