@@ -275,30 +275,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             modelList.addElement(name);
         }
         classifierList.setModel(modelList);
-    }
-
-    public static JLabel createTitleLabel(final String title) {
-        final JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(titleFont);
-        return titleLabel;
-    }
-
-    public static JPanel createTextPanel(final String title, final String text) {
-        final JPanel textPanel = new JPanel(new BorderLayout(2, 2));
-        if (title != null)
-            textPanel.setBorder(BorderFactory.createTitledBorder(title));
-        final JTextPane textPane = new JTextPane();
-        textPane.setText(text);
-        textPane.setEditable(false);
-        textPanel.add(textPane, BorderLayout.CENTER);
-        return textPanel;
-    }
-
-    public static JPanel createInstructionsPanel(final String title, final String text) {
-        final JPanel instructPanel = new JPanel(new BorderLayout(2, 2));
-        instructPanel.add(createTitleLabel(title), BorderLayout.NORTH);
-        instructPanel.add(createTextPanel(null, text), BorderLayout.CENTER);
-        return instructPanel;
+        updateControls();
     }
 
     private JPanel createClassifierButtonPanel() {
