@@ -30,13 +30,11 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProperty;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
-import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
 
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
@@ -44,8 +42,6 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -112,8 +108,10 @@ public abstract class FeatureWriter extends Operator {
                defaultValue = "0.1")
     protected float minValidPixels = 0.1f;
 
+    /*
     @TargetProperty
     protected FeatureWriterResult result;
+    */
 
     private transient PatchWriterFactory patchWriterFactory;
     private transient PatchWriter patchWriter;
@@ -233,7 +231,7 @@ public abstract class FeatureWriter extends Operator {
 
         getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
 
-        result = new FeatureWriterResult(sourceProduct.getName());
+        // result = new FeatureWriterResult(sourceProduct.getName());
 
         try {
             patchWriter = patchWriterFactory.createPatchWriter(sourceProduct);
@@ -288,6 +286,7 @@ public abstract class FeatureWriter extends Operator {
             final Patch patch = new Patch(patchX, patchY, targetRectangle, patchProduct);
 
             final boolean valid = processPatch(patch, patchWriter);
+/*
             if (valid) {
                 try (final Writer writer = new StringWriter()) {
                     for (final Feature feature : patch.getFeatures()) {
@@ -296,7 +295,7 @@ public abstract class FeatureWriter extends Operator {
                     result.addPatchResult(patchX, patchY, writer.toString());
                 }
             }
-
+*/
             patchProduct.dispose();
 
             if (disposeGlobalCaches) {
@@ -318,7 +317,7 @@ public abstract class FeatureWriter extends Operator {
         }
         patchWriter = null;
         patchWriterFactory = null;
-        result.getPatchResults().clear();
+        // result.getPatchResults().clear();
         super.dispose();
     }
 
