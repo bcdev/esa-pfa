@@ -95,18 +95,18 @@ public abstract class FeatureWriter extends Operator {
     private String patchWriterFactoryClassName;
 
     @Parameter(description = "Patch size in km", interval = "(0, *)", defaultValue = "12.0", label = "Patch Size (km)")
-    private double patchSizeKm = 12.0;
+    private double patchSizeKm;
 
     @Parameter(description = "Patch width in pixels", interval = "(0, *)", defaultValue = "200",
                label = "Patch Width (pixels)")
-    protected int patchWidth = 0;
+    protected int patchWidth;
     @Parameter(description = "Patch height in pixels", interval = "(0, *)", defaultValue = "200",
                label = "Patch Height (pixels)")
-    protected int patchHeight = 0;
+    protected int patchHeight;
 
     @Parameter(description = "Minimum percentage of valid pixels", label = "Minimum valid pixels (%)",
                defaultValue = "0.1")
-    protected float minValidPixels = 0.1f;
+    protected float minValidPixels;
 
     /*
     @TargetProperty
