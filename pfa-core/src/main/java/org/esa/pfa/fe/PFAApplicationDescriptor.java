@@ -18,6 +18,7 @@ package org.esa.pfa.fe;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Set;
 
 /**
@@ -46,8 +47,31 @@ public interface PFAApplicationDescriptor {
      * Gets the graph file with which to apply the feature extraction
      *
      * @return the graph file as a stream
+     * TODO return a URL / URI instead
      */
     public InputStream getGraphFileAsStream();
+
+    /**
+     * The name of the node in the graph that conatins the {@link org.esa.pfa.fe.op.FeatureWriter}
+     *
+     * @return the name of the node
+     */
+    public String getFeatureWriterNodeName();
+
+    /**
+     * The name of the target property in the {@link org.esa.pfa.fe.op.FeatureWriter} operator
+     * that contains the {@link org.esa.pfa.fe.op.FeatureWriterResult}.
+     *
+     * @return the name of the target property
+     */
+    public String getFeatureWriterPropertyName();
+
+    /**
+     * Gets the dataset descriptor (Schema) for the index of this application.
+     *
+     * @return the dataset descriptor
+     */
+    public URI getDatasetDescriptorURI();
 
     /**
      * @return A Lucene query expression that matches all entries.

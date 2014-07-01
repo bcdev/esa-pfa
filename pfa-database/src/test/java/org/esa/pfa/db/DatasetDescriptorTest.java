@@ -1,6 +1,7 @@
 package org.esa.pfa.db;
 
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.junit.Test;

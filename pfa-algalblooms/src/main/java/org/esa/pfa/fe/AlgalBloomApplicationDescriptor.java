@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
@@ -42,6 +45,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
 
 
     static {
+        //TODO this doesn't work on calvalus
         File file = new File(SystemUtils.getApplicationDataDir(), "pfa-algalblooms.properties");
         try {
             try (FileReader reader = new FileReader(file)) {
@@ -69,6 +73,29 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     @Override
     public InputStream getGraphFileAsStream() {
         return getClass().getResourceAsStream("AlgalBloomFeatureWriter.xml");
+    }
+
+    @Override
+    public String getFeatureWriterNodeName() {
+        return "AlgalBloomFeatureWriter";
+    }
+
+    @Override
+    public String getFeatureWriterPropertyName() {
+        return "result";
+    }
+
+    @Override
+    public URI getDatasetDescriptorURI() {
+        try {
+            URL url = getClass().getResource("DatasetDescriptor.xml");
+            if (url == null) {
+                throw new IllegalStateException("DatasetDescriptor.xml missing");
+            }
+            return url.toURI();
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
