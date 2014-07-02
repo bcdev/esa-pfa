@@ -37,10 +37,7 @@ public class JaxWsExample {
 
     @Before
     public void setUp() throws Exception {
-        try {
-            endpoint = Endpoint.publish(WS_ADDRESS, new HelloWorldImpl());
-        } catch (Exception ignored) {
-        }
+        endpoint = Endpoint.publish(WS_ADDRESS, new HelloWorldImpl());
     }
 
     @After
@@ -77,7 +74,6 @@ public class JaxWsExample {
     @Test
     public void simulateWebServiceClient() throws Exception {
         final URL url = new URL(WS_ADDRESS + "?wsdl");
-
         final QName qname = new QName(WS_NAMESPACE_URI, WS_NAME);
 
         final Service service = Service.create(url, qname);
