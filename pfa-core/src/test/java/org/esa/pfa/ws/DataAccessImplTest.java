@@ -15,6 +15,7 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Endpoint;
 import javax.xml.ws.Service;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
@@ -22,23 +23,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * A Jax-WS example.
- *
  * @author Ralf Quast
  */
+public class DataAccessImplTest {
 
-public class JaxWsExample {
-
-
-    private static final String WS_ADDRESS = "http://localhost:9999/ws/hello";
+    private static final String WS_ADDRESS = "http://localhost:9999/ws/pfa";
     private static final String WS_NAMESPACE_URI = "http://ws.pfa.esa.org/";
-    private static final String WS_NAME = "HelloWorldImplService";
+    private static final String WS_NAME = "DataAccessImplService";
 
     private Endpoint endpoint;
 
     @Before
     public void setUp() throws Exception {
-        endpoint = Endpoint.publish(WS_ADDRESS, new HelloWorldImpl());
+        endpoint = Endpoint.publish(WS_ADDRESS, new DataAccessImpl());
     }
 
     @After
@@ -83,26 +80,26 @@ public class JaxWsExample {
         final Service service = Service.create(url, qname);
         assertNotNull(service);
 
-        final HelloWorld helloWorld = service.getPort(HelloWorld.class);
+        final DataAccess dataAccess = service.getPort(DataAccess.class);
 
-        assertEquals("Hello World JAX-WS example", helloWorld.getHelloWorldAsString("example"));
+        final String[] uris = dataAccess.getAllQuicklookUris("MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1", 0, 8);
+        assertEquals(4, uris.length);
     }
 
     @WebService
     @SOAPBinding(style = SOAPBinding.Style.RPC)
-    public static interface HelloWorld {
+    public interface DataAccess {
 
         @WebMethod
-        String getHelloWorldAsString(String name);
+        String[] getAllQuicklookUris(String productName, int patchX, int patchY);
     }
 
-
-    @WebService(endpointInterface = "org.esa.pfa.ws.JaxWsExample$HelloWorld")
-    public static class HelloWorldImpl implements HelloWorld {
+    @WebService(endpointInterface = "org.esa.pfa.ws.DataAccessImplTest$DataAccess")
+    public static class DataAccessImpl implements DataAccess {
 
         @Override
-        public String getHelloWorldAsString(String name) {
-            return "Hello World JAX-WS " + name;
+        public String[] getAllQuicklookUris(String productName, int patchX, int patchY) {
+            return new String[0];
         }
     }
 
