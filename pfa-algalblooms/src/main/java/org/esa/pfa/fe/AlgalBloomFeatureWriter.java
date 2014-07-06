@@ -38,6 +38,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.TargetProperty;
 import org.esa.beam.framework.gpf.graph.Graph;
 import org.esa.beam.framework.gpf.graph.GraphContext;
 import org.esa.beam.framework.gpf.graph.GraphException;
@@ -52,8 +53,10 @@ import org.esa.beam.util.SystemUtils;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterResult;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
+import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
@@ -63,6 +66,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -188,6 +193,10 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
                description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
     private double flhGradientThreshold;
 
+    @TargetProperty
+    protected FeatureWriterResult result;
+
+
     private transient float[] coastDistData;
     private transient int coastDistWidth;
     private transient int coastDistHeight;
@@ -287,6 +296,15 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         });
 
         super.initialize();
+
+        result = new FeatureWriterResult(getSourceProduct().getName());
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        result.getPatchResults().clear();
     }
 
     @Override
@@ -364,6 +382,15 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         sink.writePatch(patch, features);
 
         disposeProducts(featureProduct, wasteProduct);
+
+        if (true) {
+            try (final Writer writer = new StringWriter()) {
+                for (final Feature feature : patch.getFeatures()) {
+                    PropertiesPatchWriter.writeFeatureProperties(feature, writer);
+                }
+                result.addPatchResult(patchX, patchY, writer.toString());
+            }
+        }
 
         return true;
     }

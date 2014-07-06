@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
@@ -71,6 +74,32 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     @Override
     public InputStream getGraphFileAsStream() {
         return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/UrbanDetectionFeatureWriter.xml");
+    }
+
+    @Override
+    public String getFeatureWriterPropertyName() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getFeatureWriterNodeName() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public URI getDatasetDescriptorURI() {
+        try {
+            // TODO supply one
+            URL url = getClass().getResource("DatasetDescriptor.xml");
+            if (url == null) {
+                throw new IllegalStateException("DatasetDescriptor.xml missing");
+            }
+            return url.toURI();
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override

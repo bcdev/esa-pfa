@@ -3,6 +3,7 @@ package org.esa.pfa.db;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.queryparser.flexible.standard.config.NumericConfig;
 import org.esa.pfa.fe.op.AttributeType;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 
 import java.text.NumberFormat;

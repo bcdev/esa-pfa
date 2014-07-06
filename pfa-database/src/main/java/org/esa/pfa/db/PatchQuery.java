@@ -12,6 +12,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.NumericUtils;
 import org.esa.pfa.fe.op.AttributeType;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
@@ -50,7 +51,7 @@ public class PatchQuery implements QueryInterface {
         this.datasetDir = datasetDir;
         this.defaultFeatureSet = defaultFeatureSet;
 
-        indexName = DsIndexer.DEFAULT_INDEX_NAME;
+        indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
         precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
         maxThreadCount = 1;
         maxHitCount = 20;
@@ -88,7 +89,7 @@ public class PatchQuery implements QueryInterface {
     }
 
     public Patch[] query(String queryExpr, int hitCount) {
-        final List<Patch> patchList = new ArrayList<Patch>(100);
+        final List<Patch> patchList = new ArrayList<>(100);
 
         queryExpr = queryExpr.trim();
 

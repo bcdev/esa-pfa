@@ -17,6 +17,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.NumericUtils;
 import org.esa.pfa.fe.op.AttributeType;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 
 import java.io.BufferedReader;
@@ -53,7 +54,7 @@ public class DsQuery {
     // </arguments>
 
     public DsQuery() {
-        indexName = DsIndexer.DEFAULT_INDEX_NAME;
+        indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
         precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
         maxThreadCount = 1;
         maxHitCount = 20;

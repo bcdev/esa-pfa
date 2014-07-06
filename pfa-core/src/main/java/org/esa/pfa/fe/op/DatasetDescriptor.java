@@ -1,8 +1,6 @@
-package org.esa.pfa.db;
+package org.esa.pfa.fe.op;
 
 import com.thoughtworks.xstream.XStream;
-import org.esa.pfa.fe.op.AttributeType;
-import org.esa.pfa.fe.op.FeatureType;
 
 import java.io.*;
 

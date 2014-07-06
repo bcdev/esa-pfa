@@ -1,11 +1,22 @@
+/*
+ * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.pfa.db;
 
 import com.bc.ceres.core.Assert;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.document.Document;
@@ -22,39 +33,29 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.NumericUtils;
 import org.apache.lucene.util.Version;
 import org.esa.pfa.fe.op.AttributeType;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
 /**
- * The PFA Dataset Indexer Tool.
- *
- * @author Norman
+ * Create a Lucene index
  */
-public class DsIndexer {
-
-    static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
+public class DsIndexer implements AutoCloseable {
 
     public static final Version LUCENE_VERSION = Version.LUCENE_47;
     //public static final Analyzer LUCENE_ANALYZER = new SimpleAnalyzer(LUCENE_VERSION);
     public static final Analyzer LUCENE_ANALYZER = new ProductNameAnalyzer(LUCENE_VERSION);
-    public static final String DEFAULT_INDEX_NAME = "lucene-index";
+
 
     private FieldType storedIntType;
     private FieldType storedLongType;
@@ -67,31 +68,30 @@ public class DsIndexer {
     private Map<Class<?>, IndexableFieldFactory> indexableFieldFactoryMap;
     private List<FeatureFieldFactory> featureFieldFactories;
 
-    private IndexWriter indexWriter;
+    private final IndexWriter indexWriter;
     private long docID;
 
-    final Options options;
-
-    // <options>
-    private static CommonOptions commonOptions = new CommonOptions();
-    private int precisionStep;
-    private int maxThreadCount;
-    private String indexName;
-    // </options>
-
-    // <arguments>
-    private File datasetDir;
-    // </arguments>
-
-    public static void main(String[] args) {
-        Locale.setDefault(Locale.ENGLISH);
-        try {
-            System.exit(new DsIndexer().run(args));
-        } catch (Exception e) {
-            commonOptions.printError(e);
-            System.exit(1);
-        }
+    public DsIndexer(DatasetDescriptor dsDescriptor, int precisionStep, Directory indexDirectory, IndexWriterConfig config) throws IOException {
+        initIndexableFieldFactories(precisionStep);
+        initFeatureFieldFactories(dsDescriptor);
+        indexWriter = new IndexWriter(indexDirectory, config);
     }
+
+    public static IndexWriterConfig createConfig(int maxThreadCount, boolean verbose) {
+        IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, LUCENE_ANALYZER);
+        config.setRAMBufferSizeMB(16);
+        config.setMaxThreadStates(maxThreadCount);
+        if (verbose) {
+            config.setInfoStream(System.out);
+        }
+        return config;
+    }
+
+
+    public void close() throws IOException {
+        indexWriter.close();
+    }
+
 
     private interface IndexableFieldFactory {
         IndexableField createIndexableField(String fieldName, String fieldValue, Field.Store fieldStore);
@@ -148,178 +148,10 @@ public class DsIndexer {
         }
     }
 
-    public DsIndexer() {
-
-        precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
-        maxThreadCount = IndexWriterConfig.DEFAULT_MAX_THREAD_STATES;
-        indexName = DEFAULT_INDEX_NAME;
-
-        options = new Options();
-        CommonOptions.addOptions(options);
-        options.addOption(CommonOptions.opt('i', "index-name", 1, "string", String.format("Name of the output index directory. Default is '%s'.", indexName)));
-        options.addOption(CommonOptions.opt('t', "max-threads", 1, "int", String.format("Number of threads to use for indexing. Default is %d.", maxThreadCount)));
-        options.addOption(CommonOptions.opt('p', "precision-step", 1, "int", String.format("Precision step used for indexing numeric data. " +
-                                                                                           "Lower values consume more disk space but speed up searching. " +
-                                                                                           "Suitable values are between 1 and 8. Default is %d.", precisionStep)));
-    }
 
 
-    private int run(String[] args) throws Exception {
 
-        if (!parseCommandLine(args)) {
-            return 1;
-        }
-
-        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
-        initIndexableFieldFactories();
-
-        featureFieldFactories = new ArrayList<>();
-        FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
-        for (FeatureType featureType : featureTypes) {
-            if (featureType.hasAttributes()) {
-                AttributeType[] attributeTypes = featureType.getAttributeTypes();
-                for (AttributeType attributeType : attributeTypes) {
-                    FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName() + "." + attributeType.getName(), attributeType);
-                    if (featureFieldFactory != null) {
-                        featureFieldFactories.add(featureFieldFactory);
-                    }
-                }
-            } else {
-                FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName(), featureType);
-                if (featureFieldFactory != null) {
-                    featureFieldFactories.add(featureFieldFactory);
-                }
-            }
-        }
-
-        IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, LUCENE_ANALYZER);
-        config.setRAMBufferSizeMB(16);
-        config.setMaxThreadStates(maxThreadCount);
-        if (commonOptions.isVerbose()) {
-            config.setInfoStream(System.out);
-        }
-
-        long t1, t2;
-
-        try (Directory indexDirectory = FSDirectory.open(new File(datasetDir, indexName))) {
-            indexWriter = new IndexWriter(indexDirectory, config);
-            try {
-                t1 = System.currentTimeMillis();
-                processDatasetDir(datasetDir);
-                t2 = System.currentTimeMillis();
-            } finally {
-                indexWriter.close();
-            }
-        }
-
-        System.out.println(docID + "(s) patches added to index within " + ((t2 - t1) / 1000) + " seconds");
-        return 0;
-    }
-
-    private boolean parseCommandLine(String[] args) throws ParseException {
-        CommandLine commandLine = new PosixParser().parse(options, args);
-        commonOptions.configure(commandLine);
-        if (commandLine.hasOption("help")) {
-            new HelpFormatter().printHelp(PW, 80,
-                                          DsIndexer.class.getSimpleName() + " [OPTIONS] <dataset-dir>",
-                                          "Creates a Lucene index for the feature extraction directory. [OPTIONS] are:",
-                                          options, 2, 2, "\n");
-            return false;
-        }
-        if (commandLine.getArgList().size() != 1) {
-            new HelpFormatter().printUsage(PW, 80, DsIndexer.class.getSimpleName(), options);
-            return false;
-        }
-
-        datasetDir = new File(commandLine.getArgs()[0]);
-
-        String indexName = commandLine.getOptionValue("index-name");
-        if (indexName != null) {
-            this.indexName = indexName;
-        }
-
-        String precisionStep = commandLine.getOptionValue("precision-step");
-        if (precisionStep != null) {
-            this.precisionStep = Integer.parseInt(precisionStep);
-        }
-
-        String maxThreads = commandLine.getOptionValue("max-threads");
-        if (maxThreads != null) {
-            this.maxThreadCount = Integer.parseInt(maxThreads);
-        }
-
-        return true;
-    }
-
-    private void processDatasetDir(File datasetDir) throws Exception {
-        File[] fexDirs = datasetDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && file.getName().endsWith(".fex");
-            }
-        });
-
-        if (fexDirs == null || fexDirs.length == 0) {
-            throw new Exception("empty dataset directory: " + datasetDir);
-        }
-
-        for (File fexDir : fexDirs) {
-            processFexDir(fexDir);
-        }
-    }
-
-    private boolean processFexDir(File fexDir) {
-        File[] patchDirs = fexDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && file.getName().startsWith("x");
-            }
-        });
-
-        if (patchDirs == null || patchDirs.length == 0) {
-            System.out.println("warning: no patches in fex directory: " + fexDir);
-            return false;
-        }
-
-        for (File patchDir : patchDirs) {
-            processPatchDir(patchDir);
-        }
-
-        return true;
-    }
-
-    private boolean processPatchDir(File patchDir) {
-        File featureFile = new File(patchDir, "features.txt");
-        if (!featureFile.exists()) {
-            System.out.println("warning: missing features: " + featureFile);
-            return false;
-        }
-
-        String name = patchDir.getName();
-        //Todo this needs to be smarter for datasets with more than 100x100 patches
-        int xi = name.indexOf("x");
-        int yi = name.indexOf("y");
-        int patchX = Integer.parseInt(name.substring(xi+1, yi));
-        int patchY = Integer.parseInt(name.substring(yi+1, name.length()));
-
-        String fexDirName = patchDir.getParentFile().getName();
-        String productName = fexDirName.substring(0, fexDirName.length() - 4);
-
-        try {
-            addPatchToIndex(productName, patchX, patchY, featureFile);
-        } catch (IOException e) {
-            System.out.printf("i/o exception: %s: file: %s%n", e.getMessage(), featureFile);
-            return false;
-        }
-        return true;
-    }
-
-    private void addPatchToIndex(String productName, int patchX, int patchY, File featureFile) throws IOException {
-
-        Properties featureValues = new Properties();
-        try (FileReader reader = new FileReader(featureFile)) {
-            featureValues.load(reader);
-        }
+    public void addPatchToIndex(String productName, int patchX, int patchY, Properties featureValues) throws IOException {
 
         Document doc = new Document();
         doc.add(new LongField("id", docID, storedLongType));
@@ -348,6 +180,26 @@ public class DsIndexer {
         docID++;
     }
 
+    private void initFeatureFieldFactories(DatasetDescriptor dsDescriptor) {
+        featureFieldFactories = new ArrayList<>();
+        FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
+        for (FeatureType featureType : featureTypes) {
+            if (featureType.hasAttributes()) {
+                AttributeType[] attributeTypes = featureType.getAttributeTypes();
+                for (AttributeType attributeType : attributeTypes) {
+                    FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName() + "." + attributeType.getName(), attributeType);
+                    if (featureFieldFactory != null) {
+                        featureFieldFactories.add(featureFieldFactory);
+                    }
+                }
+            } else {
+                FeatureFieldFactory featureFieldFactory = getFeatureFieldFactory(featureType.getName(), featureType);
+                if (featureFieldFactory != null) {
+                    featureFieldFactories.add(featureFieldFactory);
+                }
+            }
+        }
+    }
 
     private FeatureFieldFactory getFeatureFieldFactory(String fieldName, AttributeType attributeType) {
         Class<?> valueType = attributeType.getValueType();
@@ -358,8 +210,7 @@ public class DsIndexer {
         return new FeatureFieldFactory(fieldName, indexableFieldFactory);
     }
 
-
-    private void initIndexableFieldFactories() {
+    private void initIndexableFieldFactories(int precisionStep) {
         storedIntType = createNumericFieldType(FieldType.NumericType.INT, Field.Store.YES, precisionStep);
         storedLongType = createNumericFieldType(FieldType.NumericType.LONG, Field.Store.YES, precisionStep);
         unstoredLongType = createNumericFieldType(FieldType.NumericType.LONG, Field.Store.NO, precisionStep);
@@ -432,6 +283,5 @@ public class DsIndexer {
         type.freeze();
         return type;
     }
-
 
 }
