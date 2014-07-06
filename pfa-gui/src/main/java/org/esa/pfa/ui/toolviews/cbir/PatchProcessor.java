@@ -164,7 +164,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
         if (nodes.length > 0) {
             Node lastNode = nodes[nodes.length - 1];
             DomElement configuration = lastNode.getConfiguration();
-            configuration.getChild("targetPath").setValue(targetFolder.getAbsolutePath());
+            configuration.getChild("targetDir").setValue(targetFolder.getAbsolutePath());
         }
     }
 
