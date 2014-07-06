@@ -49,7 +49,7 @@ public class DefaultPatchWriter implements PatchWriter {
                 throw new IOException(String.format("Directory does not exist: '%s'.", path));
             } else {
                 try {
-                    Files.createDirectory(path);
+                    Files.createDirectories(path);
                 } catch (FileAlreadyExistsException e) {
                     throw new IOException(String.format("Failed to create directory '%s'.", path), e);
                 }
