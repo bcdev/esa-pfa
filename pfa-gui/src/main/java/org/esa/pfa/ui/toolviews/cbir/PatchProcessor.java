@@ -86,7 +86,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             }
 
             final Patch patch = new Patch(patchX, patchY, null, subset);
-            patch.setImage(session.getQuicklookBandName(), patchImage);
+            patch.setImage(session.getQuicklookBandName1(), patchImage);
             patch.setLabel(Patch.LABEL_RELEVANT);
 
             final File tmpInFolder = new File(SystemUtils.getApplicationDataDir(),

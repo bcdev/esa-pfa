@@ -108,24 +108,33 @@ public class PatchDrawer extends JPanel {
 
     private class PatchDrawing extends JLabel implements MouseListener {
         private final Patch patch;
-        private final ImageIcon icon;
+        private final ImageIcon icon1, icon2;
         private final boolean isDual;
 
         public PatchDrawing(final CBIRSession session, final Patch patch) {
             this.patch = patch;
             this.isDual = session.getImageMode().equals(CBIRSession.ImageMode.DUAL);
-            final String ql = session.getQuicklookBandName();
+            final String ql_1 = session.getQuicklookBandName1();
+            final String ql_2 = session.getQuicklookBandName2();
 
-            if (patch.getImage(ql) == null) {
-                session.getPatchQuicklook(patch, ql);
+            if (patch.getImage(ql_1) == null) {
+                session.getPatchQuicklook(patch, ql_1);
+            }
+            if (patch.getImage(ql_2) == null) {
+                session.getPatchQuicklook(patch, ql_2);
             }
 
-            if (patch.getImage(ql) != null) {
-                icon = new ImageIcon(patch.getImage(ql).getScaledInstance(imgWidth, imgHeight, BufferedImage.SCALE_FAST));
-                setIcon(icon);
+            if (patch.getImage(ql_1) != null) {
+                icon1 = new ImageIcon(patch.getImage(ql_1).getScaledInstance(imgWidth, imgHeight, BufferedImage.SCALE_FAST));
             } else {
-                icon = null;
+                icon1 = null;
             }
+            if (patch.getImage(ql_2) != null) {
+                icon2 = new ImageIcon(patch.getImage(ql_2).getScaledInstance(imgWidth, imgHeight, BufferedImage.SCALE_FAST));
+            } else {
+                icon2 = null;
+            }
+
             if(isDual) {
                 setPreferredSize(new Dimension(imgWidth * 2, imgHeight));
             } else {
@@ -136,19 +145,18 @@ public class PatchDrawer extends JPanel {
 
         @Override
         public void paintComponent(Graphics graphics) {
-           // super.paintComponent(graphics);
             final Graphics2D g = (Graphics2D) graphics;
 
-            if(icon != null) {
+            if(icon1 != null) {
                 if (isDual) {
-                    g.drawImage(icon.getImage(), 0, 0, imgWidth, imgHeight, null);
-                    g.drawImage(icon.getImage(), imgWidth, 0, imgWidth, imgHeight, null);
+                    g.drawImage(icon1.getImage(), 0, 0, imgWidth, imgHeight, null);
+                    g.drawImage(icon2.getImage(), imgWidth, 0, imgWidth, imgHeight, null);
 
                     g.setColor(Color.RED);
                     g.setStroke(new BasicStroke(2));
                     g.drawLine(imgWidth, 0, imgWidth, imgHeight);
                 } else {
-                    g.drawImage(icon.getImage(), 0, 0, imgWidth, imgHeight, null);
+                    g.drawImage(icon1.getImage(), 0, 0, imgWidth, imgHeight, null);
                 }
             }
 

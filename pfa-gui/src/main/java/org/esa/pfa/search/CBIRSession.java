@@ -53,7 +53,8 @@ public class CBIRSession {
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private SearchToolStub classifier;
-    private String quicklookBandName;
+    private String quicklookBandName1;
+    private String quicklookBandName2;
 
     public static enum ImageMode { SINGLE, DUAL, FADE }
     private ImageMode imageMode = ImageMode.SINGLE;
@@ -83,7 +84,8 @@ public class CBIRSession {
                                  final String dbFolder,
                                  final ProgressMonitor pm) throws Exception {
         try {
-            quicklookBandName = applicationDescriptor.getDefaultQuicklookFileName();
+            quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
+            quicklookBandName2 = quicklookBandName1;
             classifier = new SearchToolStub(applicationDescriptor, dbFolder, classifierName);
             classifier.saveClassifier();
             clearPatchLists();
@@ -175,12 +177,20 @@ public class CBIRSession {
         return SearchToolStub.getSavedClassifierNames(archiveFolder);
     }
 
-    public String getQuicklookBandName() {
-        return quicklookBandName;
+    public String getQuicklookBandName1() {
+        return quicklookBandName1;
     }
 
-    public void setQuicklookBandName(final String quicklookBandName) {
-        this.quicklookBandName = quicklookBandName;
+    public void setQuicklookBandName1(final String quicklookBandName) {
+        this.quicklookBandName1 = quicklookBandName;
+    }
+
+    public String getQuicklookBandName2() {
+        return quicklookBandName2;
+    }
+
+    public void setQuicklookBandName2(final String quicklookBandName) {
+        this.quicklookBandName2 = quicklookBandName;
     }
 
     public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
