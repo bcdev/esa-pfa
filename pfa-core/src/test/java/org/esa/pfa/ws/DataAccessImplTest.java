@@ -14,9 +14,19 @@ import javax.jws.soap.SOAPBinding;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Endpoint;
 import javax.xml.ws.Service;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NotDirectoryException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.ProviderNotFoundException;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,11 +41,25 @@ public class DataAccessImplTest {
     private static final String WS_NAMESPACE_URI = "http://ws.pfa.esa.org/";
     private static final String WS_NAME = "DataAccessImplService";
 
+    // TODO - define final URI format
+    private static final String QL_URI_CHL = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1.fex.zip!/x000y008/chl_ql.png";
+    private static final String QL_URI_FLH = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1.fex.zip!/x000y008/flh_ql.png";
+    private static final String QL_URI_MCI = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1.fex.zip!/x000y008/mci_ql.png";
+    private static final String QL_URI_RGB1 = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1.fex.zip!/x000y008/rgb1_ql.png";
+    private static final String QL_URI_RGB2 = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1.fex.zip!/x000y008/rgb2_ql.png";
+
+    private static final String TEST_PRODUCT_NAME = "MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1";
+
     private Endpoint endpoint;
 
     @Before
     public void setUp() throws Exception {
-        endpoint = Endpoint.publish(WS_ADDRESS, new DataAccessImpl());
+        final DataAccessImpl dataAccess = new DataAccessImpl();
+        // TODO - get archive root from system property
+        dataAccess.setArchiveRootPathString("/Users/ralf/scratch/pfa/algal_blooms/benchmarking/output");
+        dataAccess.setQuicklookFileNameSuffix("_ql.png");
+        dataAccess.setZipFileSuffix(".fex.zip");
+        endpoint = Endpoint.publish(WS_ADDRESS, dataAccess);
     }
 
     @After
@@ -46,7 +70,7 @@ public class DataAccessImplTest {
     }
 
     @Test
-    public void getWsdlDocument() throws Exception {
+    public void testWebServiceEndpoint() throws Exception {
         final URL url = new URL(WS_ADDRESS + "?wsdl");
 
         final Object content = url.getContent();
@@ -72,18 +96,63 @@ public class DataAccessImplTest {
         assertEquals(WS_NAME, name);
     }
 
-    @Test
-    public void simulateWebServiceClient() throws Exception {
+    private Service createWebService() throws MalformedURLException {
         final URL url = new URL(WS_ADDRESS + "?wsdl");
         final QName qname = new QName(WS_NAMESPACE_URI, WS_NAME);
 
-        final Service service = Service.create(url, qname);
+        return Service.create(url, qname);
+    }
+
+    @Test
+    public void testGetAllQuicklookUris() throws Exception {
+        final Service service = createWebService();
         assertNotNull(service);
 
         final DataAccess dataAccess = service.getPort(DataAccess.class);
+        assertNotNull(dataAccess);
 
-        final String[] uris = dataAccess.getAllQuicklookUris("MER_RR__1PNACR20091016_130013_000026332083_00253_39886_0000.N1", 0, 8);
-        assertEquals(4, uris.length);
+        final String[] uris = dataAccess.getAllQuicklookUris(TEST_PRODUCT_NAME, 0, 8);
+
+        assertEquals(5, uris.length);
+        assertEquals(QL_URI_CHL, uris[0]);
+        assertEquals(QL_URI_FLH, uris[1]);
+        assertEquals(QL_URI_MCI, uris[2]);
+        assertEquals(QL_URI_RGB1, uris[3]);
+        assertEquals(QL_URI_RGB2, uris[4]);
+    }
+
+    @Test
+    public void testGetQuicklookData() throws Exception {
+        final Service service = createWebService();
+        assertNotNull(service);
+
+        final DataAccess dataAccess = service.getPort(DataAccess.class);
+        assertNotNull(dataAccess);
+
+        byte[] data;
+
+        data = dataAccess.getQuicklookData(QL_URI_CHL);
+        assertEquals(12312, data.length);
+
+        data = dataAccess.getQuicklookData(QL_URI_FLH);
+        assertEquals(21399, data.length);
+
+        data = dataAccess.getQuicklookData(QL_URI_MCI);
+        assertEquals(19298, data.length);
+
+        data = dataAccess.getQuicklookData(QL_URI_RGB1);
+        assertEquals(39685, data.length);
+
+        data = dataAccess.getQuicklookData(QL_URI_RGB2);
+        assertEquals(58078, data.length);
+    }
+
+    @Test
+    public void testGetPatchDirName() throws Exception {
+        assertEquals("x000y000", DataAccessImpl.getPatchDirName(0, 0));
+        assertEquals("x000y008", DataAccessImpl.getPatchDirName(0, 8));
+        assertEquals("x008y000", DataAccessImpl.getPatchDirName(8, 0));
+        assertEquals("x008y008", DataAccessImpl.getPatchDirName(8, 8));
     }
 
     @WebService
@@ -92,14 +161,102 @@ public class DataAccessImplTest {
 
         @WebMethod
         String[] getAllQuicklookUris(String productName, int patchX, int patchY);
+
+        @WebMethod
+        byte[] getQuicklookData(String quicklookUri);
     }
 
     @WebService(endpointInterface = "org.esa.pfa.ws.DataAccessImplTest$DataAccess")
     public static class DataAccessImpl implements DataAccess {
 
+        private String archiveRootPathString;
+        private String quicklookFileNameSuffix;
+        private String zipFileSuffix;
+
+        String getArchiveRootPathString() {
+            return archiveRootPathString;
+        }
+
+        void setArchiveRootPathString(String pathString) {
+            this.archiveRootPathString = pathString;
+        }
+
+        String getQuicklookFileNameSuffix() {
+            return quicklookFileNameSuffix;
+        }
+
+        void setQuicklookFileNameSuffix(String suffix) {
+            this.quicklookFileNameSuffix = suffix;
+        }
+
+        String getZipFileSuffix() {
+            return zipFileSuffix;
+        }
+
+        void setZipFileSuffix(String suffix) {
+            this.zipFileSuffix = suffix;
+        }
+
         @Override
         public String[] getAllQuicklookUris(String productName, int patchX, int patchY) {
-            return new String[0];
+            try {
+                final Path zipFilePath = Paths.get(getArchiveRootPathString(), productName + getZipFileSuffix());
+                try (final FileSystem fileSystem = FileSystems.newFileSystem(zipFilePath, null)) {
+                    final String patchDirName = getPatchDirName(patchX, patchY);
+                    final Path patchDirPath = fileSystem.getPath(patchDirName);
+                    final ArrayList<String> uriStrings = new ArrayList<>(5);
+                    Files.list(patchDirPath).forEach(path -> {
+                        if (Files.isRegularFile(path)) {
+                            if (path.getFileName().toString().endsWith(getQuicklookFileNameSuffix())) {
+                                final String uriString = productName + getZipFileSuffix() + "!" + path.toString();
+                                uriStrings.add(uriString);
+                            }
+                        }
+                    });
+                    uriStrings.sort((o1, o2) -> o1.compareTo(o2));
+                    return uriStrings.toArray(new String[uriStrings.size()]);
+                } catch (ProviderNotFoundException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (NotDirectoryException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            } catch (InvalidPathException e) {
+                return null;
+            }
+        }
+
+        @Override
+        public byte[] getQuicklookData(String uriString) {
+            final String[] parts = uriString.split("!", 2);
+            try {
+                final Path zipFilePath = Paths.get(getArchiveRootPathString(), parts[0]);
+                try (final FileSystem fileSystem = FileSystems.newFileSystem(zipFilePath, null)) {
+                    final Path quicklookFilePath = fileSystem.getPath(parts[1]);
+                    return Files.readAllBytes(quicklookFilePath);
+                } catch (InvalidPathException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            } catch (InvalidPathException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        // package public for testing only
+        static String getPatchDirName(int patchX, int patchY) {
+            return String.format("x%03dy%03d", patchX, patchY);
         }
     }
 

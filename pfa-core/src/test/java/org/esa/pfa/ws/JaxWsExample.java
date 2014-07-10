@@ -49,7 +49,7 @@ public class JaxWsExample {
     }
 
     @Test
-    public void getWsdlDocument() throws Exception {
+    public void testWebServiceEndpoint() throws Exception {
         final URL url = new URL(WS_ADDRESS + "?wsdl");
 
         final Object content = url.getContent();
