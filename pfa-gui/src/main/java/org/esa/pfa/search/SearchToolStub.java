@@ -52,7 +52,6 @@ public class SearchToolStub {
     private int numTrainingImages = 12;
     private int numRetrievedImages = 50;
     private int numHitsMax = 500;
-    private String quicklookBandName;
 
     public SearchToolStub(final PFAApplicationDescriptor applicationDescriptor,
                           final String auxDbPath,
@@ -60,8 +59,6 @@ public class SearchToolStub {
         this.applicationDescriptor = applicationDescriptor;
         this.auxDbPath = auxDbPath;
         this.classifierName = classifierName;
-
-        this.quicklookBandName = applicationDescriptor.getDefaultQuicklookFileName();
 
         db = new PatchQuery(new File(auxDbPath), applicationDescriptor.getDefaultFeatureSet());
         al = new ActiveLearning();
@@ -112,19 +109,12 @@ public class SearchToolStub {
         return al.getNumIterations();
     }
 
-    public void setQuicklookBandName(final String quicklookBandName) {
-        this.quicklookBandName = quicklookBandName;
-    }
-
     public void addQueryImage(final Patch patch) {
         al.addQueryImage(patch);
     }
 
     public Patch[] getQueryImages() {
-        final Patch[] queryPatches = al.getQueryPatches();
-        getPatchQuicklooks(queryPatches);
-
-        return queryPatches;
+        return al.getQueryPatches();
     }
 
     public void populateArchivePatches(final ProgressMonitor pm) throws Exception {
@@ -152,10 +142,7 @@ public class SearchToolStub {
     }
 
     public Patch[] getImagesToLabel(final ProgressMonitor pm) throws Exception {
-        final Patch[] patchesToLabel = al.getMostAmbiguousPatches(numTrainingImages, pm);
-        getPatchQuicklooks(patchesToLabel);
-
-        return patchesToLabel;
+        return al.getMostAmbiguousPatches(numTrainingImages, pm);
     }
 
     public static String[] getAvailableQuickLooks(final Patch patch) throws IOException {
@@ -165,19 +152,21 @@ public class SearchToolStub {
     /**
      * Not all patches need quicklooks. This function adds quicklooks to the patches requested
      *
-     * @param patches the patches to get quicklooks for
+     * @param patch the patches to get quicklooks for
+     * @param quicklookBandName the quicklook to retrieve
      */
-    public void getPatchQuicklooks(final Patch[] patches) {
-        for (Patch patch : patches) {
-            if (patch.getImage() == null) {
-                try {
-                    URL imageURL = db.retrievePatchImage(patch, quicklookBandName);
-                    //todo download image
-                    File imageFile = new File(imageURL.getPath());
-                    patch.setImage(loadImageFile(imageFile));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    public void getPatchQuicklook(final Patch patch, final String quicklookBandName) {
+
+        if (patch.getImage(quicklookBandName) == null) {
+            try {
+                URL imageURL = db.retrievePatchImage(patch, quicklookBandName);
+                //todo download image
+                File imageFile = new File(imageURL.getPath());
+                BufferedImage img = loadImageFile(imageFile);
+                patch.setImage(quicklookBandName, img);
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -205,10 +194,7 @@ public class SearchToolStub {
                 }
             }
         }
-        final Patch[] retrievedRelevantImage = relavantImages.toArray(new Patch[relavantImages.size()]);
-        getPatchQuicklooks(retrievedRelevantImage);
-
-        return retrievedRelevantImage;
+        return relavantImages.toArray(new Patch[relavantImages.size()]);
     }
 
     private static boolean contains(final List<Patch> list, final Patch patch) {

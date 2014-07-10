@@ -17,6 +17,7 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.search.CBIRSession;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -36,12 +37,12 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
-
+    Displays a patch
  */
 public class PatchDrawer extends JPanel {
 
-    private final static int width = 150;
-    private final static int height = 150;
+    private final static int imgWidth = 150;
+    private final static int imgHeight = 150;
     private final static int margin = 4;
     private final boolean multiRow;
 
@@ -54,19 +55,20 @@ public class PatchDrawer extends JPanel {
     private static final Patch[] NO_PATCHES = new Patch[0];
     private PatchContextMenuFactory patchContextMenuFactory;
     private Patch[] patches;
+    private final CBIRSession session;
 
     private static enum SelectionMode {CHECK, RECT}
-
-    private SelectionMode mode = SelectionMode.CHECK;
+    private SelectionMode selectionMode = SelectionMode.CHECK;
 
     private PatchDrawing selection = null;
 
-    public PatchDrawer() {
-        this(false, NO_PATCHES);
+    public PatchDrawer(final CBIRSession session) {
+        this(session, false, NO_PATCHES);
     }
 
-    public PatchDrawer(final boolean multiRow, final Patch[] imageList) {
+    public PatchDrawer(final CBIRSession session, final boolean multiRow, final Patch[] imageList) {
         super(new FlowLayout(FlowLayout.LEADING));
+        this.session = session;
         this.patchContextMenuFactory = new PatchContextMenuFactory();
         this.multiRow = multiRow;
         update(imageList);
@@ -92,11 +94,12 @@ public class PatchDrawer extends JPanel {
             if(multiRow) {
                 int numCol = 10;
                 int numRow = patches.length / numCol;
-                setPreferredSize(new Dimension((width+margin)*numCol, (height+margin)*numRow));
+                int numImages = session.getImageMode().equals(CBIRSession.ImageMode.DUAL) ? 2 : 1;
+                setPreferredSize(new Dimension(((imgWidth*numImages) +margin)*numCol, (imgHeight +margin)*numRow));
             }
 
             for (Patch patch : patches) {
-                final PatchDrawing label = new PatchDrawing(patch);
+                final PatchDrawing label = new PatchDrawing(session, patch);
                 this.add(label);
             }
         }
@@ -105,20 +108,49 @@ public class PatchDrawer extends JPanel {
 
     private class PatchDrawing extends JLabel implements MouseListener {
         private final Patch patch;
+        private final ImageIcon icon;
+        private final boolean isDual;
 
-        public PatchDrawing(final Patch patch) {
+        public PatchDrawing(final CBIRSession session, final Patch patch) {
             this.patch = patch;
+            this.isDual = session.getImageMode().equals(CBIRSession.ImageMode.DUAL);
+            final String ql = session.getQuicklookBandName();
 
-            if (patch.getImage() != null) {
-                setIcon(new ImageIcon(patch.getImage().getScaledInstance(width, height, BufferedImage.SCALE_FAST)));
+            if (patch.getImage(ql) == null) {
+                session.getPatchQuicklook(patch, ql);
+            }
+
+            if (patch.getImage(ql) != null) {
+                icon = new ImageIcon(patch.getImage(ql).getScaledInstance(imgWidth, imgHeight, BufferedImage.SCALE_FAST));
+                setIcon(icon);
+            } else {
+                icon = null;
+            }
+            if(isDual) {
+                setPreferredSize(new Dimension(imgWidth * 2, imgHeight));
+            } else {
+                setPreferredSize(new Dimension(imgWidth, imgHeight));
             }
             addMouseListener(this);
         }
 
         @Override
         public void paintComponent(Graphics graphics) {
-            super.paintComponent(graphics);
+           // super.paintComponent(graphics);
             final Graphics2D g = (Graphics2D) graphics;
+
+            if(icon != null) {
+                if (isDual) {
+                    g.drawImage(icon.getImage(), 0, 0, imgWidth, imgHeight, null);
+                    g.drawImage(icon.getImage(), imgWidth, 0, imgWidth, imgHeight, null);
+
+                    g.setColor(Color.RED);
+                    g.setStroke(new BasicStroke(2));
+                    g.drawLine(imgWidth, 0, imgWidth, imgHeight);
+                } else {
+                    g.drawImage(icon.getImage(), 0, 0, imgWidth, imgHeight, null);
+                }
+            }
 
             if (DEBUG) {
                 g.setColor(Color.WHITE);
@@ -137,10 +169,10 @@ public class PatchDrawer extends JPanel {
                 }
             }
 
-            if (this.equals(selection) && mode == SelectionMode.RECT) {
+            if (this.equals(selection) && selectionMode == SelectionMode.RECT) {
                 g.setColor(Color.CYAN);
                 g.setStroke(new BasicStroke(5));
-                g.drawRoundRect(0, 0, width, height - 5, 25, 25);
+                g.drawRoundRect(0, 0, imgWidth, imgHeight - 5, 25, 25);
             }
         }
 

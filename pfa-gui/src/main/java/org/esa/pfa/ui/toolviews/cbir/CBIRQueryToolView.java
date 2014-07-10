@@ -28,25 +28,15 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.SearchToolStub;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -57,7 +47,8 @@ import java.util.concurrent.ExecutionException;
 /**
  * Query Toolview
  */
-public class CBIRQueryToolView extends AbstractToolView implements ActionListener, CBIRSession.CBIRSessionListener {
+public class CBIRQueryToolView extends AbstractToolView implements ActionListener, CBIRSession.Listener,
+        OptionsControlPanel.Listener {
 
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView";
     private final static Dimension preferredDimension = new Dimension(550, 300);
@@ -66,7 +57,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     private PatchDrawer drawer;
     private PatchSelectionInteractor interactor;
     private JButton addPatchBtn, editBtn, startTrainingBtn;
-    private JComboBox<String> quickLookCombo;
+    private OptionsControlPanel topOptionsPanel;
 
     public CBIRQueryToolView() {
         session = CBIRSession.getInstance();
@@ -77,28 +68,16 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
 
         final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
 
-        final JPanel topOptionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        quickLookCombo = new JComboBox<>();
-        quickLookCombo.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    if (session.hasClassifier()) {
-                        session.setQuicklookBandName(session.getQueryPatches(), (String) quickLookCombo.getSelectedItem());
-                        drawer.update(session.getQueryPatches());
-                    }
-                }
-            }
-        });
-        topOptionsPanel.add(new JLabel("Band shown:"));
-        topOptionsPanel.add(quickLookCombo);
+        topOptionsPanel = new OptionsControlPanel(session);
+        topOptionsPanel.addListener(this);
+
         mainPane.add(topOptionsPanel, BorderLayout.NORTH);
 
         final JPanel imageScrollPanel = new JPanel();
         imageScrollPanel.setLayout(new BoxLayout(imageScrollPanel, BoxLayout.X_AXIS));
         imageScrollPanel.setBorder(BorderFactory.createTitledBorder("Query Images"));
 
-        drawer = new PatchDrawer();
+        drawer = new PatchDrawer(session);
         drawer.setMinimumSize(new Dimension(500, 310));
         final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                                                        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -154,16 +133,13 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 final Patch[] queryPatches = session.getQueryPatches();
                 hasQueryImages = queryPatches.length > 0;
 
-                if (hasQueryImages && quickLookCombo.getItemCount() == 0) {
+                if (hasQueryImages) {
                     final String[] bandNames = session.getAvailableQuickLooks(queryPatches[0]);
-                    for (String bandName : bandNames) {
-                        quickLookCombo.addItem(bandName);
-                    }
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
-                    quickLookCombo.setSelectedItem(defaultBandName);
+                    topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
                 }
             }
-            quickLookCombo.setEnabled(hasClassifier);
+            topOptionsPanel.setEnabled(hasClassifier);
             addPatchBtn.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
             editBtn.setEnabled(false); //todo //hasQueryImages);
@@ -308,30 +284,40 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     }
 
     @Override
-    public void notifyNewClassifier(SearchToolStub classifier) {
-        if (isControlCreated()) {
-            quickLookCombo.removeAllItems();
-            updateControls();
+    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+        switch (msg) {
+            case NewClassifier:
+                if (isControlCreated()) {
+                    topOptionsPanel.clearData();
+                    updateControls();
 
-            drawer.update(session.getQueryPatches());
+                    drawer.update(session.getQueryPatches());
+                }
+                break;
+            case DeleteClassifier:
+                if (isControlCreated()) {
+                    topOptionsPanel.clearData();
+                    updateControls();
+
+                    drawer.update(new Patch[0]);
+                }
+                break;
+            case NewTrainingImages:
+                break;
+            case ModelTrained:
+                updateControls();
+                break;
         }
     }
 
     @Override
-    public void notifyDeleteClassifier(SearchToolStub classifier) {
-        if (isControlCreated()) {
-            quickLookCombo.removeAllItems();
-            updateControls();
-
-            drawer.update(new Patch[0]);
+    public void notifyOptionsMsg(final OptionsControlPanel.Notification msg) {
+        switch (msg) {
+            case QUICKLOOK_CHANGED:
+                if (session.hasClassifier()) {
+                    drawer.update(session.getQueryPatches());
+                }
+                break;
         }
-    }
-
-    @Override
-    public void notifyNewTrainingImages(SearchToolStub classifier) {
-    }
-
-    @Override
-    public void notifyModelTrained(SearchToolStub classifier) {
     }
 }

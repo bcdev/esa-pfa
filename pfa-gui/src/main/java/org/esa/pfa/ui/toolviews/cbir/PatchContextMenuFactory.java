@@ -344,9 +344,10 @@ public class PatchContextMenuFactory {
             JTable table = new JTable(new DefaultTableModel(array, new Object[]{"Name", "Value"}));
 
             JPanel contentPanel = new JPanel(new BorderLayout(2, 2));
-            if (patch.getImage() != null) {
+            final String ql = CBIRSession.getInstance().getQuicklookBandName();
+            if (patch.getImage(ql) != null) {
 
-                JLabel imageCanvas = new JLabel(new ImageIcon(patch.getImage()));
+                JLabel imageCanvas = new JLabel(new ImageIcon(patch.getImage(ql)));
                 imageCanvas.setBorder(new LineBorder(Color.DARK_GRAY));
 
                 JPanel compRow = new JPanel(new FlowLayout(FlowLayout.CENTER));

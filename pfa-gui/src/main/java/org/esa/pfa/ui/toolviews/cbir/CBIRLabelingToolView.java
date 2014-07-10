@@ -27,14 +27,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 /**
  * Labeling Toolview
  */
 public class CBIRLabelingToolView extends AbstractToolView implements Patch.PatchListener, ActionListener,
-        CBIRSession.CBIRSessionListener {
+        CBIRSession.Listener, OptionsControlPanel.Listener {
 
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRLabelingToolView";
     private final static Dimension preferredDimension = new Dimension(550, 500);
@@ -45,7 +43,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     private PatchDrawer irrelavantDrawer;
     private JButton applyBtn;
     private JLabel iterationsLabel;
-    private JComboBox<String> quickLookCombo;
+    private OptionsControlPanel topOptionsPanel;
 
     public CBIRLabelingToolView() {
         session = CBIRSession.getInstance();
@@ -54,28 +52,10 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
 
     public JComponent createControl() {
 
-        final JPanel topOptionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        quickLookCombo = new JComboBox<>();
-        quickLookCombo.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    if (session.hasClassifier()) {
-                        session.setQuicklookBandName(session.getRelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
-                        session.setQuicklookBandName(session.getIrrelevantTrainingImages(), (String) quickLookCombo.getSelectedItem());
-                        relavantDrawer.update(session.getRelevantTrainingImages());
-                        irrelavantDrawer.update(session.getIrrelevantTrainingImages());
-                    }
-                }
-            }
-        });
-        topOptionsPanel.add(new JLabel("Band shown:"));
-        topOptionsPanel.add(quickLookCombo);
-
         final JPanel relPanel = new JPanel(new BorderLayout(2, 2));
         relPanel.setBorder(BorderFactory.createTitledBorder("Relevant Images"));
 
-        relavantDrawer = new PatchDrawer();
+        relavantDrawer = new PatchDrawer(session);
         final JScrollPane scrollPane1 = new JScrollPane(relavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                                                         JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -89,7 +69,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         final JPanel irrelPanel = new JPanel(new BorderLayout(2, 2));
         irrelPanel.setBorder(BorderFactory.createTitledBorder("Irrelevant Images"));
 
-        irrelavantDrawer = new PatchDrawer();
+        irrelavantDrawer = new PatchDrawer(session);
         final JScrollPane scrollPane2 = new JScrollPane(irrelavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                                                         JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -114,6 +94,9 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
         applyBtn.setActionCommand("applyBtn");
         applyBtn.addActionListener(this);
         bottomPanel.add(applyBtn);
+
+        topOptionsPanel = new OptionsControlPanel(session);
+        topOptionsPanel.addListener(this);
 
         final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
         mainPane.add(topOptionsPanel, BorderLayout.NORTH);
@@ -141,7 +124,8 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
             boolean hasClassifier = session.hasClassifier();
 
             applyBtn.setEnabled(hasClassifier);
-            quickLookCombo.setEnabled(hasClassifier);
+            topOptionsPanel.setEnabled(hasClassifier);
+
             if (hasClassifier) {
                 final Patch[] relImages = session.getRelevantTrainingImages();
                 final Patch[] irrelImages = session.getIrrelevantTrainingImages();
@@ -149,14 +133,11 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
                 irrelavantDrawer.update(irrelImages);
                 iterationsLabel.setText("Training iterations: " + session.getNumIterations());
 
-                if (quickLookCombo.getItemCount() == 0 && (irrelImages.length > 0 || relImages.length > 0)) {
+                if (irrelImages.length > 0 || relImages.length > 0) {
                     final Patch patch = irrelImages.length > 0 ? irrelImages[0] : relImages[0];
                     final String[] bandNames = session.getAvailableQuickLooks(patch);
-                    for (String bandName : bandNames) {
-                        quickLookCombo.addItem(bandName);
-                    }
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
-                    quickLookCombo.setSelectedItem(defaultBandName);
+                    topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
                 }
             } else {
                 Patch[] noPatches = new Patch[0];
@@ -220,37 +201,48 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifyNewClassifier(SearchToolStub classifier) {
-        if (isControlCreated()) {
-            updateControls();
-        }
-    }
-
-    @Override
-    public void notifyDeleteClassifier(SearchToolStub classifier) {
-        if (isControlCreated()) {
-            updateControls();
-        }
-    }
-
-    @Override
-    public void notifyNewTrainingImages(SearchToolStub classifier) {
-        listenToPatches();
-
-        if (isControlCreated()) {
-            updateControls();
-        }
-    }
-
-    @Override
-    public void notifyModelTrained(SearchToolStub classifier) {
-    }
-
-    @Override
     public void notifyStateChanged(final Patch patch) {
         session.reassignTrainingImage(patch);
 
         relavantDrawer.update(session.getRelevantTrainingImages());
         irrelavantDrawer.update(session.getIrrelevantTrainingImages());
+    }
+
+    @Override
+    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+        switch (msg) {
+            case NewClassifier:
+                if (isControlCreated()) {
+                    updateControls();
+                }
+                break;
+            case DeleteClassifier:
+                if (isControlCreated()) {
+                    updateControls();
+                }
+                break;
+            case NewTrainingImages:
+                listenToPatches();
+                if (isControlCreated()) {
+                    updateControls();
+                }
+                break;
+            case ModelTrained:
+                break;
+        }
+    }
+
+    @Override
+    public void notifyOptionsMsg(final OptionsControlPanel.Notification msg) {
+        switch (msg) {
+            case QUICKLOOK_CHANGED:
+                if (session.hasClassifier()) {
+                    final Patch[] relPatches  = session.getRelevantTrainingImages();
+                    final Patch[] irrelPatches = session.getIrrelevantTrainingImages();
+                    relavantDrawer.update(relPatches);
+                    irrelavantDrawer.update(irrelPatches);
+                }
+                break;
+        }
     }
 }

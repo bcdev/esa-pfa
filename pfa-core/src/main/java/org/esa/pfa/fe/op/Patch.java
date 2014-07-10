@@ -6,10 +6,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Identifies a "patch" of a data product from which features are extracted.
@@ -38,6 +36,8 @@ public final class Patch {
 
     private String pathOnServer;
     private BufferedImage image;
+
+    private Map<String, BufferedImage> imageMap = new HashMap<>();
 
     private final List<PatchListener> listenerList = new ArrayList<>(1);
 
@@ -87,12 +87,10 @@ public final class Patch {
         pathOnServer = path;
     }
 
-    public void setImage(BufferedImage img) {
-        image = img;
-    }
+    public void setImage(final String name, final BufferedImage img) { imageMap.put(name, img); }
 
-    public BufferedImage getImage() {
-        return image;
+    public BufferedImage getImage(final String name) {
+        return imageMap.get(name);
     }
 
     public void clearFeatures() {

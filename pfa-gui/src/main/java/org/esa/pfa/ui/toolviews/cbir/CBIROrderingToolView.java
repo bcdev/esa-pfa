@@ -24,12 +24,7 @@ import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.SearchToolStub;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -47,7 +42,7 @@ import java.io.File;
 /**
  * Product Ordering Toolview
  */
-public class CBIROrderingToolView extends AbstractToolView implements Patch.PatchListener, CBIRSession.CBIRSessionListener {
+public class CBIROrderingToolView extends AbstractToolView implements Patch.PatchListener, CBIRSession.Listener {
 
     public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIROrderingToolView";
 
@@ -134,28 +129,24 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifyNewClassifier(SearchToolStub classifier) {
-        PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
-        setLocalProductDir(applicationDescriptor.getLocalProductDir());
-    }
-
-    @Override
-    public void notifyDeleteClassifier(SearchToolStub classifier) {
-        setLocalProductDir(null);
-    }
-
-    @Override
-    public void notifyNewTrainingImages(SearchToolStub classifier) {
-    }
-
-    @Override
-    public void notifyModelTrained(SearchToolStub classifier) {
-    }
-
-    @Override
     public void notifyStateChanged(final Patch patch) {
     }
 
+    @Override
+    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+        switch (msg) {
+            case NewClassifier:
+                final PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
+                setLocalProductDir(applicationDescriptor.getLocalProductDir());
+                break;
+            case DeleteClassifier:
+                break;
+            case NewTrainingImages:
+                break;
+            case ModelTrained:
+                break;
+        }
+    }
 
     private static class StatusCellRenderer extends DefaultTableCellRenderer {
         JProgressBar progressBar;

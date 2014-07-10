@@ -30,7 +30,6 @@ import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.SearchToolStub;
 
 import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -42,7 +41,6 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
@@ -61,7 +59,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 
 
-public class CBIRControlCentreToolView extends AbstractToolView implements CBIRSession.CBIRSessionListener {
+public class CBIRControlCentreToolView extends AbstractToolView implements CBIRSession.Listener {
 
     private final static Dimension preferredDimension = new Dimension(550, 300);
     private final static Font titleFont = new Font("Ariel", Font.BOLD, 14);
@@ -507,29 +505,26 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     }
 
     @Override
-    public void notifyNewClassifier(SearchToolStub classifier) {
-        String name = classifier.getClassifierName();
-        DefaultListModel<String> model = (DefaultListModel<String>) classifierList.getModel();
-        if (!model.contains(name)) {
-            model.addElement(name);
-            classifierList.setSelectedValue(name, true);
+    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+        switch (msg) {
+            case NewClassifier:
+                final String name = classifier.getClassifierName();
+                final DefaultListModel<String> model = (DefaultListModel<String>) classifierList.getModel();
+                if (!model.contains(name)) {
+                    model.addElement(name);
+                    classifierList.setSelectedValue(name, true);
+                }
+                updateControls();
+                break;
+            case DeleteClassifier:
+                initClassifierList();
+                updateControls();
+                break;
+            case NewTrainingImages:
+                break;
+            case ModelTrained:
+                updateControls();
+                break;
         }
-        updateControls();
     }
-
-    @Override
-    public void notifyDeleteClassifier(SearchToolStub classifier) {
-        initClassifierList();
-        updateControls();
-    }
-
-    @Override
-    public void notifyNewTrainingImages(SearchToolStub classifier) {
-    }
-
-    @Override
-    public void notifyModelTrained(SearchToolStub classifier) {
-        updateControls();
-    }
-
 }

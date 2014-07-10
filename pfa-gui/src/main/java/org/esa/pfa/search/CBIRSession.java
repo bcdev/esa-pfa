@@ -33,12 +33,11 @@ import java.util.List;
  */
 public class CBIRSession {
 
-
-    private enum Notification {
+    public enum Notification {
         NewClassifier,
         DeleteClassifier,
         NewTrainingImages,
-        ModelTrained;
+        ModelTrained
     }
 
     private static CBIRSession instance = null;
@@ -51,8 +50,13 @@ public class CBIRSession {
     private final List<Patch> irrelevantImageList = new ArrayList<>(50);
     private final List<Patch> retrievedImageList = new ArrayList<>(500);
 
-    private final List<CBIRSessionListener> listenerList = new ArrayList<>(1);
+    private final List<Listener> listenerList = new ArrayList<>(1);
+
     private SearchToolStub classifier;
+    private String quicklookBandName;
+
+    public static enum ImageMode { SINGLE, DUAL, FADE }
+    private ImageMode imageMode = ImageMode.SINGLE;
 
     private CBIRSession() {
         productOrderBasket = new ProductOrderBasket();
@@ -79,6 +83,7 @@ public class CBIRSession {
                                  final String dbFolder,
                                  final ProgressMonitor pm) throws Exception {
         try {
+            quicklookBandName = applicationDescriptor.getDefaultQuicklookFileName();
             classifier = new SearchToolStub(applicationDescriptor, dbFolder, classifierName);
             classifier.saveClassifier();
             clearPatchLists();
@@ -118,6 +123,13 @@ public class CBIRSession {
         }
     }
 
+    public void setImageMode(final ImageMode mode) {
+        imageMode = mode;
+    }
+
+    public ImageMode getImageMode() {
+        return imageMode;
+    }
 
     public String getClassifierName() {
         return classifier.getClassifierName();
@@ -163,12 +175,12 @@ public class CBIRSession {
         return SearchToolStub.getSavedClassifierNames(archiveFolder);
     }
 
-    public void setQuicklookBandName(final Patch[] patches, final String quicklookBandName) {
-        classifier.setQuicklookBandName(quicklookBandName);
-        //reset patch images
-        for (Patch patch : patches) {
-            patch.setImage(null);
-        }
+    public String getQuicklookBandName() {
+        return quicklookBandName;
+    }
+
+    public void setQuicklookBandName(final String quicklookBandName) {
+        this.quicklookBandName = quicklookBandName;
     }
 
     public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
@@ -214,15 +226,21 @@ public class CBIRSession {
     }
 
     public Patch[] getRelevantTrainingImages() {
-        final Patch[] patches = relevantImageList.toArray(new Patch[relevantImageList.size()]);
-        classifier.getPatchQuicklooks(patches);
-        return patches;
+        return relevantImageList.toArray(new Patch[relevantImageList.size()]);
     }
 
     public Patch[] getIrrelevantTrainingImages() {
-        final Patch[] patches = irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
-        classifier.getPatchQuicklooks(patches);
-        return patches;
+        return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
+    }
+
+    /**
+     * Not all patches need quicklooks. This function adds quicklooks to the patches requested
+     *
+     * @param patch the patches to get quicklooks for
+     * @param quicklookBandName the quicklook to retrieve
+     */
+    public void getPatchQuicklook(final Patch patch, final String quicklookBandName) {
+        classifier.getPatchQuicklook(patch, quicklookBandName);
     }
 
     public void getImagesToLabel(final ProgressMonitor pm) throws Exception {
@@ -261,50 +279,22 @@ public class CBIRSession {
     }
 
     public Patch[] getRetrievedImages() {
-        final Patch[] patches = retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
-        classifier.getPatchQuicklooks(patches);
-        return patches;
+        return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 
-    private void fireNotification(final Notification msg, SearchToolStub classifier) throws Exception {
-        for (CBIRSessionListener listener : listenerList) {
-            switch (msg) {
-                case NewClassifier:
-                    listener.notifyNewClassifier(classifier);
-                    break;
-                case DeleteClassifier:
-                    listener.notifyDeleteClassifier(classifier);
-                    break;
-                case NewTrainingImages:
-                    listener.notifyNewTrainingImages(classifier);
-                    break;
-                case ModelTrained:
-                    listener.notifyModelTrained(classifier);
-                    break;
-                default:
-                    throw new Exception("Unknown notification message: " + msg);
-            }
+    private void fireNotification(final Notification msg, final SearchToolStub classifier) {
+        for (Listener listener : listenerList) {
+            listener.notifySessionMsg(msg, classifier);
         }
     }
 
-    public void addListener(final CBIRSessionListener listener) {
+    public void addListener(final Listener listener) {
         if (!listenerList.contains(listener)) {
             listenerList.add(listener);
         }
     }
 
-    public void removeListener(final CBIRSessionListener listener) {
-        listenerList.remove(listener);
-    }
-
-    public interface CBIRSessionListener {
-
-        void notifyNewClassifier(SearchToolStub classifier);
-
-        void notifyNewTrainingImages(SearchToolStub classifier);
-
-        void notifyModelTrained(SearchToolStub classifier);
-
-        void notifyDeleteClassifier(SearchToolStub classifier);
+    public interface Listener {
+        void notifySessionMsg(final Notification msg, SearchToolStub classifier);
     }
 }
