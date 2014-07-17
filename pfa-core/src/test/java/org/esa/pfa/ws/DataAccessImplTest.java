@@ -8,12 +8,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.imageio.ImageIO;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.WindowConstants;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Endpoint;
 import javax.xml.ws.Service;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -52,14 +59,37 @@ public class DataAccessImplTest {
 
     private Endpoint endpoint;
 
+    public static void main(String[] args) throws IOException {
+        final Endpoint endpoint = createEndpoint(WS_ADDRESS);
+        try {
+            final Service service = createWebService();
+            final DataAccess serviceDataAccess = service.getPort(DataAccess.class);
+
+            final byte[] data = serviceDataAccess.getQuicklookData(QL_URI_RGB1);
+            final BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
+
+            final JFrame frame = new JFrame();
+            frame.add(new JLabel(new ImageIcon(image)));
+            frame.pack();
+            frame.setVisible(true);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        } finally {
+            endpoint.stop();
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
+        endpoint = createEndpoint(WS_ADDRESS);
+    }
+
+    private static Endpoint createEndpoint(String address) {
         final DataAccessImpl dataAccess = new DataAccessImpl();
         // TODO - get archive root from system property
         dataAccess.setArchiveRootPathString("/Users/ralf/scratch/pfa/algal_blooms/benchmarking/output");
         dataAccess.setQuicklookFileNameSuffix("_ql.png");
         dataAccess.setZipFileSuffix(".fex.zip");
-        endpoint = Endpoint.publish(WS_ADDRESS, dataAccess);
+        return Endpoint.publish(address, dataAccess);
     }
 
     @After
@@ -96,7 +126,7 @@ public class DataAccessImplTest {
         assertEquals(WS_NAME, name);
     }
 
-    private Service createWebService() throws MalformedURLException {
+    private static Service createWebService() throws MalformedURLException {
         final URL url = new URL(WS_ADDRESS + "?wsdl");
         final QName qname = new QName(WS_NAMESPACE_URI, WS_NAME);
 
@@ -145,6 +175,11 @@ public class DataAccessImplTest {
 
         data = dataAccess.getQuicklookData(QL_URI_RGB2);
         assertEquals(58078, data.length);
+
+        final BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
+
+        assertEquals(200, image.getHeight());
+        assertEquals(200, image.getWidth());
     }
 
     @Test
