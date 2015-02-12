@@ -301,13 +301,6 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     }
 
     @Override
-    public void dispose() {
-        super.dispose();
-
-        result.getPatchResults().clear();
-    }
-
-    @Override
     protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
         int patchX = patch.getPatchX();
         int patchY = patch.getPatchY();
