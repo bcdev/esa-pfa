@@ -23,6 +23,8 @@
         <module>pfa-algalblooms</module>
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
+
+        <module>spark-spike</module>
     </modules>
 
     <dependencyManagement>
