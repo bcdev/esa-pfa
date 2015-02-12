@@ -1,9 +1,11 @@
 package org.esa.pfa.fe.op;
 
+import java.io.Serializable;
+
 /**
  * @author Ralf Quast
  */
-public class PatchResult {
+public class PatchResult implements Serializable {
 
     int patchX;
 

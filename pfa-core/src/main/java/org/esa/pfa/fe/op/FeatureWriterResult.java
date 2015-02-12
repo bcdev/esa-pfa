@@ -1,5 +1,6 @@
 package org.esa.pfa.fe.op;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  *
  * @author Ralf Quast
  */
-public final class FeatureWriterResult {
+public final class FeatureWriterResult implements Serializable {
 
     private String productName;
 
