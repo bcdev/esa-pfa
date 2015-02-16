@@ -21,13 +21,13 @@
         <module>pfa-database</module>
     </dependency>
     <dependency>
-        <module>beam-core</module>
+        <module>snap-core</module>
     </dependency>
     <dependency>
-        <module>beam-gpf</module>
+        <module>snap-gpf</module>
     </dependency>
     <dependency>
-        <module>beam-visat-rcp</module>
+        <module>snap-visat-rcp</module>
     </dependency>
 
     <changelog>

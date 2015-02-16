@@ -25,24 +25,24 @@
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-algalblooms</artifactId>
             <version>0.2-SNAPSHOT</version>
+        </dependency-->
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
+            <version>${snap.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
-            <version>${beam.version}</version>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-gpf</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-gpf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-visat-rcp</artifactId>
-            <version>${beam.version}</version>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-visat-rcp</artifactId>
+            <version>${snap.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

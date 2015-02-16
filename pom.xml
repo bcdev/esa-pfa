@@ -12,19 +12,19 @@
 
     <properties>
         <pfa.version>0.1-SNAPSHOT</pfa.version>
-        <beam.version>[5.0,5.1-SNAPSHOT)</beam.version>
-        <nest.version>6.0-SNAPSHOT</nest.version>
+        <snap.version>1.0.1</snap.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <outputdir>../../output</outputdir>
     </properties>
 
     <modules>
         <module>pfa-core</module>
         <module>pfa-database</module>
-        <module>pfa-algalblooms</module>
+        <!--module>pfa-algalblooms</module-->
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
 
-        <module>spark-spike</module>
+        <!--module>spark-spike</module-->
     </modules>
 
     <dependencyManagement>
@@ -44,27 +44,27 @@
                 <version>${pfa.version}</version>
             </dependency>
 
-            <!--  BEAM -->
+            <!--  SNAP -->
 
             <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-core</artifactId>
-                <version>${beam.version}</version>
+                <groupId>org.esa.snap</groupId>
+                <artifactId>snap-core</artifactId>
+                <version>${snap.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-gpf</artifactId>
-                <version>${beam.version}</version>
+                <groupId>org.esa.snap</groupId>
+                <artifactId>snap-gpf</artifactId>
+                <version>${snap.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-envisat-reader</artifactId>
-                <version>${beam.version}</version>
+                <groupId>org.esa.snap</groupId>
+                <artifactId>snap-envisat-reader</artifactId>
+                <version>${snap.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-netcdf</artifactId>
-                <version>${beam.version}</version>
+                <groupId>org.esa.snap</groupId>
+                <artifactId>snap-netcdf</artifactId>
+                <version>${snap.version}</version>
             </dependency>
 
             <!--  JUnit -->
@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.9</version>
+                <version>4.11</version>
                 <scope>test</scope>
             </dependency>
 
@@ -88,10 +88,11 @@
     </dependencyManagement>
 
     <build>
+        <outputDirectory>${outputdir}/modules/${project.artifactId}-${pfa.version}</outputDirectory>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -101,7 +102,7 @@
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.4.1</version>
                     <configuration>
                       <descriptors>
                         <descriptor>assembly.xml</descriptor>
@@ -115,7 +116,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.7</version>
+                <version>2.9.1</version>
             </plugin>
         </plugins>
     </reporting>
