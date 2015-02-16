@@ -1,12 +1,9 @@
 <project>
     <groupId>org.esa.pfa</groupId>
-    <artifactId>spark-spike</artifactId>
+    <artifactId>pfa-spark</artifactId>
     <modelVersion>4.0.0</modelVersion>
-
-    <name>Simple Project</name>
-
+    <name>ESA PFA Spark</name>
     <packaging>jar</packaging>
-
     <version>1.0</version>
 
     <repositories>
