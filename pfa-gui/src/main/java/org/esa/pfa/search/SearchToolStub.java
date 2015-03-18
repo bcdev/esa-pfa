@@ -228,10 +228,11 @@ public class SearchToolStub {
                 return name.endsWith(".xml");
             }
         });
-        for (File file : files) {
-            nameList.add(FileUtils.getFilenameWithoutExtension(file));
+        if (files != null) {
+            for (File file : files) {
+                nameList.add(FileUtils.getFilenameWithoutExtension(file));
+            }
         }
-
         return nameList.toArray(new String[nameList.size()]);
     }
 
