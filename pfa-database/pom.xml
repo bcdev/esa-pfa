@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>pfa-database</artifactId>
-    <name>ESA PFA Remote Services</name>
+    <name>ESA PFA Database</name>
 
     <dependencies>
         <dependency>
