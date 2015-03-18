@@ -1,12 +1,15 @@
 <project>
-    <groupId>org.esa.pfa</groupId>
-    <artifactId>spark-spike</artifactId>
+
+    <parent>
+        <groupId>org.esa.pfa</groupId>
+        <artifactId>pfa</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>pfa-spark</artifactId>
     <modelVersion>4.0.0</modelVersion>
-
-    <name>Simple Project</name>
-
+    <name>ESA PFA Spark</name>
     <packaging>jar</packaging>
-
     <version>1.0</version>
 
     <repositories>
@@ -34,28 +37,24 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
-            <version>[5.0,5.1-SNAPSHOT)</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
-            <version>[5.0,5.1-SNAPSHOT)</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-core</artifactId>
-            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-database</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-algalblooms</artifactId>
             <version>0.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.pfa</groupId>
-            <artifactId>pfa-database</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -74,7 +73,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>2.2-beta-5</version>
                 <configuration>
                     <descriptors>
                         <descriptor>src/assembly/job-dir.xml</descriptor>

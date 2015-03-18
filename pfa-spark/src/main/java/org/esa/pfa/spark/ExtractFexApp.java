@@ -21,10 +21,8 @@ import com.bc.ceres.core.runtime.internal.DirScanner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.util.Progressable;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.util.NumericUtils;
 import org.apache.spark.SparkConf;
@@ -111,15 +109,16 @@ public class ExtractFexApp {
         JavaPairRDD<String, String> productPathRDD = jsc.newAPIHadoopRDD(configuration, PathInputFormat.class, String.class, String.class);
 
 
-        Function<Tuple2<String, String>, FeatureWriterResult> mapFunction2 = tuple -> map(applicationName, tuple._2(), output);
+        Function<Tuple2<String, String>, FeatureWriterResult> mapFunction2 = tuple -> processProduct(applicationName, tuple._2(), output);
         JavaRDD<FeatureWriterResult> patchResultJavaRDD = productPathRDD.map(mapFunction2);
 
-        creatLuceneIndex(applicationName, patchResultJavaRDD.toLocalIterator(), output);
+        createLuceneIndex(applicationName, patchResultJavaRDD.toLocalIterator(), output);
 //        patchResultJavaRDD.saveAsTextFile(output);
 
+        //patchResultJavaRDD.groupBy(groupFunction).sortByKey(comparator).filter(filterFunction);
     }
 
-    private static void creatLuceneIndex(String applicationName, Iterator<FeatureWriterResult> patchIterator, String outputDir) throws IOException {
+    private static void createLuceneIndex(String applicationName, Iterator<FeatureWriterResult> patchIterator, String outputDir) throws IOException {
         PFAApplicationDescriptor applicationDescriptor = getApplicationDescriptor(applicationName);
         URI dsURI = applicationDescriptor.getDatasetDescriptorURI();
         DatasetDescriptor datasetDescriptor;
@@ -233,8 +232,9 @@ public class ExtractFexApp {
         }
     }
 
-    static FeatureWriterResult map(String applicationName, String productPath, String outputDir) throws IOException {
+    static FeatureWriterResult processProduct(String applicationName, String productPath, String targetDir) throws IOException {
         System.out.println("applicationName = [" + applicationName + "], productPath = [" + productPath + "]");
+
         PFAApplicationDescriptor applicationDescriptor = getApplicationDescriptor(applicationName);
         File tempDir = Files.createTempDirectory(null).toFile();
         try {
@@ -245,7 +245,7 @@ public class ExtractFexApp {
             Graph graph = getGraph(applicationDescriptor, variables);
             FeatureWriterResult featureWriterResult = processGraph(graph, applicationDescriptor);
 
-            copyFezToHDFS(tempDir, outputDir);
+            copyFezToTargetDir(tempDir, targetDir);
             return featureWriterResult;
         } catch (Exception e) {
             e.printStackTrace();
@@ -265,7 +265,7 @@ public class ExtractFexApp {
         return descriptor;
     }
 
-    private static void copyFezToHDFS(File targetDir, String outputDir) throws IOException, InterruptedException {
+    private static void copyFezToTargetDir(File targetDir, String outputDir) throws IOException, InterruptedException {
         FileSystem fileSystem = FileSystem.get(new Configuration());
         for (File fezFile : targetDir.listFiles((file) -> file.getName().endsWith(".fex.zip"))) {
             Path outputFilePath = new Path(new Path(outputDir), fezFile.getName());
