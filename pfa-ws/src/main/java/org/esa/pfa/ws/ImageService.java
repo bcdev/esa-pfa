@@ -1,8 +1,10 @@
 package org.esa.pfa.ws;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -21,21 +23,23 @@ public class ImageService {
 
     @GET
     @Produces("image/png")
-    public Response getTestImage() throws IOException {
+    public Response getTestImage(@QueryParam(value = "name") final String name) throws IOException {
 
-        return Response.ok().entity(new StreamingOutput() {
+        return Response.ok().header("name", name).entity(new StreamingOutput() {
             @Override
             public void write(OutputStream output)
                     throws IOException, WebApplicationException {
-                output.write(loadImageResource("bloom.png"));
+                output.write(loadImageResource(name));
                 output.flush();
             }
         }).build();
     }
 
     private byte[] loadImageResource(String name) throws IOException {
+        System.out.println("name = " + name);
         URL resource = ImageService.class.getResource(name);
         java.nio.file.Path path = Paths.get(URI.create(resource.toExternalForm()));
+        System.out.println("path = " + path);
         return Files.readAllBytes(path);
     }
 }
