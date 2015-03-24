@@ -56,7 +56,7 @@ public class CBIRSession {
     private String quicklookBandName1;
     private String quicklookBandName2;
 
-    public static enum ImageMode { SINGLE, DUAL, FADE }
+    public enum ImageMode { SINGLE, DUAL, FADE }
     private ImageMode imageMode = ImageMode.SINGLE;
 
     private CBIRSession() {
@@ -150,7 +150,7 @@ public class CBIRSession {
     }
 
     public FeatureType[] getEffectiveFeatureTypes() {
-        return classifier.getPatchQuery().getEffectiveFeatureTypes();
+        return classifier.getEffectiveFeatureTypes();
     }
 
     public void setNumTrainingImages(final int numTrainingImages) throws Exception {

@@ -23,6 +23,7 @@ import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.PatchAccess;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
@@ -80,8 +81,8 @@ public class Classifier {
         return applicationDescriptor;
     }
 
-    public PatchQuery getPatchQuery() {
-        return db;
+    public FeatureType[] getEffectiveFeatureTypes() {
+        return db.getEffectiveFeatureTypes();
     }
 
     public void deleteClassifier() throws IOException {
