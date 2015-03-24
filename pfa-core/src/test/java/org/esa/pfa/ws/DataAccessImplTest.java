@@ -6,6 +6,7 @@ import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Ralf Quast
  */
+@Ignore
 public class DataAccessImplTest {
 
     private static final String WS_ADDRESS = "http://localhost:9999/ws/pfa";
