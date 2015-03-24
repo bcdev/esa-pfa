@@ -69,7 +69,7 @@ public class PatchDrawer extends JPanel {
     public PatchDrawer(final CBIRSession session, final boolean multiRow, final Patch[] imageList) {
         super(new FlowLayout(FlowLayout.LEADING));
         this.session = session;
-        this.patchContextMenuFactory = new PatchContextMenuFactory();
+        this.patchContextMenuFactory = new PatchContextMenuFactory(session);
         this.multiRow = multiRow;
         update(imageList);
     }

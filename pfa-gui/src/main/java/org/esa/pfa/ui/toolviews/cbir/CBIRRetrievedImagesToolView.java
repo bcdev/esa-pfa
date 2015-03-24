@@ -214,6 +214,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     private class RetrievedPatchContextMenuFactory extends PatchContextMenuFactory {
+
+        private RetrievedPatchContextMenuFactory() {
+            super(session);
+        }
+
         @Override
         public List<Action> getContextActions(Patch patch) {
             List<Action> contextActions = super.getContextActions(patch);

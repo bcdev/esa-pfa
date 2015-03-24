@@ -105,24 +105,16 @@ public class ClassifierWriter {
     * basic information to recreate a patch
     */
     public static class PatchInfo {
-        public String path;
-        public int patchX;
-        public int patchY;
-        public int label;
+        public final String parentProductName;
+        public final int patchX;
+        public final int patchY;
+        public final int label;
 
         public PatchInfo(final Patch patch) {
-            this.path = patch.getPathOnServer();
+            this.parentProductName = patch.getParentProductName();
             this.patchX = patch.getPatchX();
             this.patchY = patch.getPatchY();
             this.label = patch.getLabel();
-        }
-
-        public Patch recreatePatch() {
-            final Patch patch = new Patch(patchX, patchY, null, null);
-            patch.setPathOnServer(path);
-            patch.setLabel(label);
-
-            return patch;
         }
     }
 }

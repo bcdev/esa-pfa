@@ -122,8 +122,7 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
             try {
                 PatchContextMenuFactory.openProduct(parentProductFile);
             } catch (Exception e1) {
-                VisatApp.getApp().showErrorDialog(e1.getMessage());
-                e1.printStackTrace();
+                VisatApp.getApp().handleUnknownException(e1);
             }
         }
     }

@@ -18,9 +18,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,42 +29,20 @@ import java.util.concurrent.Executors;
  */
 public class PatchQuery implements QueryInterface {
 
-    DatasetDescriptor dsDescriptor;
+    private static final int maxThreadCount = 1;
+    private static final int maxHitCount = 20;
+    private static final String defaultField = "product";
+    private static final int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
+    private static final String indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
 
-    int maxThreadCount = 1;
-    int maxHitCount = 20;
-    int precisionStep;
-    String defaultField = "product";
-    String indexName;
-
-    private final File datasetDir;
-    private final Set<String> defaultFeatureSet;
-
-    private StandardQueryParser parser;
-    private IndexReader indexReader;
-    private IndexSearcher indexSearcher;
-    private FeatureType[] effectiveFeatureTypes;
+    private final StandardQueryParser parser;
+    private final IndexSearcher indexSearcher;
+    private final FeatureType[] effectiveFeatureTypes;
 
     public PatchQuery(final File datasetDir, Set<String> defaultFeatureSet) throws IOException {
-        this.datasetDir = datasetDir;
-        this.defaultFeatureSet = defaultFeatureSet;
-
-        indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
-        precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
-        maxThreadCount = 1;
-        maxHitCount = 20;
-        defaultField = "product";
-
-        init();
-    }
-
-    private void init() throws IOException {
-
-        dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
-
-        effectiveFeatureTypes = getEffectiveFeatureTypes(getDsDescriptor().getFeatureTypes(),
+        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
+        effectiveFeatureTypes = getEffectiveFeatureTypes(dsDescriptor.getFeatureTypes(),
                                                          defaultFeatureSet);
-
         parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
         NumericConfiguration numConf = new NumericConfiguration(precisionStep);
         parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
@@ -74,14 +50,9 @@ public class PatchQuery implements QueryInterface {
         //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, indexName))) {
         //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
         try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, indexName))) {
-            indexReader = DirectoryReader.open(indexDirectory);
+            IndexReader indexReader = DirectoryReader.open(indexDirectory);
             indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
         }
-    }
-
-    //todo must be specific to the application
-    public DatasetDescriptor getDsDescriptor() {
-        return dsDescriptor;
     }
 
     public FeatureType[] getEffectiveFeatureTypes() {
@@ -104,21 +75,15 @@ public class PatchQuery implements QueryInterface {
                 System.out.println("no documents found within " + (t2 - t1) + " ms");
             } else {
                 System.out.println("found " + topDocs.totalHits + " documents(s) within " + (t2 - t1) + " ms:");
-                int i = 0;
                 for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                     final Document doc = indexSearcher.doc(scoreDoc.doc);
                     String productName = doc.getValues("product")[0];
                     int patchX = Integer.parseInt(doc.getValues("px")[0]);
                     int patchY = Integer.parseInt(doc.getValues("py")[0]);
 
-                    Patch patch = new Patch(patchX, patchY, null, null);
-                    setPathToPatch(patch, productName);
-
+                    Patch patch = new Patch(productName, patchX, patchY, null, null);
                     getFeatures(doc, patch);
                     patchList.add(patch);
-
-                    ++i;
-                    //System.out.printf("[%5d]: product:\"%s\", px:%d, py:%d\n", i + 1, productName, patchX, patchY);
                 }
             }
         } catch (RuntimeException | Error e) {
@@ -128,45 +93,6 @@ public class PatchQuery implements QueryInterface {
         }
 
         return patchList.toArray(new Patch[patchList.size()]);
-    }
-
-    private void setPathToPatch(final Patch patch, final String productName) {
-        patch.setPathOnServer(datasetDir.getAbsolutePath() + File.separator +
-                              productName + ".fex" + File.separator + patch.getPatchName());
-    }
-
-    public static String[] getAvailableQuickLooks(final Patch patch) throws IOException {
-        final File path = new File(patch.getPathOnServer());
-
-        final File[] imageFiles = path.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isFile() && file.getName().toLowerCase().endsWith(".png");
-            }
-        });
-        if (imageFiles == null) {
-            throw new IOException("No patch image found in " + path);
-        }
-        final String[] quicklookFilenames = new String[imageFiles.length];
-        int i=0;
-        for(File imageFile : imageFiles) {
-            quicklookFilenames[i++] = imageFile.getName();
-        }
-        return quicklookFilenames;
-    }
-
-    public static URL retrievePatchImage(final Patch patch, final String patchImageFileName) throws IOException {
-        final File path = new File(patch.getPathOnServer());
-
-        File imageFile;
-        if (patchImageFileName != null && !patchImageFileName.isEmpty()) {
-            imageFile = new File(path, patchImageFileName);
-        } else {
-            final String[] quicklookFilenames = getAvailableQuickLooks(patch);
-            imageFile = new File(path, quicklookFilenames[0]);
-        }
-
-        return new URL("file:" + imageFile.getAbsolutePath());
     }
 
     private void getFeatures(final Document doc, final Patch patch) {

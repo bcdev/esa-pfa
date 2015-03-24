@@ -247,6 +247,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
             try {
                 patch = patchProcessor.get();
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
                 VisatApp.getApp().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatures().length > 0) {

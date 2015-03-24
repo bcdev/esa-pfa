@@ -31,6 +31,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.jai.ImageManager;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
@@ -283,7 +284,7 @@ public abstract class FeatureWriter extends Operator {
             final int patchX = (int) (targetRectangle.getMinX() / targetRectangle.getWidth());
             final int patchY = (int) (targetRectangle.getMinY() / targetRectangle.getHeight());
 
-            final Patch patch = new Patch(patchX, patchY, targetRectangle, patchProduct);
+            final Patch patch = new Patch(sourceProduct.getName(), patchX, patchY, targetRectangle, patchProduct);
 
             final boolean valid = processPatch(patch, patchWriter);
 /*
@@ -313,6 +314,7 @@ public abstract class FeatureWriter extends Operator {
             try {
                 patchWriter.close();
             } catch (IOException ignored) {
+                Debug.trace(ignored);
             }
         }
         patchWriter = null;

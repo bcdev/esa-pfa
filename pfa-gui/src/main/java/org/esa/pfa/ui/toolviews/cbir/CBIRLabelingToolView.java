@@ -185,7 +185,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
                 }
             }
         } catch (Exception e) {
-            VisatApp.getApp().showErrorDialog(e.toString());
+            VisatApp.getApp().handleUnknownException(e);
         }
     }
 

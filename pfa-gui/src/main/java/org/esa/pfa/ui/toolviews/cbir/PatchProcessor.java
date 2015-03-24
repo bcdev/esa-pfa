@@ -27,6 +27,7 @@ import org.esa.beam.framework.gpf.graph.GraphProcessor;
 import org.esa.beam.framework.gpf.graph.Node;
 import org.esa.beam.gpf.operators.standard.ReadOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.visat.VisatApp;
@@ -85,7 +86,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
                         com.bc.ceres.core.ProgressMonitor.NULL);
             }
 
-            final Patch patch = new Patch(patchX, patchY, null, subset);
+            final Patch patch = new Patch(product.getName(), patchX, patchY, null, subset);
             patch.setImage(session.getQuicklookBandName1(), patchImage);
             patch.setLabel(Patch.LABEL_RELEVANT);
 
@@ -114,6 +115,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             processor.executeGraph(graph, pm);
 
             loadFeatures(patch, tmpOutFolder);
+            // TODO remove tmp folders ???
             return patch;
         } finally {
             pm.done();
@@ -121,6 +123,17 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
     }
 
     private void loadFeatures(final Patch patch, final File datasetDir) {
+//        PatchAccess patchAccess = new PatchAccess(datasetDir.getParentFile(), session.getEffectiveFeatureTypes());
+//        try {
+//            File patchFile = patchAccess.findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
+//            patchAccess.readPatchFeatures(patch, patchFile);
+//        } catch (IOException ioe) {
+//            Debug.trace(ioe);
+//            final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
+//            VisatApp.getApp().showErrorDialog(msg);
+//        }
+
+        // TODO maybe harmonize with PatchAccess, but structure is abit different
         try {
             final File[] fexDirs = datasetDir.listFiles(new FileFilter() {
                 @Override
@@ -128,8 +141,9 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
                     return file.isDirectory() && file.getName().startsWith(patch.getPatchName());
                 }
             });
-            if (fexDirs.length == 0)
+            if (fexDirs == null || fexDirs.length == 0) {
                 return;
+            }
 
             final File[] patchDirs = fexDirs[0].listFiles(new FileFilter() {
                 @Override
@@ -137,16 +151,16 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
                     return file.isDirectory() && file.getName().startsWith("x");
                 }
             });
-            if (patchDirs.length == 0)
+            if (patchDirs == null || patchDirs.length == 0) {
                 return;
-
-            patch.setPathOnServer(patchDirs[0].getAbsolutePath());
+            }
 
             final File featureFile = new File(patchDirs[0], "features.txt");
             patch.readFeatureFile(featureFile, session.getEffectiveFeatureTypes());
 
-        } catch (Exception e) {
-            final String msg = "Error reading features " + patch.getPatchName() + "\n" + e.getMessage();
+        } catch (IOException ioe) {
+            Debug.trace(ioe);
+            final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
             VisatApp.getApp().showErrorDialog(msg);
         }
     }

@@ -19,6 +19,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The PFA Dataset Indexer Tool.
@@ -175,9 +177,11 @@ public class DsIndexerTool {
         }
 
         String name = patchDir.getName();
-        //Todo this needs to be smarter for datasets with more than 100x100 patches
-        int patchX = Integer.parseInt(name.substring(1, 3));
-        int patchY = Integer.parseInt(name.substring(4, 6));
+        Pattern patchNamePatter = Pattern.compile("y(?<patchX>[0-9]+)y(?<patchY>[0-9]+)");
+        Matcher matcher = patchNamePatter.matcher(name);
+
+        int patchX = Integer.parseInt(matcher.group("patchX"));
+        int patchY = Integer.parseInt(matcher.group("patchY"));
 
         String fexDirName = patchDir.getParentFile().getName();
         String productName = fexDirName.substring(0, fexDirName.length() - 4);

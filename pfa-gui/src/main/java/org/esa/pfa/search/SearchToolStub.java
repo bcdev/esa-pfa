@@ -22,6 +22,7 @@ import org.esa.pfa.activelearning.ClassifierWriter;
 import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
@@ -48,6 +49,7 @@ public class SearchToolStub {
     private final String classifierName;
     private final PatchQuery db;
     private final ActiveLearning al;
+    private final PatchAccess patchAccess;
 
     private int numTrainingImages = 12;
     private int numRetrievedImages = 50;
@@ -60,12 +62,18 @@ public class SearchToolStub {
         this.auxDbPath = auxDbPath;
         this.classifierName = classifierName;
 
-        db = new PatchQuery(new File(auxDbPath), applicationDescriptor.getDefaultFeatureSet());
+        File datasetDir = new File(auxDbPath);
+        db = new PatchQuery(datasetDir, applicationDescriptor.getDefaultFeatureSet());
         al = new ActiveLearning();
+        patchAccess = new PatchAccess(datasetDir, db.getEffectiveFeatureTypes());
     }
 
     public String getClassifierName() {
         return classifierName;
+    }
+
+    public PatchAccess getPatchAccess() {
+        return patchAccess;
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
@@ -145,8 +153,8 @@ public class SearchToolStub {
         return al.getMostAmbiguousPatches(numTrainingImages, pm);
     }
 
-    public static String[] getAvailableQuickLooks(final Patch patch) throws IOException {
-        return PatchQuery.getAvailableQuickLooks(patch);
+    public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
+        return patchAccess.getAvailableQuickLooks(patch);
     }
 
     /**
@@ -159,7 +167,7 @@ public class SearchToolStub {
 
         if (patch.getImage(quicklookBandName) == null) {
             try {
-                URL imageURL = db.retrievePatchImage(patch, quicklookBandName);
+                URL imageURL = patchAccess.retrievePatchImage(patch, quicklookBandName);
                 //todo download image
                 File imageFile = new File(imageURL.getPath());
                 BufferedImage img = loadImageFile(imageFile);
@@ -210,6 +218,7 @@ public class SearchToolStub {
                     bufferedImage = ImageIO.read(fis);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 //
             }
         }
@@ -280,11 +289,7 @@ public class SearchToolStub {
             final Patch[] patches = new Patch[patchInfo.length];
             int i = 0;
             for (ClassifierWriter.PatchInfo info : patchInfo) {
-                final Patch patch = info.recreatePatch();
-                final File featureFile = new File(patch.getPathOnServer(), "features.txt");
-                patch.readFeatureFile(featureFile, getPatchQuery().getEffectiveFeatureTypes());
-
-                patches[i++] = patch;
+                patches[i++] = patchAccess.loadPatch(info.parentProductName, info.patchX, info.patchY, info.label);
             }
             return patches;
         }
