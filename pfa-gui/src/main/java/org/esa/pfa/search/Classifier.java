@@ -18,7 +18,7 @@ package org.esa.pfa.search;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.util.io.FileUtils;
 import org.esa.pfa.activelearning.ActiveLearning;
-import org.esa.pfa.activelearning.ClassifierWriter;
+import org.esa.pfa.activelearning.ClassifierPersitable;
 import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -39,10 +39,10 @@ import java.util.List;
 /**
  * Stub for PFA Search Tool on the server.
  * TODO major refactorings required (after demo):
- * (1) rename this to Classifier, because it is *the* classifier.
+ * DONE (1) rename this to Classifier, because it is *the* classifier.
  * (2) introduce ClassifierService interface, which is used by CBIRSession. ClassifierService manages Classifiers (local or remote ones)
  */
-public class SearchToolStub {
+public class Classifier {
 
     private final PFAApplicationDescriptor applicationDescriptor;
     private final String auxDbPath;
@@ -55,9 +55,9 @@ public class SearchToolStub {
     private int numRetrievedImages = 50;
     private int numHitsMax = 500;
 
-    public SearchToolStub(final PFAApplicationDescriptor applicationDescriptor,
-                          final String auxDbPath,
-                          final String classifierName) throws Exception {
+    public Classifier(final PFAApplicationDescriptor applicationDescriptor,
+                      final String auxDbPath,
+                      final String classifierName) throws Exception {
         this.applicationDescriptor = applicationDescriptor;
         this.auxDbPath = auxDbPath;
         this.classifierName = classifierName;
@@ -245,15 +245,15 @@ public class SearchToolStub {
         return nameList.toArray(new String[nameList.size()]);
     }
 
-    static SearchToolStub loadClassifier(String auxDbPath, String classifierName, ProgressMonitor pm) throws Exception {
+    static Classifier loadClassifier(String auxDbPath, String classifierName, ProgressMonitor pm) throws Exception {
 
         File classifierFile = getClassifierFile(auxDbPath, classifierName);
 
-        final ClassifierWriter storedClassifier = ClassifierWriter.read(classifierFile);
+        final ClassifierPersitable storedClassifier = ClassifierPersitable.read(classifierFile);
         String applicationName = storedClassifier.getApplicationName();
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(applicationName);
 
-        SearchToolStub classifier = new SearchToolStub(applicationDescriptor, auxDbPath, classifierName);
+        Classifier classifier = new Classifier(applicationDescriptor, auxDbPath, classifierName);
         classifier.numTrainingImages = storedClassifier.getNumTrainingImages();
         classifier.numRetrievedImages = storedClassifier.getNumRetrievedImages();
         classifier.initActiveLearning(storedClassifier, pm);
@@ -270,7 +270,7 @@ public class SearchToolStub {
         return new File(auxDbDir, "Classifiers");
     }
 
-    private void initActiveLearning(ClassifierWriter storedClassifier, ProgressMonitor pm) throws Exception {
+    private void initActiveLearning(ClassifierPersitable storedClassifier, ProgressMonitor pm) throws Exception {
         al.setModel(storedClassifier.getModel());
 
         final Patch[] queryPatches = loadPatches(storedClassifier.getQueryPatchInfo());
@@ -284,11 +284,11 @@ public class SearchToolStub {
         }
     }
 
-    private Patch[] loadPatches(final ClassifierWriter.PatchInfo[] patchInfo) throws Exception {
+    private Patch[] loadPatches(final ClassifierPersitable.PatchInfo[] patchInfo) throws Exception {
         if (patchInfo != null && patchInfo.length > 0) {
             final Patch[] patches = new Patch[patchInfo.length];
             int i = 0;
-            for (ClassifierWriter.PatchInfo info : patchInfo) {
+            for (ClassifierPersitable.PatchInfo info : patchInfo) {
                 patches[i++] = patchAccess.loadPatch(info.parentProductName, info.patchX, info.patchY, info.label);
             }
             return patches;
@@ -301,7 +301,7 @@ public class SearchToolStub {
         if (classifierDir != null && !classifierDir.exists()) {
             classifierDir.mkdirs();
         }
-        final ClassifierWriter writer = new ClassifierWriter(applicationDescriptor.getName(), numTrainingImages, numRetrievedImages, al);
+        final ClassifierPersitable writer = new ClassifierPersitable(applicationDescriptor.getName(), numTrainingImages, numRetrievedImages, al);
         File classifierFile = getClassifierFile(auxDbPath, classifierName);
         writer.write(classifierFile);
     }

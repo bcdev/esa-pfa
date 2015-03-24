@@ -52,7 +52,7 @@ public class CBIRSession {
 
     private final List<Listener> listenerList = new ArrayList<>(1);
 
-    private SearchToolStub classifier;
+    private Classifier classifier;
     private String quicklookBandName1;
     private String quicklookBandName2;
 
@@ -75,7 +75,7 @@ public class CBIRSession {
         return classifier != null;
     }
 
-    public SearchToolStub getClassifier() {
+    public Classifier getClassifier() {
         return classifier;
     }
 
@@ -86,7 +86,7 @@ public class CBIRSession {
         try {
             quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
             quicklookBandName2 = quicklookBandName1;
-            classifier = new SearchToolStub(applicationDescriptor, dbFolder, classifierName);
+            classifier = new Classifier(applicationDescriptor, dbFolder, classifierName);
             classifier.saveClassifier();
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);
@@ -98,7 +98,7 @@ public class CBIRSession {
 
     public void loadClassifier(String dbFolder, String classifierName) throws Exception {
         try {
-            classifier = SearchToolStub.loadClassifier(dbFolder, classifierName, ProgressMonitor.NULL);
+            classifier = Classifier.loadClassifier(dbFolder, classifierName, ProgressMonitor.NULL);
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);
         } catch (Exception e) {
@@ -115,7 +115,7 @@ public class CBIRSession {
 
     public void deleteClassifier() throws Exception {
         try {
-            SearchToolStub deletedClassifier = classifier;
+            Classifier deletedClassifier = classifier;
             classifier.deleteClassifier();
             classifier = null;
             fireNotification(Notification.DeleteClassifier, deletedClassifier);
@@ -174,7 +174,7 @@ public class CBIRSession {
     }
 
     public static String[] getSavedClassifierNames(final String archiveFolder) {
-        return SearchToolStub.getSavedClassifierNames(archiveFolder);
+        return Classifier.getSavedClassifierNames(archiveFolder);
     }
 
     public String getQuicklookBandName1() {
@@ -292,7 +292,7 @@ public class CBIRSession {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 
-    private void fireNotification(final Notification msg, final SearchToolStub classifier) {
+    private void fireNotification(final Notification msg, final Classifier classifier) {
         for (Listener listener : listenerList) {
             listener.notifySessionMsg(msg, classifier);
         }
@@ -305,6 +305,6 @@ public class CBIRSession {
     }
 
     public interface Listener {
-        void notifySessionMsg(final Notification msg, SearchToolStub classifier);
+        void notifySessionMsg(final Notification msg, Classifier classifier);
     }
 }

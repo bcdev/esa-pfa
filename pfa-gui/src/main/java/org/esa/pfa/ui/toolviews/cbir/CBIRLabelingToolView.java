@@ -21,7 +21,7 @@ import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
+import org.esa.pfa.search.Classifier;
 
 import javax.swing.*;
 import java.awt.*;
@@ -209,7 +209,7 @@ public class CBIRLabelingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {

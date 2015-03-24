@@ -22,7 +22,7 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
+import org.esa.pfa.search.Classifier;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -132,7 +132,7 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 final PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();

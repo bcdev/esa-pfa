@@ -14,27 +14,26 @@ import java.util.List;
 /**
  * Save a session
  */
-public class ClassifierWriter {
+public class ClassifierPersitable {
 
-    String applicationName;
-    int numTrainingImages;
-    int numRetrievedImages;
-    int numIterations;
-    svm_model model;
-    PatchInfo[] queryInfo;
-    PatchInfo[] patchInfo;
+    private String applicationName;
+    private int numTrainingImages;
+    private int numRetrievedImages;
+    private int numIterations;
+    private svm_model model;
+    private PatchInfo[] queryInfo;
+    private PatchInfo[] patchInfo;
 
-    ClassifierWriter() {}
+    private ClassifierPersitable() {}
 
-    public ClassifierWriter(final String applicationName, final int numTrainingImages, final int numRetrievedImages, final ActiveLearning al) {
+    public ClassifierPersitable(final String applicationName, final int numTrainingImages, final int numRetrievedImages, final ActiveLearning al) {
         this.applicationName = applicationName;
         this.numTrainingImages = numTrainingImages;
         this.numRetrievedImages = numRetrievedImages;
         this.numIterations = al.getNumIterations();
-        model = al.getModel();
-
-        queryInfo = getPatchInfo(al.getQueryPatches());
-        patchInfo = getPatchInfo(al.getTrainingData());
+        this.model = al.getModel();
+        this.queryInfo = getPatchInfo(al.getQueryPatches());
+        this.patchInfo = getPatchInfo(al.getTrainingData());
     }
 
     private static PatchInfo[] getPatchInfo(final Patch[] patches) {
@@ -77,9 +76,9 @@ public class ClassifierWriter {
         return model;
     }
 
-    public static ClassifierWriter read(final File file) throws Exception {
+    public static ClassifierPersitable read(final File file) throws Exception {
         try (FileReader fileReader = new FileReader(file)) {
-            ClassifierWriter session = new ClassifierWriter();
+            ClassifierPersitable session = new ClassifierPersitable();
             getXStream().fromXML(fileReader, session);
             return session;
         }
@@ -96,8 +95,8 @@ public class ClassifierWriter {
     private static XStream getXStream() {
         XStream xStream = new XStream();
         xStream.alias("model", svm_model.class);
-        xStream.alias("classifier", ClassifierWriter.class);
-        xStream.setClassLoader(ClassifierWriter.class.getClassLoader());
+        xStream.alias("classifier", ClassifierPersitable.class);
+        xStream.setClassLoader(ClassifierPersitable.class.getClassLoader());
         return xStream;
     }
 
