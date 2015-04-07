@@ -7,9 +7,11 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.ModelessDialog;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
@@ -43,6 +45,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -51,6 +54,16 @@ import java.util.concurrent.ExecutionException;
  * @author Norman Fomferra
  */
 public class PatchContextMenuFactory {
+
+    private final CBIRSession session;
+
+    public PatchContextMenuFactory(CBIRSession session) {
+        this.session = session;
+    }
+
+    protected CBIRSession getSession() {
+        return session;
+    }
 
     public JPopupMenu createContextMenu(Patch patch) {
         List<Action> actionList = getContextActions(patch);
@@ -168,6 +181,7 @@ public class PatchContextMenuFactory {
                 try {
                     showPatchInParentProduct(patch, parentProductFile);
                 } catch (Exception ioe) {
+                    Debug.trace(ioe);
                     VisatApp.getApp().handleError("Failed to open parent product.", ioe);
                 }
             }
@@ -175,21 +189,28 @@ public class PatchContextMenuFactory {
     }
 
     public Action createOpenPatchProductAction(final Patch patch) {
-        if (patch.getPathOnServer() == null) {
+        File patchProductFile = null;
+        if (getSession().hasClassifier()) {
+            PatchAccess patchAccess = getSession().getClassifier().getPatchAccess();
+            try {
+                patchProductFile = patchAccess.getPatchProductFile(patch);
+            } catch (IOException ignore) {
+                Debug.trace(ignore);
+            }
+        }
+
+        if (patchProductFile != null && !patchProductFile.exists()) {
             return null;
         }
 
-        final File patchProductFile = new File(patch.getPathOnServer(), "patch.dim");
-        if (!patchProductFile.exists()) {
-            return null;
-        }
-
+        final File finalPatchProductFile = patchProductFile;
         return new AbstractAction("Open Patch Product") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    showPatchInParentProduct(patch, patchProductFile);
+                    showPatchInParentProduct(patch, finalPatchProductFile);
                 } catch (Exception ioe) {
+                    Debug.trace(ioe);
                     VisatApp.getApp().handleError("Failed to open patch product.", ioe);
                 }
             }
@@ -326,6 +347,7 @@ public class PatchContextMenuFactory {
                 try {
                     visat.getProductManager().addProduct(get());
                 } catch (InterruptedException | ExecutionException e) {
+                    Debug.trace(e);
                     VisatApp.getApp().handleError("Failed to open product.", e);
                 }
             }

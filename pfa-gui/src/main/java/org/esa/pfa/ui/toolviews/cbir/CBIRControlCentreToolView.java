@@ -27,7 +27,7 @@ import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
+import org.esa.pfa.search.Classifier;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListModel;
@@ -151,7 +151,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     if (e.getValueIsAdjusting() == false) {
                         String classifierName = classifierList.getSelectedValue();
                         if (classifierName != null) {
-                            SearchToolStub classifier = session.getClassifier();
+                            Classifier classifier = session.getClassifier();
                             if (classifier == null || !classifierName.equals(classifier.getClassifierName())) {
                                 session.loadClassifier(dbFolder.getAbsolutePath(), classifierName);
                             }
@@ -505,7 +505,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 final String name = classifier.getClassifierName();

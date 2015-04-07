@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -24,28 +25,24 @@ public final class Patch {
     private static int uidCnt = 0;
     private final int uid;
 
+    private final String parentProductName;
     private final int patchX;
     private final int patchY;
     private final Rectangle patchRegion;
     private final Product patchProduct;
-    private final String patchName;
+
     private final List<Feature> featureList = new ArrayList<>(10);
+    private final Map<String, BufferedImage> imageMap = new HashMap<>();
+    private final List<PatchListener> listenerList = new ArrayList<>(1);
 
     private int label;
     private double distance;   // functional distance of a patch to the hyperplane in SVM
 
-    private String pathOnServer;
-    private BufferedImage image;
-
-    private Map<String, BufferedImage> imageMap = new HashMap<>();
-
-    private final List<PatchListener> listenerList = new ArrayList<>(1);
-
-    public Patch(int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
+    public Patch(String parentProductName, int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
+        this.parentProductName = parentProductName;
         this.uid = createUniqueID();
         this.patchX = patchX;
         this.patchY = patchY;
-        this.patchName = String.format("x%03dy%03d", patchX, patchY);
         this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
         this.label = LABEL_NONE;
@@ -60,7 +57,7 @@ public final class Patch {
     }
 
     public String getPatchName() {
-        return patchName;
+        return String.format("x%03dy%03d", patchX, patchY);
     }
 
     public int getPatchX() {
@@ -71,20 +68,16 @@ public final class Patch {
         return patchY;
     }
 
+    public String getParentProductName() {
+        return parentProductName;
+    }
+
     public Rectangle getPatchRegion() {
         return patchRegion;
     }
 
     public Product getPatchProduct() {
         return patchProduct;
-    }
-
-    public String getPathOnServer() {
-        return pathOnServer;
-    }
-
-    public void setPathOnServer(final String path) {
-        pathOnServer = path;
     }
 
     public void setImage(final String name, final BufferedImage img) { imageMap.put(name, img); }
@@ -149,38 +142,7 @@ public final class Patch {
         public void notifyStateChanged(final Patch patch);
     }
 
-    public String getParentProductName() {
-
-        String pathOnServer = getPathOnServer();
-        if (pathOnServer == null) {
-            return null;
-        }
-        File serverPathToPatch = new File(pathOnServer);
-//        System.out.println("serverPathToPatch = " + serverPathToPatch);
-        String parentProductFexName = serverPathToPatch.getParentFile().getName();
-//        System.out.println("parentProductFexName = " + parentProductFexName);
-        String parentProductName = parentProductFexName.substring(0, parentProductFexName.length() - 4); // prune ".fex" extension
-//        System.out.println("parentProductName = " + parentProductName);
-        return parentProductName;
-    }
-
-    @Deprecated
-    public String getFeaturesAsText() {
-        final StringBuilder str = new StringBuilder(100);
-
-        for (Feature feature : featureList) {
-            str.append(feature.getName());
-            str.append(": ");
-            str.append(feature.getValue().toString());
-            str.append('\n');
-        }
-        if (str.length() == 0) {
-            str.append("No features found");
-        }
-        return str.toString();
-    }
-
-    public void readFeatureFile(final File featureFile, final FeatureType[] effectiveFeatureTypes) throws Exception {
+    public void readFeatureFile(final File featureFile, final FeatureType[] effectiveFeatureTypes) throws IOException {
         if (featureFile.exists()) {
             final Properties featureValues = new Properties();
             try (FileReader reader = new FileReader(featureFile)) {

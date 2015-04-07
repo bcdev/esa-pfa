@@ -26,7 +26,7 @@ import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
+import org.esa.pfa.search.Classifier;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -247,6 +247,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
             try {
                 patch = patchProcessor.get();
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
                 VisatApp.getApp().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatures().length > 0) {
@@ -284,7 +285,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {

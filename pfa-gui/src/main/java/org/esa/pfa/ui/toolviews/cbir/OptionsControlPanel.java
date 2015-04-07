@@ -1,10 +1,8 @@
 package org.esa.pfa.ui.toolviews.cbir;
 
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

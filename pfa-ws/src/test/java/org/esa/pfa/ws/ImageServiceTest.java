@@ -10,7 +10,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,7 +36,6 @@ public class ImageServiceTest {
         // dependency on jersey-media-json module in pom.xml and Main.startServer())
         // --
         // c.configuration().enable(new org.glassfish.jersey.media.json.JsonJaxbFeature());
-
         target = c.target(Main.BASE_URI);
     }
 
@@ -46,9 +49,15 @@ public class ImageServiceTest {
      */
     @Test
     public void testGetIt() {
-        Response response = target.path("testimage").request().get();
+        testImage("bloom1.png");
+        testImage("bloom2.png");
+    }
+
+    private void testImage(String name) {
+        Response response = target.path("testimage").queryParam("name", name).request().get();
         assertNotNull(response);
         assertEquals(200, response.getStatus());
         assertEquals(new MediaType("image", "png"), response.getMediaType());
+        assertEquals(name, response.getHeaderString("name"));
     }
 }

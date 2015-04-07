@@ -15,6 +15,7 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.SystemUtils;
 
 import java.awt.Dimension;
@@ -52,6 +53,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
                 properties.load(reader);
             }
         } catch (IOException e) {
+            Debug.trace(e);
             // ok
         }
     }

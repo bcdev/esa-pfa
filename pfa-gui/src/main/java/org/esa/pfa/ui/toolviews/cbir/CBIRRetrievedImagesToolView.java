@@ -24,7 +24,7 @@ import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.SearchToolStub;
+import org.esa.pfa.search.Classifier;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -170,7 +170,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final SearchToolStub classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 retrievedPatches = new Patch[0];
@@ -214,6 +214,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     }
 
     private class RetrievedPatchContextMenuFactory extends PatchContextMenuFactory {
+
+        private RetrievedPatchContextMenuFactory() {
+            super(session);
+        }
+
         @Override
         public List<Action> getContextActions(Patch patch) {
             List<Action> contextActions = super.getContextActions(patch);
