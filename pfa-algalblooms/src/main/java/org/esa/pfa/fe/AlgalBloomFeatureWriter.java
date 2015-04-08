@@ -68,7 +68,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -257,7 +257,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     public void initialize() throws OperatorException {
 //        removeAllSourceMetadata();
 
-        installAuxiliaryData(AUXDATA_DIR);
+        installAuxiliaryData(AUXDATA_DIR.toPath());
 
         minSampleFlh = 0.0;
         maxSampleFlh = 0.0025;
@@ -420,9 +420,9 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         }
     }
 
-    private void installAuxiliaryData(File targetDir) {
-        final URL url = ResourceInstaller.getSourceUrl(getClass());
-        final ResourceInstaller installer = new ResourceInstaller(url, "auxdata", targetDir);
+    private void installAuxiliaryData(Path targetPath) {
+        final Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
+        final ResourceInstaller installer = new ResourceInstaller(basePath, "auxdata", targetPath);
         try {
             installer.install(".*", ProgressMonitor.NULL);
         } catch (IOException e) {
