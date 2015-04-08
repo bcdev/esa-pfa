@@ -42,8 +42,8 @@ public class WorldDataOpImage extends RasterDataNodeSampleOpImage {
     @Override
     protected double computeSample(int sourceX, int sourceY) {
         GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(sourceX + 0.5f, sourceY + 0.5f), null);
-        int vx = Math.round(worldWidth * (geoPos.lon + 180.0f) / 360.0f);
-        int vy = Math.round(worldHeight * (90.0f - geoPos.lat) / 180.0f);
+        int vx = (int)Math.round(worldWidth * (geoPos.lon + 180.0f) / 360.0f);
+        int vy = (int)Math.round(worldHeight * (90.0f - geoPos.lat) / 180.0f);
         if (vx < 0) {
             vx = 0;
         }
