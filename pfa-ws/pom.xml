@@ -7,12 +7,14 @@
     <parent>
         <groupId>org.esa.pfa</groupId>
         <artifactId>pfa</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pfa-ws</artifactId>
     <name>ESA PFA Web Services</name>
 
+    <packaging>nbm</packaging>
+    
     <properties>
         <jersey.version>2.17</jersey.version>
     </properties>
@@ -33,6 +35,10 @@
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
         </dependency>
 
         <dependency>
@@ -68,6 +74,12 @@
             <artifactId>jersey-container-grizzly2-http</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 
@@ -95,6 +107,22 @@
                 </executions>
                 <configuration>
                     <mainClass>com.org.esa.pfa.ws.Main</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.esa.pfa.*</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
         </plugins>
