@@ -18,30 +18,15 @@ import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.SnapDialogs;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Rectangle;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -65,7 +50,7 @@ public class PatchContextMenuFactory {
         return session;
     }
 
-    public JPopupMenu createContextMenu(Patch patch) {
+    public JPopupMenu createContextMenu(final Patch patch) {
         List<Action> actionList = getContextActions(patch);
         if (actionList.isEmpty()) {
             return null;
@@ -121,26 +106,24 @@ public class PatchContextMenuFactory {
                 ProductOrder productOrder = productOrderBasket.getProductOrder(parentProductName);
                 if (productOrder != null) {
                     if (productOrder.getState() == ProductOrder.State.COMPLETED) {
-                        int resp = VisatApp.getApp().showQuestionDialog((String) getValue(NAME),
-                                                                        String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
-                                                                                      parentProductName), null);
-                        if (resp == JOptionPane.OK_OPTION) {
+                        SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
+                                                               String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
+                                                                             parentProductName), true, null);
+                        if (resp == SnapDialogs.Answer.YES) {
                             createShowPatchInParentProductAction(patch);
                         }
                     } else {
-                        VisatApp.getApp().showMessageDialog((String) getValue(NAME),
-                                                            String.format("Data product\n%s\nis already in the basket.",
-                                                                          parentProductName),
-                                                            JOptionPane.INFORMATION_MESSAGE,
-                                                            null);
+                        SnapDialogs.showInformation((String) getValue(NAME),
+                                                    String.format("Data product\n%s\nis already in the basket.",
+                                                                  parentProductName), null);
                     }
                     return;
                 }
 
-                int resp = VisatApp.getApp().showQuestionDialog((String) getValue(NAME),
-                                                                String.format("Data product\n%s\nwill be ordered.\nProceed?",
-                                                                              parentProductName), null);
-                if (resp == JOptionPane.YES_OPTION) {
+                SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
+                                                                      String.format("Data product\n%s\nwill be ordered.\nProceed?",
+                                                                                    parentProductName), true, null);
+                if (resp == SnapDialogs.Answer.YES) {
                     ProductOrderService productOrderService = CBIRSession.getInstance().getProductOrderService();
                     productOrderService.submit(new ProductOrder(parentProductName));
                 }
@@ -182,7 +165,7 @@ public class PatchContextMenuFactory {
                     showPatchInParentProduct(patch, parentProductFile);
                 } catch (Exception ioe) {
                     Debug.trace(ioe);
-                    VisatApp.getApp().handleError("Failed to open parent product.", ioe);
+                    SnapApp.getDefault().handleError("Failed to open parent product.", ioe);
                 }
             }
         };
@@ -211,7 +194,7 @@ public class PatchContextMenuFactory {
                     showPatchInParentProduct(patch, finalPatchProductFile);
                 } catch (Exception ioe) {
                     Debug.trace(ioe);
-                    VisatApp.getApp().handleError("Failed to open patch product.", ioe);
+                    SnapApp.getDefault().handleError("Failed to open patch product.", ioe);
                 }
             }
         };
@@ -229,7 +212,7 @@ public class PatchContextMenuFactory {
             }
 
             private void showPatchInfo(Patch patch) {
-                PatchInfoDialog patchInfoDialog = new PatchInfoDialog(VisatApp.getApp().getApplicationWindow(), patch, createOtherButtons(patch));
+                PatchInfoDialog patchInfoDialog = new PatchInfoDialog(null, patch, createOtherButtons(patch));
                 patchInfoDialog.show();
             }
 

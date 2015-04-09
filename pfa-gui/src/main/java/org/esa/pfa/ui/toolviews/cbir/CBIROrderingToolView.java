@@ -15,13 +15,13 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
-import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
+import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -148,7 +148,7 @@ public class CBIROrderingToolView extends ToolTopComponent implements Patch.Patc
             try {
                 PatchContextMenuFactory.openProduct(parentProductFile);
             } catch (Exception e1) {
-                VisatApp.getApp().handleUnknownException(e1);
+                SnapApp.getDefault().handleError("Error opening product", e1);
             }
         }
     }

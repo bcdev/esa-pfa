@@ -30,10 +30,10 @@ import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.SystemUtils;
-import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.snap.rcp.SnapDialogs;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.CropDescriptor;
@@ -130,7 +130,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
 //        } catch (IOException ioe) {
 //            Debug.trace(ioe);
 //            final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
-//            VisatApp.getApp().showErrorDialog(msg);
+//            SnapDialogs.showError(msg);
 //        }
 
         // TODO maybe harmonize with PatchAccess, but structure is abit different
@@ -161,7 +161,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
         } catch (IOException ioe) {
             Debug.trace(ioe);
             final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
-            VisatApp.getApp().showErrorDialog(msg);
+            SnapDialogs.showError(msg);
         }
     }
 

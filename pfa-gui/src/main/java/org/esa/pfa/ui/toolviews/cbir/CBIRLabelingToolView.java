@@ -17,7 +17,6 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
@@ -179,7 +178,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 iterationsLabel.setText("");
             }
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            SnapApp.getDefault().handleError("Error updating controls", e);
         }
     }
 

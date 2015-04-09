@@ -25,6 +25,7 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -43,6 +44,7 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @TopComponent.Description(
         preferredID = "CBIRQueryToolView",
@@ -254,8 +256,8 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     RenderedImage parentImage = productSceneView != null ? productSceneView.getBaseImageLayer().getImage() : null;
 
                     final Product product = SnapApp.getDefault().getSelectedProduct();
-                    addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight(), parentImage);
-
+                    addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
+                                  (int) rect.getHeight(), parentImage, productSceneView);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -264,25 +266,25 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
         }
 
         private void addQueryImage(final Product product, final int x, final int y, final int w, final int h,
-                                   final RenderedImage parentImage) throws IOException {
-
+                                   final RenderedImage parentImage, final ProductSceneView productSceneView) throws IOException {
+            final Window parentWindow = SwingUtilities.getWindowAncestor(productSceneView);
             final Rectangle region = new Rectangle(x, y, w, h);
-         /*  //todo final PatchProcessor patchProcessor = new PatchProcessor(getControl(), product, parentImage, region, session);
-           //todo patchProcessor.executeWithBlocking();
+            final PatchProcessor patchProcessor = new PatchProcessor(parentWindow, product, parentImage, region, session);
+            patchProcessor.executeWithBlocking();
             Patch patch = null;
             try {
-                //todo patch = patchProcessor.get();
+                patch = patchProcessor.get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
-                VisatApp.getApp().handleError("Failed to extract patch", e);
+                SnapApp.getDefault().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatures().length > 0) {
                 session.addQueryPatch(patch);
                 drawer.update(session.getQueryPatches());
                 updateControls();
             } else {
-                VisatApp.getApp().showWarningDialog("Failed to extract features for this patch");
-            }*/
+                SnapDialogs.showWarning("Failed to extract features for this patch");
+            }
         }
 
         private ProductSceneView getProductSceneView(InputEvent event) {
@@ -314,20 +316,20 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                /*if (isControlCreated()) {
+                if (isControlCreated()) {
                     topOptionsPanel.clearData();
                     updateControls();
 
                     drawer.update(session.getQueryPatches());
-                }*/
+                }
                 break;
             case DeleteClassifier:
-              /*  if (isControlCreated()) {
+                if (isControlCreated()) {
                     topOptionsPanel.clearData();
                     updateControls();
 
                     drawer.update(new Patch[0]);
-                }*/
+                }
                 break;
             case NewTrainingImages:
                 break;
@@ -335,6 +337,11 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 updateControls();
                 break;
         }
+    }
+
+    //todo
+    private boolean isControlCreated() {
+        return true;
     }
 
     @Override

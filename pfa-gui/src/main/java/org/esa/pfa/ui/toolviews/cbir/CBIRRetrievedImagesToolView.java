@@ -17,7 +17,6 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
@@ -26,6 +25,7 @@ import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
 import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -142,7 +142,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                         session.getApplicationDescriptor().getDefaultQuicklookFileName());
             }
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            SnapApp.getDefault().handleError("Error updating controls", e);
         }
     }
 
@@ -278,17 +278,16 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                         }
 
                         if (productNameSet.isEmpty()) {
-                            VisatApp.getApp().showMessageDialog((String) getValue(NAME),
-                                                                "All parent data products have already been ordered.",
-                                                                JOptionPane.INFORMATION_MESSAGE, null);
+                            SnapDialogs.showInformation((String) getValue(NAME),
+                                        "All parent data products have already been ordered.", null);
                             return;
                         }
 
-                        int resp = VisatApp.getApp().showQuestionDialog((String) getValue(NAME),
-                                                                        String.format("%d data product(s) will be ordered.\nProceed?",
-                                                                                      productNameSet.size()),
-                                                                        null);
-                        if (resp == JOptionPane.YES_OPTION) {
+                        SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
+                                                                              String.format("%d data product(s) will be ordered.\nProceed?",
+                                                                                            productNameSet.size()),
+                                                                              true, null);
+                        if (resp == SnapDialogs.Answer.YES) {
                             for (String productName : productNameSet) {
                                 productOrderService.submit(new ProductOrder(productName));
                             }
