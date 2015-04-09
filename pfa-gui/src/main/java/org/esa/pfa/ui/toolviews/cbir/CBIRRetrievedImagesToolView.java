@@ -17,7 +17,6 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
@@ -25,23 +24,51 @@ import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
+import org.esa.snap.netbeans.docwin.WindowUtilities;
+import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@TopComponent.Description(
+        preferredID = "CBIRRetrievedImagesToolView",
+        iconBase = "images/icons/pfa-retrieve-24.png",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
+)
+@TopComponent.Registration(
+        mode = "navigator",
+        openAtStartup = false,
+        position = 1
+)
+@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRRetrievedImagesToolView")
+@ActionReferences({
+        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Toolbars/PFA")
+})
+@TopComponent.OpenActionRegistration(
+        displayName = "#CTL_CBIRRetrievedImagesToolView_Name",
+        preferredID = "CBIRRetrievedImagesToolView"
+)
+@NbBundle.Messages({
+        "CTL_CBIRRetrievedImagesToolView_Name=CBIR Retrieved Images",
+})
 /**
  * Retrieved Images Panel
  */
-public class CBIRRetrievedImagesToolView extends AbstractToolView implements ActionListener,
+public class CBIRRetrievedImagesToolView extends ToolTopComponent implements ActionListener,
         Patch.PatchListener, CBIRSession.Listener, OptionsControlPanel.Listener {
-
-    public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRRetrievedImagesToolView";
 
     private final CBIRSession session;
     private PatchDrawer drawer;
@@ -54,9 +81,13 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
     public CBIRRetrievedImagesToolView() {
         session = CBIRSession.getInstance();
         session.addListener(this);
+
+        setLayout(new BorderLayout(4, 4));
+        setBorder(new EmptyBorder(4, 4, 4, 4));
+        setDisplayName("CBIR Retrieved Images");
+        add(createControl(), BorderLayout.CENTER);
     }
 
-    @Override
     public JComponent createControl() {
 
         final JPanel retPanel = new JPanel(new BorderLayout(2, 2));
@@ -121,10 +152,12 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
      * @param event the event.
      */
     public void actionPerformed(final ActionEvent event) {
+        final Window parentWindow = SwingUtilities.getWindowAncestor(this);
         try {
             final String command = event.getActionCommand();
             if (command.equals("improveBtn")) {
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
+                ProgressMonitorSwingWorker<Boolean, Void> worker =
+                        new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
@@ -141,11 +174,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
                 };
                 worker.executeWithBlocking();
                 if (worker.get()) {
-                    getContext().getPage().showToolView(CBIRLabelingToolView.ID);
+                    WindowUtilities.getOpened(CBIRLabelingToolView.class).findFirst().get().setVisible(true);
                 }
             }
         } catch (Exception e) {
-            VisatApp.getApp().showErrorDialog(e.toString());
+            SnapApp.getDefault().handleError("Error getting images", e);
         }
     }
 
@@ -167,6 +200,11 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
         if (isControlCreated()) {
             updateControls();
         }
+    }
+
+    //todo
+    private boolean isControlCreated() {
+        return true;
     }
 
     @Override
@@ -207,7 +245,7 @@ public class CBIRRetrievedImagesToolView extends AbstractToolView implements Act
                     }
 
                 } catch (Exception e) {
-                    VisatApp.getApp().handleUnknownException(e);
+                    SnapApp.getDefault().handleError("Error training model", e);
                 }
                 break;
         }

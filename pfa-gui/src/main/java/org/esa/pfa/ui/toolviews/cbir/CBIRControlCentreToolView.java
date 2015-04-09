@@ -22,49 +22,56 @@ import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.ModalDialog;
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
+import org.esa.snap.netbeans.docwin.WindowUtilities;
+import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
-import javax.swing.AbstractAction;
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Label;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
-
-public class CBIRControlCentreToolView extends AbstractToolView implements CBIRSession.Listener {
+@TopComponent.Description(
+        preferredID = "CBIRControlCentreToolView",
+        iconBase = "images/icons/pfa-manage-24.png",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
+)
+@TopComponent.Registration(
+        mode = "navigator",
+        openAtStartup = false,
+        position = 1
+)
+@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRControlCentreToolView")
+@ActionReferences({
+        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Toolbars/PFA")
+})
+@TopComponent.OpenActionRegistration(
+        displayName = "#CTL_CBIRControlCentreToolView_Name",
+        preferredID = "CBIRControlCentreToolView"
+)
+@NbBundle.Messages({
+        "CTL_CBIRControlCentreToolView_Name=CBIR Control Centre",
+})
+/**
+ * Control Centre Toolview
+ */
+public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRSession.Listener {
 
     private final static Dimension preferredDimension = new Dimension(550, 300);
-    private final static Font titleFont = new Font("Ariel", Font.BOLD, 14);
-    private final static String title = "Content Based Image Retrieval";
-    private final static String instructionsStr = "Select a feature extraction application";
     private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
 
     private JList<String> classifierList;
@@ -83,6 +90,11 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     public CBIRControlCentreToolView() {
         session = CBIRSession.getInstance();
         session.addListener(this);
+
+        setLayout(new BorderLayout(4, 4));
+        setBorder(new EmptyBorder(4, 4, 4, 4));
+        setDisplayName("CBIR Control");
+        add(createControl(), BorderLayout.CENTER);
     }
 
     public JComponent createControl() {
@@ -94,8 +106,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-
-        dbFolder = new File(VisatApp.getApp().getPreferences().getPropertyString(PROPERTY_KEY_DB_PATH, ""));
+        dbFolder = new File(SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_PATH, ""));
         dbFolderTextField = new JTextField();
         if (dbFolder.exists()) {
             dbFolderTextField.setText(dbFolder.getAbsolutePath());
@@ -124,7 +135,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                 if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
                     dbFolder = chooser.getSelectedFile();
                     dbFolderTextField.setText(dbFolder.getAbsolutePath());
-                    VisatApp.getApp().getPreferences().setPropertyString(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
+                    SnapApp.getDefault().getPreferences().put(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
                     initClassifierList();
                 }
             }
@@ -148,7 +159,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 try {
-                    if (e.getValueIsAdjusting() == false) {
+                    if (!e.getValueIsAdjusting()) {
                         String classifierName = classifierList.getSelectedValue();
                         if (classifierName != null) {
                             Classifier classifier = session.getClassifier();
@@ -158,7 +169,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                         }
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error loading classifier", t);
                 }
             }
         });
@@ -184,7 +195,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                         session.setNumTrainingImages(Integer.parseInt(numTrainingImages.getText()));
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error setting number of training images", t);
                 }
             }
         });
@@ -206,7 +217,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                         session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error setting retrieved images", t);
                 }
             }
         });
@@ -227,7 +238,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                         session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error updating retrieved images", t);
                 }
             }
         });
@@ -256,9 +267,9 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         return mainPane;
     }
 
-    @Override
+    //todo @Override
     public void componentShown() {
-        final Window win = getPaneWindow();
+        final Window win = SwingUtilities.getWindowAncestor(this);
         if (win != null) {
             win.setPreferredSize(preferredDimension);
             win.setMaximumSize(preferredDimension);
@@ -294,7 +305,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                         createNewClassifier(applicationDescriptor, classifierName, dbPath);
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error creating new classifier", t);
                 }
             }
         });
@@ -303,7 +314,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                 try {
                     session.deleteClassifier();
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error deleting classifier", t);
                 }
             }
         });
@@ -316,13 +327,14 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
 
     private JPanel createSideButtonPanel() {
         final JPanel panel = new JPanel(new GridLayout(-1, 1, 2, 2));
+        final Window parentWindow = SwingUtilities.getWindowAncestor(this);
 
         queryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    getContext().getPage().showToolView(CBIRQueryToolView.ID);
+                    WindowUtilities.getOpened(CBIRQueryToolView.class).findFirst().get().setVisible(true);
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error calling Query", t);
                 }
             }
         });
@@ -332,7 +344,8 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     return;
                 }
                 try {
-                    ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
+                    ProgressMonitorSwingWorker<Boolean, Void> worker =
+                            new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                         @Override
                         protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                             pm.beginTask("Getting images...", 100);
@@ -350,10 +363,10 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        getContext().getPage().showToolView(CBIRLabelingToolView.ID);
+                        //todo WindowUtilities.getOpened(CBIRLabelingToolView.class).findFirst().get().setVisible(true);
                     }
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error getting images", t);
                 }
             }
         });
@@ -363,7 +376,8 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     if (!session.hasClassifier()) {
                         return;
                     }
-                    ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Retrieving") {
+                    ProgressMonitorSwingWorker<Boolean, Void> worker =
+                            new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {
                         @Override
                         protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                             pm.beginTask("Retrieving images...", 100);
@@ -381,11 +395,11 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
                     };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        getContext().getPage().showToolView(CBIRRetrievedImagesToolView.ID);
+                        //todo getContext().getPage().showToolView(CBIRRetrievedImagesToolView.ID);
                     }
 
                 } catch (Throwable t) {
-                    VisatApp.getApp().handleUnknownException(t);
+                    SnapApp.getDefault().handleError("Error retrieving images", t);
                 }
             }
         });
@@ -433,7 +447,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         private final JComboBox<String> applicationCombo;
 
         public PromptDialog(String title, String labelStr, String defaultValue) {
-            super(VisatApp.getApp().getMainFrame(), title, ModalDialog.ID_OK, null);
+            super(SnapApp.getDefault().getMainFrame(), title, ModalDialog.ID_OK, null);
 
             final JPanel contentPane = new JPanel(new GridBagLayout());
             final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
@@ -480,7 +494,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
     }
 
     private static void createNewClassifier(final PFAApplicationDescriptor applicationDescriptor, final String classifierName, final String dbPath) {
-        ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(VisatApp.getApp().getMainFrame(), "Loading") {
+        ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(SnapApp.getDefault().getMainFrame(), "Loading") {
             @Override
             protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                 pm.beginTask("Creating classifier...", 100);
@@ -500,7 +514,7 @@ public class CBIRControlCentreToolView extends AbstractToolView implements CBIRS
         try {
             worker.get();
         } catch (Exception e) {
-            VisatApp.getApp().handleError("Failed to create new Classifier", e);
+            SnapApp.getDefault().handleError("Failed to create new Classifier", e);
         }
     }
 

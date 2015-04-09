@@ -15,25 +15,26 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
-import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
+import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Window;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -42,15 +43,35 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+@TopComponent.Description(
+        preferredID = "CBIRQueryToolView",
+        iconBase = "images/icons/pfa-query-24.png",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
+)
+@TopComponent.Registration(
+        mode = "navigator",
+        openAtStartup = false,
+        position = 1
+)
+@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView")
+@ActionReferences({
+        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Toolbars/PFA")
+})
+@TopComponent.OpenActionRegistration(
+        displayName = "#CTL_CBIRQueryToolView_Name",
+        preferredID = "CBIRQueryToolView"
+)
+@NbBundle.Messages({
+        "CTL_CBIRQueryToolView_Name=CBIR Query",
+})
 /**
  * Query Toolview
  */
-public class CBIRQueryToolView extends AbstractToolView implements ActionListener, CBIRSession.Listener,
+public class CBIRQueryToolView extends ToolTopComponent implements ActionListener, CBIRSession.Listener,
         OptionsControlPanel.Listener {
 
-    public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView";
     private final static Dimension preferredDimension = new Dimension(550, 300);
 
     private final CBIRSession session;
@@ -62,6 +83,11 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     public CBIRQueryToolView() {
         session = CBIRSession.getInstance();
         session.addListener(this);
+
+        setLayout(new BorderLayout(4, 4));
+        setBorder(new EmptyBorder(4, 4, 4, 4));
+        setDisplayName("CBIR Query");
+        add(createControl(), BorderLayout.CENTER);
     }
 
     public JComponent createControl() {
@@ -157,7 +183,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         try {
             final String command = event.getActionCommand();
             if (command.equals("addPatchBtn")) {
-                if (VisatApp.getApp().getSelectedProductSceneView() == null) {
+                if (SnapApp.getDefault().getSelectedProductSceneView() == null) {
                     throw new Exception("First open a product and an image view to be able to add new query images.");
                 }
 
@@ -183,7 +209,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 }
                 final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
 
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
+            /*    ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
@@ -201,10 +227,10 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 worker.executeWithBlocking();
                 if (worker.get()) {
                     getContext().getPage().showToolView(CBIRLabelingToolView.ID);
-                }
+                }*/
             }
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            SnapApp.getDefault().handleError("Error getting images", e);
         }
     }
 
@@ -227,7 +253,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                     ProductSceneView productSceneView = getProductSceneView(inputEvent);
                     RenderedImage parentImage = productSceneView != null ? productSceneView.getBaseImageLayer().getImage() : null;
 
-                    final Product product = VisatApp.getApp().getSelectedProduct();
+                    final Product product = SnapApp.getDefault().getSelectedProduct();
                     addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight(), parentImage);
 
 
@@ -241,11 +267,11 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                                    final RenderedImage parentImage) throws IOException {
 
             final Rectangle region = new Rectangle(x, y, w, h);
-            final PatchProcessor patchProcessor = new PatchProcessor(getControl(), product, parentImage, region, session);
-            patchProcessor.executeWithBlocking();
+         /*  //todo final PatchProcessor patchProcessor = new PatchProcessor(getControl(), product, parentImage, region, session);
+           //todo patchProcessor.executeWithBlocking();
             Patch patch = null;
             try {
-                patch = patchProcessor.get();
+                //todo patch = patchProcessor.get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
                 VisatApp.getApp().handleError("Failed to extract patch", e);
@@ -256,7 +282,7 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
                 updateControls();
             } else {
                 VisatApp.getApp().showWarningDialog("Failed to extract features for this patch");
-            }
+            }*/
         }
 
         private ProductSceneView getProductSceneView(InputEvent event) {
@@ -273,10 +299,10 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
         }
     }
 
-    @Override
+    //todo @Override
     public void componentShown() {
 
-        final Window win = getPaneWindow();
+        final Window win = SwingUtilities.getWindowAncestor(this);
         if (win != null) {
             win.setPreferredSize(preferredDimension);
             win.setMaximumSize(preferredDimension);
@@ -288,20 +314,20 @@ public class CBIRQueryToolView extends AbstractToolView implements ActionListene
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                if (isControlCreated()) {
+                /*if (isControlCreated()) {
                     topOptionsPanel.clearData();
                     updateControls();
 
                     drawer.update(session.getQueryPatches());
-                }
+                }*/
                 break;
             case DeleteClassifier:
-                if (isControlCreated()) {
+              /*  if (isControlCreated()) {
                     topOptionsPanel.clearData();
                     updateControls();
 
                     drawer.update(new Patch[0]);
-                }
+                }*/
                 break;
             case NewTrainingImages:
                 break;

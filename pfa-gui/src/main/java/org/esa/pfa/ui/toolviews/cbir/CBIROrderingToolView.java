@@ -15,7 +15,6 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
@@ -23,6 +22,12 @@ import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;
+import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,21 +35,37 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableColumn;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
+@TopComponent.Description(
+        preferredID = "CBIROrderingToolView",
+        iconBase = "images/icons/pfa-order-24.png",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
+)
+@TopComponent.Registration(
+        mode = "navigator",
+        openAtStartup = false,
+        position = 1
+)
+@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIROrderingToolView")
+@ActionReferences({
+        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Toolbars/PFA")
+})
+@TopComponent.OpenActionRegistration(
+        displayName = "#CTL_CBIROrderingToolView_Name",
+        preferredID = "CBIROrderingToolView"
+)
+@NbBundle.Messages({
+        "CTL_CBIROrderingToolView_Name=CBIR Ordering",
+})
 /**
  * Product Ordering Toolview
  */
-public class CBIROrderingToolView extends AbstractToolView implements Patch.PatchListener, CBIRSession.Listener {
-
-    public final static String ID = "org.esa.pfa.ui.toolviews.cbir.CBIROrderingToolView";
+public class CBIROrderingToolView extends ToolTopComponent implements Patch.PatchListener, CBIRSession.Listener {
 
     private final CBIRSession session;
 
@@ -55,6 +76,11 @@ public class CBIROrderingToolView extends AbstractToolView implements Patch.Patc
     public CBIROrderingToolView() {
         session = CBIRSession.getInstance();
         session.addListener(this);
+
+        setLayout(new BorderLayout(4, 4));
+        setBorder(new EmptyBorder(4, 4, 4, 4));
+        setDisplayName("CBIR Ordering");
+        add(createControl(), BorderLayout.CENTER);
     }
 
     public JComponent createControl() {
