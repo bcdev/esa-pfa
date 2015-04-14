@@ -44,10 +44,7 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
+        assertBetween(am.contagion, 0.0, 1.0);
         assertEquals(1.0, am.clumpiness, 0.0);
     }
 
@@ -71,10 +68,7 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
+        assertBetween(am.contagion, 0.0, 1.0);
         assertEquals(-1.0, am.clumpiness, 0.0);
     }
 
@@ -99,15 +93,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -131,15 +118,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -163,15 +143,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -196,15 +169,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -229,15 +195,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -262,15 +221,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -297,15 +249,8 @@ public class AggregationMetricsTest {
 
         assertEquals(1.0, am.p00 + am.p01 + am.p10 + am.p11, 0.0);
 
-        assertTrue(am.contagion >= 0.0);
-
-        assertTrue(am.contagion <= 1.0);
-
-        assertTrue(am.clumpiness >= -1.0);
-
-        assertTrue(am.clumpiness <= 1.0);
-
-        System.out.println("am.clumpiness = " + am.clumpiness);
+        assertBetween(am.contagion, 0.0, 1.0);
+        assertBetween(am.clumpiness, -1.0, 1.0);
     }
 
     @Test
@@ -322,10 +267,7 @@ public class AggregationMetricsTest {
             }
 
             final AggregationMetrics am = AggregationMetrics.compute(200, 200, data);
-
-            assertTrue(am.clumpiness >= -0.1);
-
-            assertTrue(am.clumpiness <= 0.1);
+            assertBetween(am.clumpiness, -0.1, 0.1);
         }
     }
 
@@ -341,13 +283,13 @@ public class AggregationMetricsTest {
             }
 
             final AggregationMetrics am = AggregationMetrics.compute(200, 200, data);
-
-            assertTrue(am.clumpiness >= -1.0);
-
-            assertTrue(am.clumpiness <= 1.0);
-
-            System.out.println("am.clumpiness = " + am.clumpiness);
+            assertBetween(am.clumpiness, -1.0, 1.0);
         }
+    }
+
+    private static void assertBetween(double value, double lower, double upper) {
+        assertTrue(value >= lower);
+        assertTrue(value <= upper);
     }
 
 }
