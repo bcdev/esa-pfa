@@ -18,9 +18,20 @@ import java.util.List;
  * @author Luis Veci
  */
 public final class Patch {
-    public static final int LABEL_NONE = -1;
-    public static final int LABEL_RELEVANT = 1;
-    public static final int LABEL_IRRELEVANT = 0;
+
+    public enum Label {NONE(-1), RELEVANT(1), IRRELEVANT(0);
+
+        private final int value;
+
+        Label(int value) {
+
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
 
     private static int uidCnt = 0;
     private final int uid;
@@ -35,7 +46,7 @@ public final class Patch {
     private final Map<String, BufferedImage> imageMap = new HashMap<>();
     private final List<PatchListener> listenerList = new ArrayList<>(1);
 
-    private int label;
+    private Label label;
     private double distance;   // functional distance of a patch to the hyperplane in SVM
 
     public Patch(String parentProductName, int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
@@ -45,7 +56,7 @@ public final class Patch {
         this.patchY = patchY;
         this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
-        this.label = LABEL_NONE;
+        this.label = Label.NONE;
     }
 
     private synchronized int createUniqueID() {
@@ -103,12 +114,12 @@ public final class Patch {
         return featureList.toArray(new Feature[featureList.size()]);
     }
 
-    public void setLabel(final int label) {
+    public void setLabel(final Label label) {
         this.label = label;
         updateState();
     }
 
-    public int getLabel() {
+    public Label getLabel() {
         return label;
     }
 

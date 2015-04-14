@@ -202,7 +202,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 //only add patches with features
                 final List<Patch> queryPatches = new ArrayList<>(processedPatches.length);
                 for (Patch patch : processedPatches) {
-                    if (patch.getFeatures().length > 0 && patch.getLabel() == Patch.LABEL_RELEVANT) {
+                    if (patch.getFeatures().length > 0 && patch.getLabel() == Patch.Label.RELEVANT) {
                         queryPatches.add(patch);
                     }
                 }

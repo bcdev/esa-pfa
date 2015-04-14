@@ -24,6 +24,7 @@ import org.esa.pfa.fe.op.Patch;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -209,7 +210,7 @@ public class ActiveLearning {
         final double[] decValues = new double[1];
         for (Patch patch : patchArray) {
             double p = svmClassifier.classify(patch, decValues);
-            final int label = p < 1 ? Patch.LABEL_IRRELEVANT : Patch.LABEL_RELEVANT;
+            final Patch.Label label = p < 1 ? Patch.Label.IRRELEVANT : Patch.Label.RELEVANT;
             patch.setLabel(label);
             patch.setDistance(Math.abs(decValues[0]));
             //System.out.println("Classified patch: x" + patch.getPatchX() + "y" + patch.getPatchY() + ", label: " + label);
@@ -246,14 +247,9 @@ public class ActiveLearning {
      */
     private static void checkQueryPatchesValidation(final Patch[] patchArray) throws Exception {
 
-        ArrayList<Integer> classLabels = new ArrayList<>();
+        EnumSet<Patch.Label> classLabels =  EnumSet.noneOf(Patch.Label.class);
         for (Patch patch : patchArray) {
-
-            final int label = patch.getLabel();
-            if (!classLabels.contains(label)) {
-                classLabels.add(label);
-            }
-
+            classLabels.add(patch.getLabel());
             if (!checkFeatureValidation(getValues(patch.getFeatures()))) {
                 throw new Exception("Found invalid feature value in query patch.");
             }
@@ -336,7 +332,7 @@ public class ActiveLearning {
         int[] patchIDs = new int[numIrrelevantSample];
         for (int i = 0; i < numIrrelevantSample; i++) {
             final Patch patch = testData.get((int) distance[i][0]);
-            patch.setLabel(Patch.LABEL_IRRELEVANT);
+            patch.setLabel(Patch.Label.IRRELEVANT);
             patchIDs[i] = patch.getID();
             trainingData.add(patch);
         }
@@ -482,7 +478,7 @@ public class ActiveLearning {
     private static void checkLabels(final Patch[] patchArray) throws Exception {
 
         for (Patch patch : patchArray) {
-            if (patch.getLabel() == Patch.LABEL_NONE) {
+            if (patch.getLabel() == Patch.Label.NONE) {
                 throw new Exception("Found unlabeled patch(s)");
             }
         }

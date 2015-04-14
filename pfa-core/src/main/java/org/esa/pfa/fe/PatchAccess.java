@@ -23,10 +23,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
 
 /**
- * Created by marcoz on 23.03.15.
+ * Service for accessing patches.
  */
 public class PatchAccess {
 
@@ -38,7 +37,7 @@ public class PatchAccess {
         this.effectiveFeatureTypes = effectiveFeatureTypes;
     }
 
-    public Patch loadPatch(String parentProductName, int patchX, int patchY, int label) throws IOException {
+    public Patch loadPatch(String parentProductName, int patchX, int patchY, Patch.Label label) throws IOException {
         File patchFile = findPatch(parentProductName, patchX, patchY);
         if (patchFile != null) {
             final Patch patch = new Patch(parentProductName, patchX, patchY, null, null);

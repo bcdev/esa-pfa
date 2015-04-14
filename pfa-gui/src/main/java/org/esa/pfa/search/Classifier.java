@@ -193,7 +193,7 @@ public class Classifier {
         al.classify(archivePatches);
         int i = 0;
         for (Patch patch : archivePatches) {
-            if (patch.getLabel() == Patch.LABEL_RELEVANT) {
+            if (patch.getLabel() == Patch.Label.RELEVANT) {
                 if (!contains(relavantImages, patch)) {
                     relavantImages.add(patch);
                     ++i;

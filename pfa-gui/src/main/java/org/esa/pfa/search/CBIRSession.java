@@ -220,13 +220,13 @@ public class CBIRSession {
     }
 
     public void reassignTrainingImage(final Patch patch) {
-        if (patch.getLabel() == Patch.LABEL_RELEVANT) {
+        if (patch.getLabel() == Patch.Label.RELEVANT) {
             int index = irrelevantImageList.indexOf(patch);
             if (index != -1) {
                 irrelevantImageList.remove(index);
                 relevantImageList.add(patch);
             }
-        } else if (patch.getLabel() == Patch.LABEL_IRRELEVANT) {
+        } else if (patch.getLabel() == Patch.Label.IRRELEVANT) {
             int index = relevantImageList.indexOf(patch);
             if (index != -1) {
                 relevantImageList.remove(index);
@@ -260,11 +260,11 @@ public class CBIRSession {
 
         final Patch[] imagesToLabel = classifier.getImagesToLabel(pm);
         for (Patch patch : imagesToLabel) {
-            if (patch.getLabel() == Patch.LABEL_RELEVANT) {
+            if (patch.getLabel() == Patch.Label.RELEVANT) {
                 relevantImageList.add(patch);
             } else {
                 // default to irrelevant so user only needs to select the relevant
-                patch.setLabel(Patch.LABEL_IRRELEVANT);
+                patch.setLabel(Patch.Label.IRRELEVANT);
                 irrelevantImageList.add(patch);
             }
         }

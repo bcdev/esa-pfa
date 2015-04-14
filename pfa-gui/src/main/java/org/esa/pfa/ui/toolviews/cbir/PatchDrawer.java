@@ -168,13 +168,13 @@ public class PatchDrawer extends JPanel {
                 g.drawString(Integer.toString(patch.getID()), 35, 50);
             }
 
-            final int label = patch.getLabel();
-            if (label > Patch.LABEL_NONE) {
-                if (label == Patch.LABEL_RELEVANT) {
+            switch (patch.getLabel()) {
+                case RELEVANT:
                     g.drawImage(iconTrue.getImage(), 0, 0, null);
-                } else if (label == Patch.LABEL_IRRELEVANT) {
+                    break;
+                case IRRELEVANT:
                     g.drawImage(iconFalse.getImage(), 0, 0, null);
-                }
+                    break;
             }
 
             if (this.equals(selection) && selectionMode == SelectionMode.RECT) {
@@ -199,11 +199,14 @@ public class PatchDrawer extends JPanel {
         @Override
         public void mousePressed(MouseEvent e) {
             if (e.getButton() == MouseEvent.BUTTON1) {
-                int currentLabel = patch.getLabel();
-                if (currentLabel == Patch.LABEL_RELEVANT) {
-                    patch.setLabel(Patch.LABEL_IRRELEVANT);
-                } else if (currentLabel == Patch.LABEL_IRRELEVANT || currentLabel == Patch.LABEL_NONE) {
-                    patch.setLabel(Patch.LABEL_RELEVANT);
+                switch (patch.getLabel()) {
+                    case RELEVANT:
+                        patch.setLabel(Patch.Label.IRRELEVANT);
+                        break;
+                    case IRRELEVANT:
+                    case NONE:
+                        patch.setLabel(Patch.Label.RELEVANT);
+                        break;
                 }
                 repaint();
             } else if (e.getButton() == MouseEvent.BUTTON3) {

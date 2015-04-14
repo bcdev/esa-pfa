@@ -107,7 +107,7 @@ public class ClassifierPersitable {
         public final String parentProductName;
         public final int patchX;
         public final int patchY;
-        public final int label;
+        public final Patch.Label label;
 
         public PatchInfo(final Patch patch) {
             this.parentProductName = patch.getParentProductName();

@@ -181,7 +181,7 @@ public class SVM {
         }
 
 		for (int i = 0; i < numSamples; i++) {
-			problem.y[i] = dataSet.get(i).getLabel();
+			problem.y[i] = dataSet.get(i).getLabel().getValue();
             final Feature[] features = dataSet.get(i).getFeatures();
 			for (int j = 0; j < numFeatures; j++) {
 				problem.x[i][j].index = j+1;

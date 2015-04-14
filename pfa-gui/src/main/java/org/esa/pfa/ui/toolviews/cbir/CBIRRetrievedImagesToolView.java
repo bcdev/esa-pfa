@@ -192,7 +192,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
     public void notifyStateChanged(final Patch notifyingPatch) {
         int cnt = 0;
         for (Patch patch : retrievedPatches) {
-            if (patch.getLabel() == Patch.LABEL_RELEVANT) {
+            if (patch.getLabel() == Patch.Label.RELEVANT) {
                 cnt++;
             }
         }
@@ -233,7 +233,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                     retrievedPatches = session.getRetrievedImages();
                     //initially remove label from all
                     for (Patch patch : retrievedPatches) {
-                        patch.setLabel(Patch.LABEL_NONE);
+                        patch.setLabel(Patch.Label.NONE);
                     }
                     listenToPatches();
 
@@ -304,13 +304,13 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
         switch (msg) {
             case SET_ALL_RELEVANT:
                 for (Patch patch : retrievedPatches) {
-                    patch.setLabel(Patch.LABEL_RELEVANT);
+                    patch.setLabel(Patch.Label.RELEVANT);
                 }
                 drawer.repaint();
                 break;
             case SET_ALL_IRRELEVANT:
                 for (Patch patch : retrievedPatches) {
-                    patch.setLabel(Patch.LABEL_IRRELEVANT);
+                    patch.setLabel(Patch.Label.IRRELEVANT);
                 }
                 drawer.repaint();
                 break;
