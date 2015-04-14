@@ -15,7 +15,7 @@
  */
 package org.esa.pfa.fe;
 
-import org.esa.beam.util.SystemUtils;
+import org.esa.snap.util.SystemUtils;
 
 import java.awt.*;
 import java.io.File;

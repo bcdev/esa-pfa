@@ -1,8 +1,8 @@
 package org.esa.pfa.fe.op;
 
 import com.bc.ceres.binding.PropertySet;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.gpf.GPF;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;

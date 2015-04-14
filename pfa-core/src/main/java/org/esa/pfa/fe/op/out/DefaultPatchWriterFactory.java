@@ -2,9 +2,9 @@ package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.core.ExtensionFactory;
 import com.bc.ceres.core.ExtensionManager;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.logging.BeamLogManager;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.util.logging.BeamLogManager;
 import org.esa.pfa.fe.op.Feature;
 
 import javax.imageio.ImageIO;

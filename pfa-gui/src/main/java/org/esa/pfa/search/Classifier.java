@@ -16,7 +16,7 @@
 package org.esa.pfa.search;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.util.io.FileUtils;
 import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.activelearning.ClassifierPersitable;
 import org.esa.pfa.db.PatchQuery;

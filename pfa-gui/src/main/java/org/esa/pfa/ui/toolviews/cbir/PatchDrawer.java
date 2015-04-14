@@ -15,7 +15,7 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
-import org.esa.beam.framework.ui.UIUtils;
+import org.esa.snap.framework.ui.UIUtils;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 

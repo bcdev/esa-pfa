@@ -16,23 +16,23 @@
 package org.esa.pfa.fe.op;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.dataio.ProductSubsetBuilder;
-import org.esa.beam.framework.dataio.ProductSubsetDef;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.framework.gpf.Tile;
-import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.jai.ImageManager;
-import org.esa.beam.util.Debug;
-import org.esa.beam.util.Guardian;
+import org.esa.snap.framework.dataio.ProductSubsetBuilder;
+import org.esa.snap.framework.dataio.ProductSubsetDef;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.ColorPaletteDef;
+import org.esa.snap.framework.datamodel.ImageInfo;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.RasterDataNode;
+import org.esa.snap.framework.datamodel.Stx;
+import org.esa.snap.framework.gpf.Operator;
+import org.esa.snap.framework.gpf.OperatorException;
+import org.esa.snap.framework.gpf.Tile;
+import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
+import org.esa.snap.framework.gpf.annotations.Parameter;
+import org.esa.snap.framework.gpf.annotations.SourceProduct;
+import org.esa.snap.jai.ImageManager;
+import org.esa.snap.util.Debug;
+import org.esa.snap.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
@@ -272,7 +272,7 @@ public abstract class FeatureWriter extends Operator {
      * @param targetRectangle The area in pixel coordinates to be computed (same for all rasters in <code>targetRasters</code>).
      * @param pm              A progress monitor which should be used to determine computation cancelation requests.
      *
-     * @throws org.esa.beam.framework.gpf.OperatorException if an error occurs during computation of the target rasters.
+     * @throws org.esa.snap.framework.gpf.OperatorException if an error occurs during computation of the target rasters.
      */
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws

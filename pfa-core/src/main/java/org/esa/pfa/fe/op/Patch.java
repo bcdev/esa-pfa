@@ -1,6 +1,6 @@
 package org.esa.pfa.fe.op;
 
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.Product;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

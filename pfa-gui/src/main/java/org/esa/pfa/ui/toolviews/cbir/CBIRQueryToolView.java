@@ -17,10 +17,10 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.visat.VisatApp;
-import org.esa.beam.visat.actions.InsertFigureInteractorInterceptor;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.ui.product.ProductSceneView;
+import org.esa.snap.visat.VisatApp;
+import org.esa.snap.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.search.Classifier;

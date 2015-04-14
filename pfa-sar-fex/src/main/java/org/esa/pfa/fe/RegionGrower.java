@@ -1,8 +1,8 @@
 package org.esa.pfa.fe;
 
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.Tile;
+import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.framework.gpf.Tile;
 
 import java.util.ArrayList;
 import java.util.List;

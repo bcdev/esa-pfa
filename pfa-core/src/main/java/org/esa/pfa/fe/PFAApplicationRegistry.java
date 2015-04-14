@@ -17,8 +17,8 @@ package org.esa.pfa.fe;
 
 import com.bc.ceres.core.ServiceRegistry;
 import com.bc.ceres.core.ServiceRegistryManager;
-import org.esa.beam.BeamCoreActivator;
-import org.esa.beam.util.Guardian;
+import org.esa.snap.BeamCoreActivator;
+import org.esa.snap.util.Guardian;
 
 import java.util.Set;
 

@@ -2,7 +2,7 @@ package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertySet;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.Product;
 
 import java.io.IOException;
 import java.util.HashMap;
