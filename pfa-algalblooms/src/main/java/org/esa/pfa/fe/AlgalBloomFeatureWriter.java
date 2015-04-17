@@ -422,7 +422,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     private void installAuxiliaryData(Path targetPath) {
         final Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
-        final ResourceInstaller installer = new ResourceInstaller(basePath, "auxdata", targetPath);
+        final ResourceInstaller installer = new ResourceInstaller(basePath.resolve("auxdata"), targetPath);
         try {
             installer.install(".*", ProgressMonitor.NULL);
         } catch (IOException e) {
