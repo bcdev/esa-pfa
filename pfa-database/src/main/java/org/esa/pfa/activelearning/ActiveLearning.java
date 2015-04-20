@@ -55,7 +55,7 @@ public class ActiveLearning {
     private List<Patch> queryData = new ArrayList<>();
     private List<Patch> trainingData = new ArrayList<>();
 
-    public ActiveLearning() throws Exception {
+    public ActiveLearning() {
         svmClassifier = new SVM(NUM_FOLDS, LOWER_LIMIT, UPPER_LIMIT);
     }
 
@@ -234,6 +234,11 @@ public class ActiveLearning {
     public void setModel(final svm_model model) {
         svmClassifier.setModel(model);
     }
+
+    public void setModel(final svm_model model, int iterations) {
+            svmClassifier.setModel(model);
+        this.iteration = iterations;
+        }
 
     public svm_model getModel() {
         return svmClassifier.getModel();

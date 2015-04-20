@@ -279,7 +279,7 @@ public class Classifier {
             al.setQueryPatches(queryPatches);
         }
 
-        final Patch[] patches = loadPatches(storedClassifier.getPatchInfo());
+        final Patch[] patches = loadPatches(storedClassifier.getTrainingPatchInfo());
         if (patches != null && patches.length > 0) {
             al.setTrainingData(patches, storedClassifier.getNumIterations(), pm);
         }

@@ -52,7 +52,7 @@ public class ClassifierPersitable {
      * basic information to recreate a patch
      * @return list of PatchInfo
      */
-    public PatchInfo[] getPatchInfo() {
+    public PatchInfo[] getTrainingPatchInfo() {
         return patchInfo;
     }
 
@@ -76,7 +76,7 @@ public class ClassifierPersitable {
         return model;
     }
 
-    public static ClassifierPersitable read(final File file) throws Exception {
+    public static ClassifierPersitable read(final File file) throws IOException {
         try (FileReader fileReader = new FileReader(file)) {
             ClassifierPersitable session = new ClassifierPersitable();
             getXStream().fromXML(fileReader, session);
