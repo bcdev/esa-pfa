@@ -61,10 +61,9 @@ public class KernelKmeansClusterer {
 
     /**
      * Perform clustering using Kernel K-means clustering algorithm.
-     * @throws Exception The exception.
      * @param pm
      */
-    public void clustering(ProgressMonitor pm) throws Exception {
+    public void clustering(ProgressMonitor pm) {
 
         pm.beginTask("Clustering", maxIterations + 1);
         setInitialClusterCenters();
@@ -133,9 +132,8 @@ public class KernelKmeansClusterer {
 
     /**
      * Assign samples to their near clusters base on Euclidean distance in kernel space.
-     * @throws Exception The exception.
      */
-    private void assignSamplesToClusters() throws Exception {
+    private void assignSamplesToClusters() {
 
         for (int sampleIdx = 0; sampleIdx < numSamples; sampleIdx++) {
             if (!isClusterCenter(sampleIdx)) {
@@ -164,9 +162,8 @@ public class KernelKmeansClusterer {
      * Find the nearest cluster for each given sample.
      * @param sampleIdx Index of the given sample.
      * @return Cluster index.
-     * @throws Exception The exception.
      */
-    private int findNearestCluster(final int sampleIdx) throws Exception {
+    private int findNearestCluster(final int sampleIdx) {
 
         double minDistance = Double.MAX_VALUE;
         int nearestClusterIdx = 0;
@@ -190,9 +187,8 @@ public class KernelKmeansClusterer {
      * @param sampleIdx1 Index of the first sample.
      * @param sampleIdx2 Index of the second sample.
      * @return The kernel space distance.
-     * @throws Exception The exception.
      */
-    private double computeDistance(final int sampleIdx1, final int sampleIdx2) throws Exception {
+    private double computeDistance(final int sampleIdx1, final int sampleIdx2) {
 
         final double[] x1 = getFeatures(samples.get(sampleIdx1));
         final double[] x2 = getFeatures(samples.get(sampleIdx2));
@@ -213,9 +209,8 @@ public class KernelKmeansClusterer {
 
     /**
      * Update centers of the clusters.
-     * @throws Exception The exception.
      */
-    private void updateClusterCenters() throws Exception {
+    private void updateClusterCenters() {
 
         for (int clusterIdx = 0; clusterIdx < numClusters; clusterIdx++) {
 
@@ -231,9 +226,8 @@ public class KernelKmeansClusterer {
      * Find the sample that is nearest to the center of a given cluster.
      * @param clusterIdx The cluster index.
      * @return The sample index.
-     * @throws Exception The exception.
      */
-    private int findSampleNearestToClusterCenter(final int clusterIdx) throws Exception {
+    private int findSampleNearestToClusterCenter(final int clusterIdx) {
 
         final double sum2 = computeSum2(clusters[clusterIdx].memberSampleIndices);
 
@@ -258,9 +252,8 @@ public class KernelKmeansClusterer {
      * This summation will be used in the calculation of distance between a given sample and a given cluster.
      * @param memberSampleIndices The list of indices of samples in a given cluster.
      * @return The summation.
-     * @throws Exception The exception.
      */
-    private double computeSum2(final List<Integer> memberSampleIndices) throws Exception {
+    private double computeSum2(final List<Integer> memberSampleIndices) {
 
         double sum2 = 0.0;
         for (Integer memberSampleIndice : memberSampleIndices) {
@@ -279,10 +272,9 @@ public class KernelKmeansClusterer {
      * @param memberSampleIndices The list of indices of samples in the given cluster.
      * @param sum2 The summation computed by computeSum2 function.
      * @return The distance.
-     * @throws Exception The exception.
      */
     private double computeDistanceToClusterCenter(
-            final int sampleIdx, final List<Integer> memberSampleIndices, final double sum2) throws Exception {
+            final int sampleIdx, final List<Integer> memberSampleIndices, final double sum2) {
 
         final int numSamples = memberSampleIndices.size();
         final double[] x = getFeatures(samples.get(sampleIdx));
@@ -299,9 +291,8 @@ public class KernelKmeansClusterer {
     /**
      * Get representatives of the clusters using density criterion.
      * @return patchIDs Array of IDs of the selected patches.
-     * @throws Exception The exception.
      */
-    public int[] getRepresentatives() throws Exception {
+    public int[] getRepresentatives() {
 
         int[] rep = new int[numClusters];
         int[] patchIDs = new int[numClusters];
@@ -324,9 +315,8 @@ public class KernelKmeansClusterer {
      * Find the representative sample in a given cluster based on density criterion.
      * @param cluster The given cluster.
      * @return The representative sample index.
-     * @throws Exception The exception.
      */
-    private int findHighestDensitySample(Cluster cluster) throws Exception {
+    private int findHighestDensitySample(Cluster cluster) {
 
         // The density of a sample in a cluster is defined through the average distance of the sample to all other
         // samples in the cluster. Therefore, the lower the average distance, the higher the density.
@@ -348,10 +338,8 @@ public class KernelKmeansClusterer {
      * @param sampleIdx The index of the given sample.
      * @param memberSampleIndices The list of indices of samples in the cluster.
      * @return The average distance.
-     * @throws Exception The exception.
      */
-    private double computeAverageDistance(final int sampleIdx, final List<Integer> memberSampleIndices)
-            throws Exception {
+    private double computeAverageDistance(final int sampleIdx, final List<Integer> memberSampleIndices) {
 
         final int numSamples = memberSampleIndices.size();
         final double[] x = getFeatures(samples.get(sampleIdx));

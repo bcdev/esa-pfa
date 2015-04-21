@@ -75,9 +75,8 @@ public class ActiveLearning {
      * Set training data with relevant patches from query image.
      *
      * @param patchArray The patch array.
-     * @throws Exception The exception.
      */
-    public void setQueryPatches(final Patch[] patchArray) throws Exception {
+    public void setQueryPatches(final Patch[] patchArray) {
 
         trainingData.clear();
         checkQueryPatchesValidation(patchArray);
@@ -97,9 +96,8 @@ public class ActiveLearning {
      * The rest will be used in active learning.
      *
      * @param patchArray The patch array.
-     * @throws Exception The exception.
      */
-    public void setRandomPatches(final Patch[] patchArray, final ProgressMonitor pm) throws Exception {
+    public void setRandomPatches(final Patch[] patchArray, final ProgressMonitor pm) {
 
         setTestDataSetWithValidPatches(patchArray);
 
@@ -124,10 +122,8 @@ public class ActiveLearning {
      *
      * @param patchArray     The patch array.
      * @param iterationIndex The iteration index.
-     * @throws Exception The exception.
      */
-    public void setTrainingData(final Patch[] patchArray, final int iterationIndex,
-                                final ProgressMonitor pm) throws Exception {
+    public void setTrainingData(Patch[] patchArray, int iterationIndex, ProgressMonitor pm) {
 
         trainingData.clear();
         trainingData.addAll(Arrays.asList(patchArray));
@@ -141,9 +137,8 @@ public class ActiveLearning {
      * @param numDiversePatches The number of ambiguous patches.
      * @param pm A progress monitor
      * @return The patch array.
-     * @throws Exception The exceptions.
      */
-    public Patch[] getMostAmbiguousPatches(final int numDiversePatches, final ProgressMonitor pm) throws Exception {
+    public Patch[] getMostAmbiguousPatches(final int numDiversePatches, final ProgressMonitor pm) {
 
         final int numUncertainPatches = 4 * numDiversePatches;
         if (DEBUG) {
@@ -182,9 +177,8 @@ public class ActiveLearning {
      * Update training set with user labeled patches and train the classifier.
      *
      * @param userLabelledPatches The user labeled patch array.
-     * @throws Exception The exception.
      */
-    public void train(final Patch[] userLabelledPatches, final ProgressMonitor pm) throws Exception {
+    public void train(final Patch[] userLabelledPatches, final ProgressMonitor pm) {
 
         checkLabels(userLabelledPatches);
 
@@ -203,9 +197,8 @@ public class ActiveLearning {
      * Classify an array of patches. UI needs to sort the patches according to their distances to hyperplane.
      *
      * @param patchArray The Given patch array.
-     * @throws Exception The exception.
      */
-    public void classify(final Patch[] patchArray) throws Exception {
+    public void classify(final Patch[] patchArray) {
 
         final double[] decValues = new double[1];
         for (Patch patch : patchArray) {
@@ -248,20 +241,19 @@ public class ActiveLearning {
      * Check validity of the query patches.
      *
      * @param patchArray The patch array.
-     * @throws Exception The exception.
      */
-    private static void checkQueryPatchesValidation(final Patch[] patchArray) throws Exception {
+    private static void checkQueryPatchesValidation(final Patch[] patchArray) {
 
         EnumSet<Patch.Label> classLabels =  EnumSet.noneOf(Patch.Label.class);
         for (Patch patch : patchArray) {
             classLabels.add(patch.getLabel());
             if (!checkFeatureValidation(getValues(patch.getFeatures()))) {
-                throw new Exception("Found invalid feature value in query patch.");
+                throw new IllegalArgumentException("Found invalid feature value in query patch.");
             }
         }
 
         if (classLabels.size() > 1) {
-            throw new Exception("Found different labels in query patches.");
+            throw new IllegalArgumentException("Found different labels in query patches.");
         }
     }
 
@@ -478,13 +470,12 @@ public class ActiveLearning {
      * Check if there is any unlabeled patch.
      *
      * @param patchArray Patch array.
-     * @throws Exception The exception.
      */
-    private static void checkLabels(final Patch[] patchArray) throws Exception {
+    private static void checkLabels(final Patch[] patchArray) {
 
         for (Patch patch : patchArray) {
             if (patch.getLabel() == Patch.Label.NONE) {
-                throw new Exception("Found unlabeled patch(s)");
+                throw new IllegalArgumentException("Found unlabeled patch(s)");
             }
         }
     }
@@ -493,9 +484,8 @@ public class ActiveLearning {
      * Select uncertain samples from test data.
      *
      * @param numUncertainPatches Number of uncertainty samples selected with uncertainty criterion
-     * @throws Exception The exception.
      */
-    private List<Patch> selectMostUncertainSamples(int numUncertainPatches) throws Exception {
+    private List<Patch> selectMostUncertainSamples(int numUncertainPatches) {
 
         final double[][] distance = computeFunctionalDistanceForAllSamples();
 
@@ -519,10 +509,8 @@ public class ActiveLearning {
      * Compute functional distance for all samples in test data set.
      *
      * @return The distance array.
-     * @throws Exception The exception.
      */
-    private double[][] computeFunctionalDistanceForAllSamples() throws Exception {
-
+    private double[][] computeFunctionalDistanceForAllSamples() {
         final double[][] distance = new double[testData.size()][2];
         int k = 0;
         for (int i = 0; i < testData.size(); i++) {
@@ -530,7 +518,6 @@ public class ActiveLearning {
             distance[k][1] = computeFunctionalDistance(testData.get(i));
             k++;
         }
-
         return distance;
     }
 
@@ -539,10 +526,8 @@ public class ActiveLearning {
      *
      * @param x The given sample.
      * @return The functional distance.
-     * @throws Exception The exception.
      */
-    private double computeFunctionalDistance(final Patch x) throws Exception {
-
+    private double computeFunctionalDistance(final Patch x) {
         final double[] decValues = new double[1];
         svmClassifier.classify(x, decValues);
         return Math.abs(decValues[0]);
@@ -587,9 +572,8 @@ public class ActiveLearning {
      *
      * @param numDiversePatches Number of batch samples selected with diversity and density criteria
      * @param pm A progress monitor
-     * @throws Exception The exception.
      */
-    private List<Patch> selectMostDiverseSamples(int numDiversePatches, List<Patch> uncertainSamples, ProgressMonitor pm) throws Exception {
+    private List<Patch> selectMostDiverseSamples(int numDiversePatches, List<Patch> uncertainSamples, ProgressMonitor pm) {
 
         KernelKmeansClusterer kkc = new KernelKmeansClusterer(MAX_ITERATIONS_KMEANS, numDiversePatches, svmClassifier);
         kkc.setData(uncertainSamples);
@@ -617,7 +601,7 @@ public class ActiveLearning {
         }
 
         if (diverseSamples.size() != diverseSampleIDs.length) {
-            throw new Exception("Invalid diverse patch array.");
+            throw new IllegalArgumentException("Invalid diverse patch array.");
         }
         return diverseSamples;
     }

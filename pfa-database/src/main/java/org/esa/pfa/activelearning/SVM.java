@@ -78,9 +78,8 @@ public class SVM {
     /**
 	 * Train SVM model with given training data.
      * @param trainingSet The training data set.
-     * @throws Exception The exception.
 	 */
-	public void train(final List<Patch> trainingSet, final ProgressMonitor pm) throws Exception {
+	public void train(final List<Patch> trainingSet, final ProgressMonitor pm) {
 
         setProblem(trainingSet);
 
@@ -99,12 +98,11 @@ public class SVM {
      * @param x1 The first sample.
      * @param x2 The second sample.
      * @return The kernel function value.
-     * @throws Exception The exception.
      */
-    public double kernel(final double[] x1, final double[] x2) throws Exception {
+    public double kernel(final double[] x1, final double[] x2) {
 
         if (x1.length != numFeatures || x2.length != numFeatures) {
-            throw new Exception("Invalid feature dimension.");
+            throw new IllegalArgumentException("Invalid feature dimension.");
         }
 
         double sum = 0.0;
@@ -200,7 +198,7 @@ public class SVM {
     /**
      * Scale training data to user specified range [lower, upper].
      */
-    private void scaleData() throws Exception {
+    private void scaleData() {
         for (int i = 0; i < numSamples; i++) {
             for (int j = 0; j < numFeatures; j++) {
                 problem.x[i][j].value = scale(j, problem.x[i][j].value);
@@ -220,9 +218,8 @@ public class SVM {
 
     /**
      * Set parameters used by SVM model.
-     * @throws Exception The exception.
      */
-    private void setSVMModelParameters() throws Exception {
+    private void setSVMModelParameters() {
 
         modelParameters.svm_type = svm_parameter.C_SVC;
         modelParameters.kernel_type = svm_parameter.RBF;
@@ -232,7 +229,7 @@ public class SVM {
 
         String error_msg = svm.svm_check_parameter(problem, modelParameters);
         if (error_msg != null) {
-            throw new Exception(error_msg);
+            throw new IllegalArgumentException(error_msg);
         }
     }
 
