@@ -96,24 +96,30 @@ public class LocalClassifierService implements ClassifierService {
 
     @Override
     public Classifier get(String classifierName) throws IOException {
-        return loadClassifier(classifierName);
+        return loadClassifier(classifierName, getClassifierPath(classifierName), this);
     }
 
     @Override
     public void save(Classifier classifier) throws IOException {
+        saveClassifier(classifier, getClassifierPath(classifier.getName()));
+    }
+
+    private Path getClassifierPath(String classifierName) {
+        return storageDirectory.resolve(classifierName + ".xml");
+    }
+
+    private static void saveClassifier(Classifier classifier, Path classifierPath) throws IOException {
         PFAApplicationDescriptor applicationDescriptor = classifier.getApplicationDescriptor();
-        String classifierName = classifier.getName();
         int numTrainingImages = classifier.getNumTrainingImages();
         int numRetrievedImages = classifier.getNumRetrievedImages();
         ActiveLearning al = classifier.getActiveLearning();
 
         final ClassifierPersitable persitable = new ClassifierPersitable(applicationDescriptor.getName(), numTrainingImages, numRetrievedImages, al);
-        Path classifierPath = getClassifierPath(classifierName);
         persitable.write(classifierPath.toFile());
     }
 
-    private Classifier loadClassifier(String classifierName) throws IOException {
-        Path classifierPath = getClassifierPath(classifierName);
+
+    private static Classifier loadClassifier(String classifierName, Path classifierPath, ClassifierService classifierService) throws IOException {
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
@@ -122,7 +128,7 @@ public class LocalClassifierService implements ClassifierService {
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(applicationName);
 
 
-        Classifier classifier = new Classifier(classifierName, applicationDescriptor, this);
+        Classifier classifier = new Classifier(classifierName, applicationDescriptor, classifierService);
         classifier.setNumTrainingImages(persitable.getNumTrainingImages());
         classifier.setNumRetrievedImages(persitable.getNumRetrievedImages());
 
@@ -139,10 +145,5 @@ public class LocalClassifierService implements ClassifierService {
             classifier.setTrainingPatchInfo(trainingPatchInfo);
         }
         return classifier;
-    }
-
-
-    private Path getClassifierPath(String classifierName) {
-        return storageDirectory.resolve(classifierName + ".xml");
     }
 }
