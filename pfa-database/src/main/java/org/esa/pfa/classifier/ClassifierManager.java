@@ -19,29 +19,15 @@ package org.esa.pfa.classifier;
 import java.io.IOException;
 
 /**
- * Created by marcoz on 17.04.15.
+ * CRUD interface for the Classifier
  */
-public class ClassifierManager {
+public interface ClassifierManager {
 
-    private final ClassifierService classifierService;
+    String[] list();
 
-    public ClassifierManager(ClassifierService classifierService) {
-        this.classifierService = classifierService;
-    }
+    Classifier create(String classifierName, String applicationName) throws IOException;
 
-    public String[] list() {
-        return classifierService.list();
-    }
+    void delete(String classifierName) throws IOException;
 
-    public Classifier create(String classifierName, String applicationName) throws IOException {
-        return classifierService.create(classifierName, applicationName);
-    }
-
-    public void delete(String classifierName) throws IOException {
-        classifierService.delete(classifierName);
-    }
-
-    public Classifier get(String classifierName) throws IOException {
-        return classifierService.get(classifierName);
-    }
+    Classifier get(String classifierName) throws IOException;
 }

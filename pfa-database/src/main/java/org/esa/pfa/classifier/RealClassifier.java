@@ -16,30 +16,31 @@
 
 package org.esa.pfa.classifier;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.IOException;
 
 /**
- * Created by marcoz on 17.04.15.
+ * The part of the classifier that does the "real" work.
  */
-public interface ClassifierService {
+public interface RealClassifier {
 
-    String[] list();
+    int getNumTrainingImages();
 
-    Classifier create(String classifierName, String applicationName) throws IOException;
+    void setNumTrainingImages(int numTrainingImages);
 
-    void delete(String classifierName) throws IOException;
+    int getNumRetrievedImages();
 
-    Classifier get(String classifierName) throws IOException;
+    void setNumRetrievedImages(int numRetrievedImages);
 
-    void save(Classifier classifier) throws IOException;
+    void saveClassifier() throws IOException;
 
-    void startTraining(Patch[] qeueryPatches);
+    void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
 
-    Patch[] getmostAmbigous(int numTrainingImages);
+    Patch[] getMostAmbigousPatches(ProgressMonitor pm);
 
-    void train(Patch[] labeledPatches);
+    void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
 
-    Patch[] getBestPatches();
+    Patch[] classify();
 }

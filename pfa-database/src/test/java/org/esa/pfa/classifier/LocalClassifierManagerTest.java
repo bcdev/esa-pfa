@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -36,9 +35,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 
-public class LocalClassifierServiceTest {
+public class LocalClassifierManagerTest {
 
-    private ClassifierService classifierService;
+    private LocalClassifierManager localClassifierManager;
     private TestPFAApplicationDescriptor testPFAApplicationDescriptor;
 
     @Rule
@@ -46,11 +45,11 @@ public class LocalClassifierServiceTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+
     @Before
     public void setUp() throws Exception {
-        URI testfolderUri = testFolder.getRoot().toURI();
-        Path storagePath = Paths.get(testfolderUri);
-        classifierService = new LocalClassifierService(storagePath);
+        Path classifierStoragePath = Paths.get(testFolder.getRoot().toURI());
+        localClassifierManager = new LocalClassifierManager(classifierStoragePath, classifierStoragePath, classifierStoragePath);
         testPFAApplicationDescriptor = new TestPFAApplicationDescriptor();
         PFAApplicationRegistry.getInstance().addDescriptor(testPFAApplicationDescriptor);
     }
@@ -61,75 +60,63 @@ public class LocalClassifierServiceTest {
     }
 
     @Test
-    public void testListEmpty() throws Exception {
-        String[] list = classifierService.list();
+    public void listEmpty() throws Exception {
+        String[] list = localClassifierManager.list();
         assertNotNull(list);
         assertEquals(0, list.length);
     }
 
     @Test
-    public void testListSome() throws Exception {
+    public void listSome() throws Exception {
         testFolder.newFile("foo.xml");
         testFolder.newFile("bar.xml");
 
-        String[] list = classifierService.list();
+        String[] list = localClassifierManager.list();
         assertNotNull(list);
         assertEquals(2, list.length);
         assertThat(Arrays.asList(list), hasItems("foo", "bar"));
     }
 
     @Test
-    public void testCreate() throws Exception {
-        Classifier classifier = classifierService.create("cName", "testAppDesc");
+    public void createClassifier() throws Exception {
+        Classifier classifier = localClassifierManager.create("cName", "testAppDesc");
         assertNotNull(classifier);
         assertEquals("cName", classifier.getName());
         assertSame(testPFAApplicationDescriptor, classifier.getApplicationDescriptor());
 
-        String[] list = classifierService.list();
+        String[] list = localClassifierManager.list();
         assertNotNull(list);
         assertEquals(1, list.length);
         assertThat(Arrays.asList(list), hasItems("cName"));
     }
 
     @Test
-    public void testDelete() throws Exception {
+    public void deleteExisting() throws Exception {
         testFolder.newFile("foo.xml");
         testFolder.newFile("bar.xml");
 
-        classifierService.delete("foo");
+        localClassifierManager.delete("foo");
 
-        String[] list = classifierService.list();
+        String[] list = localClassifierManager.list();
         assertNotNull(list);
         assertEquals(1, list.length);
         assertThat(Arrays.asList(list), hasItems("bar"));
     }
 
     @Test
-    public void testGetNotExist() throws Exception {
+    public void getNotExisting() throws Exception {
         thrown.expect(IllegalArgumentException.class);
-        classifierService.get("badName");
+        localClassifierManager.get("badName");
     }
 
     @Test
-    public void testGetExisting() throws Exception {
-        Classifier classifier1 = classifierService.create("cName", "testAppDesc");
-        Classifier classifier2 = classifierService.get("cName");
+    public void getExisting() throws Exception {
+        Classifier classifier1 = localClassifierManager.create("cName", "testAppDesc");
+        Classifier classifier2 = localClassifierManager.get("cName");
 
         assertNotNull(classifier1);
         assertNotNull(classifier2);
         assertEquals("cName", classifier2.getName());
         assertSame(testPFAApplicationDescriptor, classifier2.getApplicationDescriptor());
-    }
-
-    @Test
-    public void testSaveAutomatically() throws Exception {
-        Classifier classifier1 = new Classifier("cName", testPFAApplicationDescriptor, classifierService);
-        classifier1.setNumTrainingImages(99);
-        classifier1.setNumRetrievedImages(199);
-
-        Classifier classifier2 = classifierService.get("cName");
-        assertNotNull(classifier2);
-        assertEquals(99, classifier2.getNumTrainingImages());
-        assertEquals(199, classifier2.getNumRetrievedImages());
     }
 }

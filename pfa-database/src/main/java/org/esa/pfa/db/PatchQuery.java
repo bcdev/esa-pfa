@@ -41,8 +41,7 @@ public class PatchQuery implements QueryInterface {
 
     public PatchQuery(final File datasetDir, Set<String> defaultFeatureSet) throws IOException {
         DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
-        effectiveFeatureTypes = getEffectiveFeatureTypes(dsDescriptor.getFeatureTypes(),
-                                                         defaultFeatureSet);
+        effectiveFeatureTypes = getEffectiveFeatureTypes(dsDescriptor.getFeatureTypes(), defaultFeatureSet);
         parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
         NumericConfiguration numConf = new NumericConfiguration(precisionStep);
         parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));

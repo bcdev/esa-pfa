@@ -17,111 +17,54 @@
 package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.activelearning.ActiveLearning;
-import org.esa.pfa.activelearning.ClassifierPersitable;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.IOException;
 
 /**
- * Created by marcoz on 17.04.15.
+ * The classifier
  */
 public class Classifier {
 
-    private static final int NUM_TRAINING_IMAGES_DEFAULT = 12;
-    private static final int NUM_RETRIEVED_IMAGES_DEFAULT = 50;
-
-    private final String name;
+    private final String classifierName;
     private final PFAApplicationDescriptor applicationDescriptor;
-    private final ClassifierService classifierService;
-    private final ActiveLearning al;
+    private final RealClassifier realClassifier;
 
-    private int numTrainingImages = NUM_TRAINING_IMAGES_DEFAULT;
-    private int numRetrievedImages = NUM_RETRIEVED_IMAGES_DEFAULT;
-    private ClassifierPersitable.PatchInfo[] queryPatchInfo;
-    private ClassifierPersitable.PatchInfo[] trainingPatchInfo;
-
-    public Classifier(String name, PFAApplicationDescriptor applicationDescriptor, ClassifierService classifierService) {
-        this.name = name;
+    public Classifier(String classifierName, PFAApplicationDescriptor applicationDescriptor, RealClassifier realClassifier) {
+        this.classifierName = classifierName;
         this.applicationDescriptor = applicationDescriptor;
-        this.classifierService = classifierService;
-        this.al = new ActiveLearning();
+        this.realClassifier = realClassifier;
     }
 
-    void startTraining(Patch[] queryPatches) {
-//
-//        al.resetQuery();
-//        al.setQueryPatches(queryPatches);
-//        populateArchivePatches(pm);
-//
-//        saveClassifier();
-
-        classifierService.startTraining(queryPatches);
-    }
-
-//    private void populateArchivePatches(final ProgressMonitor pm) throws Exception {
-//        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numHitsMax);
-//
-//        int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
-//        int numFeaturesDB = archivePatches[0].getFeatures().length;
-//        if (numFeaturesDB != numFeaturesQuery) {
-//            String msg = String.format("Incompatible Database.\n" +
-//                                               "The patches in the database have %d features.\n" +
-//                                               "The query patches have %d features.", numFeaturesDB, numFeaturesQuery);
-//            throw new IllegalArgumentException(msg);
-//        }
-//
-//        al.setRandomPatches(archivePatches, pm);
-//    }
-
-    Patch[] getMostAmbigousPatches() {
-        return classifierService.getmostAmbigous(numTrainingImages);
-    }
-
-    void train(Patch[] labeledPatches) {
-        classifierService.train(labeledPatches);
-    }
-
-    Patch[] getBestPatches() {
-        return classifierService.getBestPatches();
-    }
-
-    String getName() {
-        return name;
+    public String getName() {
+        return classifierName;
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
         return applicationDescriptor;
     }
 
-    public ActiveLearning getActiveLearning() {
-        return al;
+    // org.esa.pfa.search.Classifier.setQueryImages()
+    void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        realClassifier.startTraining(queryPatches, pm);
     }
 
-    public int getNumTrainingImages() {
-        return numTrainingImages;
+    // org.esa.pfa.search.Classifier.getImagesToLabel()
+    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
+        return realClassifier.getMostAmbigousPatches(pm);
     }
 
-    public void setNumTrainingImages(int numTrainingImages) throws IOException {
-        this.numTrainingImages = numTrainingImages;
-        classifierService.save(this);
+    // org.esa.pfa.search.Classifier.trainModel()
+    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+        realClassifier.train(labeledPatches, pm);
     }
 
-    public int getNumRetrievedImages() {
-        return numRetrievedImages;
+    // org.esa.pfa.search.Classifier.getRetrievedImages()
+    public Patch[] classify() {
+        return realClassifier.classify();
     }
 
-    public void setNumRetrievedImages(int numRetrievedImages) throws IOException {
-        this.numRetrievedImages = numRetrievedImages;
-        classifierService.save(this);
-    }
 
-    public void setQueryPatchInfo(ClassifierPersitable.PatchInfo[] queryPatchInfo) {
-        this.queryPatchInfo = queryPatchInfo;
-    }
 
-    public void setTrainingPatchInfo(ClassifierPersitable.PatchInfo[] trainingPatchInfo) {
-        this.trainingPatchInfo = trainingPatchInfo;
-    }
 }

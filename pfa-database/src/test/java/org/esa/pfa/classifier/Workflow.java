@@ -16,6 +16,7 @@
 
 package org.esa.pfa.classifier;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.IOException;
@@ -45,12 +46,12 @@ public class Workflow {
         String classifierName = classifier.getName();
 
         Patch[] queryPatches = null;
-        classifier.startTraining(queryPatches);
+        classifier.startTraining(queryPatches, ProgressMonitor.NULL);
 
-        Patch[] mostAmbigousPatches = classifier.getMostAmbigousPatches();
+        Patch[] mostAmbigousPatches = classifier.getMostAmbigousPatches(ProgressMonitor.NULL);
         Patch[] labeledPatches = mostAmbigousPatches;
-        classifier.train(labeledPatches);
+        classifier.train(labeledPatches, ProgressMonitor.NULL);
 
-        Patch[] bestPatches = classifier.getBestPatches();
+        Patch[] bestPatches = classifier.classify();
     }
 }
