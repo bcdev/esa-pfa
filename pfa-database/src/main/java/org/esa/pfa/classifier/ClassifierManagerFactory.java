@@ -17,25 +17,17 @@
 package org.esa.pfa.classifier;
 
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Creating a new classifier manager
  */
 public class ClassifierManagerFactory {
 
-    public static ClassifierManager create(String parameters) throws IOException {
-        Path auxPath = Paths.get(URI.create(parameters));
-        Path classifierStoragePath = auxPath.resolve("Classifiers");
-        if (!Files.exists(classifierStoragePath)) {
-            Files.createDirectories(classifierStoragePath);
-        }
-        Path patchPath = auxPath;
-        Path dbPath = auxPath;
-        return new LocalClassifierManager(classifierStoragePath, dbPath, patchPath);
+    public static ClassifierManager create(String responsibleURL) throws IOException {
+        // if file URL
+        return new LocalClassifierManager(responsibleURL);
+        // else if HTTP URL
+        // Web Service Client
     }
 
 }

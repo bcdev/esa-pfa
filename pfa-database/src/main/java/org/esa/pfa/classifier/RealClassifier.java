@@ -17,8 +17,10 @@
 package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -43,4 +45,16 @@ public interface RealClassifier {
     void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
 
     Patch[] classify();
+
+    int getNumIterations();
+
+    FeatureType[] getEffectiveFeatureTypes();
+
+    String[] getAvailableQuickLooks(Patch patch) throws IOException;
+
+    void populateArchivePatches(ProgressMonitor pm);
+
+    void getPatchQuicklook(Patch patch, String quicklookBandName);
+
+    File getPatchProductFile(Patch patch) throws IOException;
 }

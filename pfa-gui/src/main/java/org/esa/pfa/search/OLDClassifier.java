@@ -43,7 +43,7 @@ import java.util.List;
  * DONE (1) rename this to Classifier, because it is *the* classifier.
  * (2) introduce ClassifierService interface, which is used by CBIRSession. ClassifierService manages Classifiers (local or remote ones)
  */
-public class Classifier {
+class OLDClassifier {
 
     private final PFAApplicationDescriptor applicationDescriptor;
     private final String auxDbPath;
@@ -56,9 +56,9 @@ public class Classifier {
     private int numRetrievedImages = 50;
     private int numHitsMax = 500;
 
-    public Classifier(final PFAApplicationDescriptor applicationDescriptor,
-                      final String auxDbPath,
-                      final String classifierName) throws Exception {
+    private OLDClassifier(final PFAApplicationDescriptor applicationDescriptor,
+                          final String auxDbPath,
+                          final String classifierName) throws Exception {
         this.applicationDescriptor = applicationDescriptor;
         this.auxDbPath = auxDbPath;
         this.classifierName = classifierName;
@@ -246,7 +246,7 @@ public class Classifier {
         return nameList.toArray(new String[nameList.size()]);
     }
 
-    static Classifier loadClassifier(String auxDbPath, String classifierName, ProgressMonitor pm) throws Exception {
+    static OLDClassifier loadClassifier(String auxDbPath, String classifierName, ProgressMonitor pm) throws Exception {
 
         File classifierFile = getClassifierFile(auxDbPath, classifierName);
 
@@ -254,7 +254,7 @@ public class Classifier {
         String applicationName = storedClassifier.getApplicationName();
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(applicationName);
 
-        Classifier classifier = new Classifier(applicationDescriptor, auxDbPath, classifierName);
+        OLDClassifier classifier = new OLDClassifier(applicationDescriptor, auxDbPath, classifierName);
         classifier.numTrainingImages = storedClassifier.getNumTrainingImages();
         classifier.numRetrievedImages = storedClassifier.getNumRetrievedImages();
         classifier.initActiveLearning(storedClassifier, pm);

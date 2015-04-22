@@ -11,7 +11,6 @@ import org.esa.snap.util.Debug;
 import org.esa.snap.util.ProductUtils;
 import org.esa.snap.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
@@ -174,9 +173,8 @@ public class PatchContextMenuFactory {
     public Action createOpenPatchProductAction(final Patch patch) {
         File patchProductFile = null;
         if (getSession().hasClassifier()) {
-            PatchAccess patchAccess = getSession().getClassifier().getPatchAccess();
             try {
-                patchProductFile = patchAccess.getPatchProductFile(patch);
+                patchProductFile = getSession().getClassifier().getPatchProductFile(patch);
             } catch (IOException ignore) {
                 Debug.trace(ignore);
             }

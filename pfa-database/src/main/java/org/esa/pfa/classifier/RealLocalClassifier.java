@@ -23,9 +23,16 @@ import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.PatchAccess;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,9 +55,6 @@ public class RealLocalClassifier implements RealClassifier {
 
     private int numTrainingImages = NUM_TRAINING_IMAGES_DEFAULT;
     private int numRetrievedImages = NUM_RETRIEVED_IMAGES_DEFAULT;
-    private ClassifierPersitable.PatchInfo[] queryPatchInfo = new ClassifierPersitable.PatchInfo[0];
-    private ClassifierPersitable.PatchInfo[] trainingPatchInfo = new ClassifierPersitable.PatchInfo[0];
-
 
     public RealLocalClassifier(Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
         this.classifierPath = classifierPath;
@@ -84,6 +88,11 @@ public class RealLocalClassifier implements RealClassifier {
     @Override
     public void setNumRetrievedImages(int numRetrievedImages) {
         this.numRetrievedImages = numRetrievedImages;
+    }
+
+    @Override
+    public int getNumIterations() {
+        return al.getNumIterations();
     }
 
     @Override
@@ -146,7 +155,8 @@ public class RealLocalClassifier implements RealClassifier {
         saveClassifier();
     }
 
-    private void populateArchivePatches(final ProgressMonitor pm) {
+    @Override
+    public void populateArchivePatches(final ProgressMonitor pm) {
         final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
 
         int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
@@ -183,5 +193,49 @@ public class RealLocalClassifier implements RealClassifier {
             }
         }
         return relavantImages.toArray(new Patch[relavantImages.size()]);
+    }
+
+    @Override
+    public FeatureType[] getEffectiveFeatureTypes() {
+        return db.getEffectiveFeatureTypes();
+    }
+
+    @Override
+    public String[] getAvailableQuickLooks(Patch patch) throws IOException {
+        return patchAccess.getAvailableQuickLooks(patch);
+    }
+
+    @Override
+    public void getPatchQuicklook(Patch patch, String quicklookBandName) {
+        if (patch.getImage(quicklookBandName) == null) {
+            try {
+                URL imageURL = patchAccess.retrievePatchImage(patch, quicklookBandName);
+                //TODO download image
+                File imageFile = new File(imageURL.getPath());
+                BufferedImage img = loadImageFile(imageFile);
+                patch.setImage(quicklookBandName, img);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static BufferedImage loadImageFile(final File file) {
+        BufferedImage bufferedImage = null;
+        if (file.canRead()) {
+            try {
+                try (BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))) {
+                    bufferedImage = ImageIO.read(fis);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return bufferedImage;
+    }
+
+    @Override
+    public File getPatchProductFile(Patch patch) throws IOException {
+        return patchAccess.getPatchProductFile(patch);
     }
 }

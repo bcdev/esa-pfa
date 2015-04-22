@@ -18,8 +18,10 @@ package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -45,8 +47,29 @@ public class Classifier {
         return applicationDescriptor;
     }
 
+    public int getNumTrainingImages() {
+        return realClassifier.getNumTrainingImages();
+    }
+
+    public void setNumTrainingImages(int numTrainingImages) {
+        realClassifier.setNumTrainingImages(numTrainingImages);
+    }
+
+    public int getNumRetrievedImages() {
+        return realClassifier.getNumRetrievedImages();
+    }
+
+    public void setNumRetrievedImages(int numRetrievedImages) {
+        realClassifier.setNumRetrievedImages(numRetrievedImages);
+    }
+
+    public int getNumIterations() {
+        return realClassifier.getNumIterations();
+    }
+
+
     // org.esa.pfa.search.Classifier.setQueryImages()
-    void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+    public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
         realClassifier.startTraining(queryPatches, pm);
     }
 
@@ -65,6 +88,29 @@ public class Classifier {
         return realClassifier.classify();
     }
 
+    public void populateArchivePatches(ProgressMonitor pm) {
+        realClassifier.populateArchivePatches(pm);
+    }
+
+    public void getPatchQuicklook(Patch patch, String quicklookBandName) {
+        realClassifier.getPatchQuicklook(patch, quicklookBandName);
+    }
+
+    public File getPatchProductFile(Patch patch) throws IOException {
+        return realClassifier.getPatchProductFile(patch);
+    }
+
+    //=============================================
+    //mz: I'm not sure , if they belong here....
+    //=============================================
+
+    public FeatureType[] getEffectiveFeatureTypes() {
+        return realClassifier.getEffectiveFeatureTypes();
+    }
+
+    public String[] getAvailableQuickLooks(Patch patch) throws IOException {
+        return realClassifier.getAvailableQuickLooks(patch);
+    }
 
 
 }

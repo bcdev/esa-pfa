@@ -17,6 +17,9 @@ package org.esa.pfa.search;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierManager;
+import org.esa.pfa.classifier.ClassifierManagerFactory;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
@@ -53,8 +56,11 @@ public class CBIRSession {
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private Classifier classifier;
+    private ClassifierManager classifierManager;
+
     private String quicklookBandName1;
     private String quicklookBandName2;
+    private List<Patch> queryPatches;
 
     public enum ImageMode { SINGLE, DUAL, FADE }
     private ImageMode imageMode = ImageMode.SINGLE;
@@ -79,29 +85,40 @@ public class CBIRSession {
         return classifier;
     }
 
-    public void createClassifier(final String classifierName,
-                                 final PFAApplicationDescriptor applicationDescriptor,
-                                 final String dbFolder,
-                                 final ProgressMonitor pm) throws Exception {
+    public boolean hasClassifierManager() {
+        return classifierManager != null;
+    }
+
+    public ClassifierManager getClassifierManager() {
+        return classifierManager;
+    }
+
+    public void createClassifierManager(final String dbFolder) throws IOException {
+        classifierManager = ClassifierManagerFactory.create(dbFolder);
+    }
+
+    public void createClassifier(String classifierName, PFAApplicationDescriptor applicationDescriptor) throws IOException {
         try {
             quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
             quicklookBandName2 = quicklookBandName1;
-            classifier = new Classifier(applicationDescriptor, dbFolder, classifierName);
-            classifier.saveClassifier();
+            classifier = classifierManager.create(classifierName, applicationDescriptor.getName());
+            queryPatches = new ArrayList<>();
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             throw e;
         }
     }
 
-    public void loadClassifier(String dbFolder, String classifierName) throws Exception {
+    public void loadClassifier(String classifierName) throws IOException {
         try {
-            classifier = Classifier.loadClassifier(dbFolder, classifierName, ProgressMonitor.NULL);
-            clearPatchLists();
-            fireNotification(Notification.NewClassifier, classifier);
-        } catch (Exception e) {
+            if (classifierManager != null) {
+                classifier = classifierManager.get(classifierName);
+                clearPatchLists();
+                fireNotification(Notification.NewClassifier, this.classifier);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
             throw e;
         }
@@ -116,7 +133,9 @@ public class CBIRSession {
     public void deleteClassifier() throws Exception {
         try {
             Classifier deletedClassifier = classifier;
-            classifier.deleteClassifier();
+            if (classifierManager != null) {
+                classifierManager.delete(classifier.getName());
+            }
             classifier = null;
             fireNotification(Notification.DeleteClassifier, deletedClassifier);
         } catch (Exception e) {
@@ -131,10 +150,6 @@ public class CBIRSession {
 
     public ImageMode getImageMode() {
         return imageMode;
-    }
-
-    public String getClassifierName() {
-        return classifier.getClassifierName();
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
@@ -173,10 +188,6 @@ public class CBIRSession {
         return classifier.getNumIterations();
     }
 
-    public static String[] getSavedClassifierNames(final String archiveFolder) {
-        return Classifier.getSavedClassifierNames(archiveFolder);
-    }
-
     public String getQuicklookBandName1() {
         return quicklookBandName1;
     }
@@ -198,17 +209,17 @@ public class CBIRSession {
     }
 
     public void addQueryPatch(final Patch patch) {
-        classifier.addQueryImage(patch);
+        queryPatches.add(patch);
     }
 
     public Patch[] getQueryPatches() {
-        return classifier.getQueryImages();
+        return queryPatches.toArray(new Patch[queryPatches.size()]);
     }
 
     public void setQueryImages(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
         pm.beginTask("Getting Images to Label", 100);
         try {
-            classifier.setQueryImages(queryImages, SubProgressMonitor.create(pm, 50));
+            classifier.startTraining(queryImages, SubProgressMonitor.create(pm, 50));
             getImagesToLabel(SubProgressMonitor.create(pm, 50));
         } finally {
             pm.done();
@@ -258,7 +269,7 @@ public class CBIRSession {
         relevantImageList.clear();
         irrelevantImageList.clear();
 
-        final Patch[] imagesToLabel = classifier.getImagesToLabel(pm);
+        final Patch[] imagesToLabel = classifier.getMostAmbigousPatches(pm);
         for (Patch patch : imagesToLabel) {
             if (patch.getLabel() == Patch.Label.RELEVANT) {
                 relevantImageList.add(patch);
@@ -274,18 +285,18 @@ public class CBIRSession {
     }
 
     public void trainModel(final ProgressMonitor pm) throws Exception {
-        final List<Patch> labeledList = new ArrayList<Patch>(30);
+        final List<Patch> labeledList = new ArrayList<>(30);
         labeledList.addAll(relevantImageList);
         labeledList.addAll(irrelevantImageList);
 
-        classifier.trainModel(labeledList.toArray(new Patch[labeledList.size()]), pm);
+        classifier.train(labeledList.toArray(new Patch[labeledList.size()]), pm);
 
         fireNotification(Notification.ModelTrained, classifier);
     }
 
     public void retrieveImages() throws Exception {
         retrievedImageList.clear();
-        retrievedImageList.addAll(Arrays.asList(classifier.getRetrievedImages()));
+        retrievedImageList.addAll(Arrays.asList(classifier.classify()));
     }
 
     public Patch[] getRetrievedImages() {

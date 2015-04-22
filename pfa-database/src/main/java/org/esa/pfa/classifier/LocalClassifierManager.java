@@ -20,9 +20,11 @@ import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +33,25 @@ import java.util.List;
  */
 public class LocalClassifierManager implements ClassifierManager {
 
+    private final String responsibleURL;
     private final Path classifierStoragePath;
     private final Path patchPath;
     private final Path dbPath;
 
-    public LocalClassifierManager(Path classifierStoragePath, Path dbPath, Path patchPath) {
-        this.classifierStoragePath = classifierStoragePath;
-        this.dbPath = dbPath;
-        this.patchPath = patchPath;
+    public LocalClassifierManager(String responsibleURL) throws IOException {
+        this.responsibleURL = responsibleURL;
+        Path auxPath = Paths.get(URI.create(responsibleURL));
+        classifierStoragePath = auxPath.resolve("Classifiers");
+        if (!Files.exists(classifierStoragePath)) {
+            Files.createDirectories(classifierStoragePath);
+        }
+        patchPath = auxPath;
+        dbPath = auxPath;
+    }
+
+    @Override
+    public String getResponsibleURL() {
+        return responsibleURL;
     }
 
     @Override

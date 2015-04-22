@@ -23,7 +23,7 @@ import org.esa.snap.visat.VisatApp;
 import org.esa.snap.visat.actions.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.Classifier;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.windows.ToolTopComponent;

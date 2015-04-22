@@ -20,12 +20,13 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
+import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.snap.framework.ui.GridBagUtils;
 import org.esa.snap.framework.ui.ModalDialog;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.search.Classifier;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
@@ -43,6 +44,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
@@ -163,8 +165,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                         String classifierName = classifierList.getSelectedValue();
                         if (classifierName != null) {
                             Classifier classifier = session.getClassifier();
-                            if (classifier == null || !classifierName.equals(classifier.getClassifierName())) {
-                                session.loadClassifier(dbFolder.getAbsolutePath(), classifierName);
+                            if (classifier == null || !classifierName.equals(classifier.getName())) {
+                                session.loadClassifier(classifierName);
                             }
                         }
                     }
@@ -278,10 +280,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private void initClassifierList() {
-        final String[] savedClassifierNames = CBIRSession.getSavedClassifierNames(dbFolder.getAbsolutePath());
         final DefaultListModel<String> modelList = new DefaultListModel<>();
-        for (String name : savedClassifierNames) {
-            modelList.addElement(name);
+        String auxPath = dbFolder.getAbsolutePath();
+        if (!auxPath.isEmpty()) {
+            CBIRSession instance = CBIRSession.getInstance();
+            if (!instance.hasClassifierManager() || !instance.getClassifierManager().getResponsibleURL().equals(auxPath)) {
+                try {
+                    instance.createClassifierManager(auxPath);
+                } catch (IOException ioe) {
+                    SnapApp.getDefault().handleError("I/O Problem", ioe);
+                }
+            }
+            ClassifierManager classifierManager = instance.getClassifierManager();
+            for (String name : classifierManager.list()) {
+                modelList.addElement(name);
+            }
         }
         classifierList.setModel(modelList);
         updateControls();
@@ -500,7 +513,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 pm.beginTask("Creating classifier...", 100);
                 try {
                     CBIRSession instance = CBIRSession.getInstance();
-                    instance.createClassifier(classifierName, applicationDescriptor, dbPath, pm);
+                    instance.createClassifier(classifierName, applicationDescriptor);
                     if (!pm.isCanceled()) {
                         return Boolean.TRUE;
                     }
@@ -522,7 +535,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                final String name = classifier.getClassifierName();
+                final String name = classifier.getName();
                 final DefaultListModel<String> model = (DefaultListModel<String>) classifierList.getModel();
                 if (!model.contains(name)) {
                     model.addElement(name);

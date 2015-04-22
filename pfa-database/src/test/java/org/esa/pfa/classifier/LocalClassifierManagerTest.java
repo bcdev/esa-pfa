@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -48,8 +46,7 @@ public class LocalClassifierManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        Path classifierStoragePath = Paths.get(testFolder.getRoot().toURI());
-        localClassifierManager = new LocalClassifierManager(classifierStoragePath, classifierStoragePath, classifierStoragePath);
+        localClassifierManager = new LocalClassifierManager(testFolder.getRoot().toURI().toString());
         testPFAApplicationDescriptor = new TestPFAApplicationDescriptor();
         PFAApplicationRegistry.getInstance().addDescriptor(testPFAApplicationDescriptor);
     }
@@ -68,8 +65,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void listSome() throws Exception {
-        testFolder.newFile("foo.xml");
-        testFolder.newFile("bar.xml");
+        testFolder.newFile("Classifiers/foo.xml");
+        testFolder.newFile("Classifiers/bar.xml");
 
         String[] list = localClassifierManager.list();
         assertNotNull(list);
@@ -92,8 +89,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void deleteExisting() throws Exception {
-        testFolder.newFile("foo.xml");
-        testFolder.newFile("bar.xml");
+        testFolder.newFile("Classifiers/foo.xml");
+        testFolder.newFile("Classifiers/bar.xml");
 
         localClassifierManager.delete("foo");
 

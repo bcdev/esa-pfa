@@ -23,6 +23,8 @@ import java.io.IOException;
  */
 public interface ClassifierManager {
 
+    String getResponsibleURL();
+
     String[] list();
 
     Classifier create(String classifierName, String applicationName) throws IOException;
