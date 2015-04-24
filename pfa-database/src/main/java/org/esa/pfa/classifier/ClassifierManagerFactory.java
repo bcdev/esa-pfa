@@ -24,10 +24,15 @@ import java.io.IOException;
 public class ClassifierManagerFactory {
 
     public static ClassifierManager create(String responsibleURL) throws IOException {
-        // if file URL
-        return new LocalClassifierManager(responsibleURL);
-        // else if HTTP URL
-        // Web Service Client
+        if (responsibleURL.startsWith("http")) {
+            // if HTTP URL: Web Service Client
+//            return new WebClassifierManager(responsibleURL);
+            return null;
+        } else {
+            // if file URL
+            return new LocalClassifierManager(responsibleURL);
+        }
+
     }
 
 }

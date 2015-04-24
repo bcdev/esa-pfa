@@ -28,7 +28,7 @@ public class Workflow {
 
     public static void main(String[] args) throws IOException {
 
-        ClassifierManager classifierManager = ClassifierManagerFactory.create("responsibleURL");
+        ClassifierManager classifierManager = new LocalClassifierManager("responsibleURL");
 
         /////////////////////////////////////////////////////////
 

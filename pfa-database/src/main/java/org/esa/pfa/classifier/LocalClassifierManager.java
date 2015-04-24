@@ -20,7 +20,6 @@ import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +39,7 @@ public class LocalClassifierManager implements ClassifierManager {
 
     public LocalClassifierManager(String responsibleURL) throws IOException {
         this.responsibleURL = responsibleURL;
-        Path auxPath = Paths.get(URI.create(responsibleURL));
+        Path auxPath = Paths.get(responsibleURL);
         classifierStoragePath = auxPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);

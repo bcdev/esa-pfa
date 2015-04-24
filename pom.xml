@@ -27,6 +27,8 @@
         <module>pfa-core</module>
         <module>pfa-database</module>
         <module>pfa-ws</module>
+        <module>pfa-ws-server</module>
+        <module>pfa-ws-client</module>
         <module>pfa-algalblooms</module>
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
@@ -43,12 +45,17 @@
                 <artifactId>pfa-core</artifactId>
                 <version>${pfa.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.esa.pfa</groupId>
                 <artifactId>pfa-database</artifactId>
                 <version>${pfa.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.esa.pfa</groupId>
+                <artifactId>pfa-ws-client</artifactId>
+                <version>${pfa.version}</version>
+            </dependency>
+
 
             <!--  CERES -->
 

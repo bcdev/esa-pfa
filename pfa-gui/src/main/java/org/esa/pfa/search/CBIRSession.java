@@ -20,11 +20,13 @@ import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.ClassifierManagerFactory;
+import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
+import org.esa.pfa.ws.WebClassifierManagerClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,8 +95,14 @@ public class CBIRSession {
         return classifierManager;
     }
 
-    public void createClassifierManager(final String dbFolder) throws IOException {
-        classifierManager = ClassifierManagerFactory.create(dbFolder);
+    public void createClassifierManager(final String responsibleURL) throws IOException {
+        if (responsibleURL.startsWith("http")) {
+            // if HTTP URL: Web Service Client
+            classifierManager = new WebClassifierManagerClient(responsibleURL);
+        } else {
+            // if file URL
+            classifierManager = new LocalClassifierManager(responsibleURL);
+        }
     }
 
     public void createClassifier(String classifierName, PFAApplicationDescriptor applicationDescriptor) throws IOException {
