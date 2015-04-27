@@ -14,7 +14,7 @@
     <name>ESA PFA Web Services Server</name>
 
     <packaging>jar</packaging>
-    
+
     <properties>
         <jersey.version>2.17</jersey.version>
     </properties>
@@ -39,6 +39,11 @@
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-algalblooms</artifactId>
+            <version>${pfa.version}</version>
         </dependency>
 
         <!-- JAX-RS implementation -->
@@ -74,20 +79,20 @@
                 </configuration>
             </plugin>
             <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>nbm-maven-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<publicPackages>-->
-                        <!--<publicPackage>org.esa.pfa.*</publicPackage>-->
-                    <!--</publicPackages>-->
-                <!--</configuration>-->
+            <!--<groupId>org.codehaus.mojo</groupId>-->
+            <!--<artifactId>nbm-maven-plugin</artifactId>-->
+            <!--<configuration>-->
+            <!--<publicPackages>-->
+            <!--<publicPackage>org.esa.pfa.*</publicPackage>-->
+            <!--</publicPackages>-->
+            <!--</configuration>-->
             <!--</plugin>-->
             <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-jar-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<useDefaultManifestFile>true</useDefaultManifestFile>-->
-                <!--</configuration>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-jar-plugin</artifactId>-->
+            <!--<configuration>-->
+            <!--<useDefaultManifestFile>true</useDefaultManifestFile>-->
+            <!--</configuration>-->
             <!--</plugin>-->
         </plugins>
     </build>

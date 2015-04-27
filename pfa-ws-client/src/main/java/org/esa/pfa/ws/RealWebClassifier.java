@@ -18,6 +18,7 @@ package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.RealClassifier;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
@@ -29,6 +30,14 @@ import java.io.IOException;
  */
 public class RealWebClassifier implements RealClassifier {
 
+
+    private final String classifierName;
+    private final String applicationName;
+
+    public RealWebClassifier(String classifierName, String applicationName) {
+        this.classifierName = classifierName;
+        this.applicationName = applicationName;
+    }
 
     @Override
     public int getNumTrainingImages() {

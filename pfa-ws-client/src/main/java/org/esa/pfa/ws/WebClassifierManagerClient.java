@@ -18,6 +18,8 @@ package org.esa.pfa.ws;
 
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -35,7 +37,7 @@ public class WebClassifierManagerClient implements ClassifierManager {
     public WebClassifierManagerClient(String responsibleURL) {
         this.responsibleURL = responsibleURL;
         Client client = ClientBuilder.newClient();
-        this.target = client.target("http://localhost:8089/pfa/").path("manager");
+        this.target = client.target(responsibleURL).path("manager");
     }
 
     @Override
@@ -52,6 +54,11 @@ public class WebClassifierManagerClient implements ClassifierManager {
 
     @Override
     public Classifier create(String classifierName, String applicationName) throws IOException {
+//        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+//        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
+//        RealWebClassifier realClassifier = new RealWebClassifier(classifierName, applicationName);
+//        realClassifier.saveClassifier();
+//        return new Classifier(classifierName, applicationDescriptor, realClassifier);
         return null;
     }
 
@@ -62,11 +69,20 @@ public class WebClassifierManagerClient implements ClassifierManager {
 
     @Override
     public Classifier get(String classifierName) throws IOException {
+        Response response = target.path("getClassifier").queryParam("classifierName", classifierName).request().get();
+        String readEntity = response.readEntity(String.class);
+        System.out.println("get: readEntity = " + readEntity);
+
+//        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+//        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
+//        RealWebClassifier realClassifier = new RealWebClassifier(classifierName, applicationName);
+//        realClassifier.saveClassifier();
+//        return new Classifier(classifierName, applicationDescriptor, realClassifier);
         return null;
     }
 
     public static void main(String[] args) throws IOException {
-        WebClassifierManagerClient client = new WebClassifierManagerClient("foo");
+        WebClassifierManagerClient client = new WebClassifierManagerClient("http://localhost:8089/pfa/");
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
         Classifier classifier = client.get(list[0]);

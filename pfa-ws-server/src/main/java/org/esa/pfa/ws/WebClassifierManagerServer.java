@@ -16,6 +16,7 @@
 
 package org.esa.pfa.ws;
 
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.classifier.RealLocalClassifier;
@@ -23,6 +24,7 @@ import org.esa.pfa.classifier.RealLocalClassifier;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
@@ -33,7 +35,7 @@ public class WebClassifierManagerServer {
     private final ClassifierManager localClassifier;
 
     public WebClassifierManagerServer() throws IOException {
-        System.out.println("WebClassifierManagerServer.WebClassifierManagerServer");
+        System.out.println("WebClassifierManagerServer.WebClassifierManagerServer " + this);
         localClassifier = new LocalClassifierManager("/home/marcoz/Scratch/pfa/output");
     }
 
@@ -41,6 +43,25 @@ public class WebClassifierManagerServer {
     @Path("list")
     @Produces(MediaType.TEXT_PLAIN)
     public String list() throws IOException {
+        System.out.println("WebClassifierManagerServer.list " + this);
         return String.join(",", localClassifier.list());
     }
+
+    @GET
+    @Path("getClassifier")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getClassifier(@QueryParam(value = "classifierName") final String classifierName) {
+        System.out.println("WebClassifierManagerServer.getClassifier" + this);
+        System.out.println("classifierName = [" + classifierName + "]");
+        try {
+            Classifier classifier = localClassifier.get(classifierName);
+            System.out.println("classifier = " + classifier);
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+            return "";
+        }
+//        System.out.println("classifier = " + classifier);
+        return "bar";
+    }
+
 }
