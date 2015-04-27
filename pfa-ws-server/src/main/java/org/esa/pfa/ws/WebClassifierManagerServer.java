@@ -27,6 +27,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 
 @Path("manager")
@@ -34,9 +36,11 @@ public class WebClassifierManagerServer {
 
     private final ClassifierManager localClassifier;
 
-    public WebClassifierManagerServer() throws IOException {
+    public WebClassifierManagerServer() throws IOException, URISyntaxException {
         System.out.println("WebClassifierManagerServer.WebClassifierManagerServer " + this);
-        localClassifier = new LocalClassifierManager("/home/marcoz/Scratch/pfa/output");
+
+        URI uri = new URI("/home/marcoz/Scratch/pfa/output");
+        localClassifier = new LocalClassifierManager(uri);
     }
 
     @GET
@@ -44,7 +48,8 @@ public class WebClassifierManagerServer {
     @Produces(MediaType.TEXT_PLAIN)
     public String list() throws IOException {
         System.out.println("WebClassifierManagerServer.list " + this);
-        return String.join(",", localClassifier.list());
+
+        return String.join("\n", localClassifier.list());
     }
 
     @GET
@@ -53,6 +58,7 @@ public class WebClassifierManagerServer {
     public String getClassifier(@QueryParam(value = "classifierName") final String classifierName) {
         System.out.println("WebClassifierManagerServer.getClassifier" + this);
         System.out.println("classifierName = [" + classifierName + "]");
+
         try {
             Classifier classifier = localClassifier.get(classifierName);
             System.out.println("classifier = " + classifier);
@@ -60,7 +66,6 @@ public class WebClassifierManagerServer {
             ioe.printStackTrace();
             return "";
         }
-//        System.out.println("classifier = " + classifier);
         return "bar";
     }
 

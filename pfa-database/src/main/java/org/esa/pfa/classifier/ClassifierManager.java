@@ -17,13 +17,14 @@
 package org.esa.pfa.classifier;
 
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * CRUD interface for the Classifier
  */
 public interface ClassifierManager {
 
-    String getResponsibleURL();
+    URI getURI();
 
     String[] list();
 

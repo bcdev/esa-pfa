@@ -18,38 +18,38 @@ package org.esa.pfa.ws;
 
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PFAApplicationRegistry;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 
 public class WebClassifierManagerClient implements ClassifierManager {
 
     private final WebTarget target;
-    private final String responsibleURL;
+    private final URI uri;
 
-    public WebClassifierManagerClient(String responsibleURL) {
-        this.responsibleURL = responsibleURL;
+    public WebClassifierManagerClient(URI uri) {
+        this.uri = uri;
         Client client = ClientBuilder.newClient();
-        this.target = client.target(responsibleURL).path("manager");
+        this.target = client.target(uri).path("manager");
     }
 
     @Override
-    public String getResponsibleURL() {
-        return responsibleURL;
+    public URI getURI() {
+        return uri;
     }
 
     @Override
     public String[] list() {
         Response response = target.path("list").request().get();
         String readEntity = response.readEntity(String.class);
-        return readEntity.split(",");
+        return readEntity.split("\n");
     }
 
     @Override
@@ -81,8 +81,9 @@ public class WebClassifierManagerClient implements ClassifierManager {
         return null;
     }
 
-    public static void main(String[] args) throws IOException {
-        WebClassifierManagerClient client = new WebClassifierManagerClient("http://localhost:8089/pfa/");
+    public static void main(String[] args) throws IOException, URISyntaxException {
+        URI uri = new URI("http://localhost:8089/pfa/");
+        WebClassifierManagerClient client = new WebClassifierManagerClient(uri);
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
         Classifier classifier = client.get(list[0]);

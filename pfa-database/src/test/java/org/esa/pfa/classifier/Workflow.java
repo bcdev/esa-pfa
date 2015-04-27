@@ -20,15 +20,17 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Created by marcoz on 20.04.15.
  */
 public class Workflow {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException {
 
-        ClassifierManager classifierManager = new LocalClassifierManager("responsibleURL");
+        ClassifierManager classifierManager = new LocalClassifierManager(new URI("anURI"));
 
         /////////////////////////////////////////////////////////
 

@@ -283,17 +283,14 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         final DefaultListModel<String> modelList = new DefaultListModel<>();
         String auxPath = dbFolder.getAbsolutePath();
         if (!auxPath.isEmpty()) {
-            CBIRSession instance = CBIRSession.getInstance();
-            if (!instance.hasClassifierManager() || !instance.getClassifierManager().getResponsibleURL().equals(auxPath)) {
-                try {
-                    instance.createClassifierManager(auxPath);
-                } catch (IOException ioe) {
-                    SnapApp.getDefault().handleError("I/O Problem", ioe);
+            try {
+                CBIRSession instance = CBIRSession.getInstance();
+                ClassifierManager classifierManager = instance.getClassifierManager(auxPath);
+                for (String name : classifierManager.list()) {
+                    modelList.addElement(name);
                 }
-            }
-            ClassifierManager classifierManager = instance.getClassifierManager();
-            for (String name : classifierManager.list()) {
-                modelList.addElement(name);
+            } catch (Exception ioe) {
+                SnapApp.getDefault().handleError("I/O Problem", ioe);
             }
         }
         classifierList.setModel(modelList);

@@ -19,7 +19,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.pfa.classifier.ClassifierManagerFactory;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
@@ -28,7 +27,10 @@ import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.ws.WebClassifierManagerClient;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,22 +89,27 @@ public class CBIRSession {
         return classifier;
     }
 
-    public boolean hasClassifierManager() {
-        return classifierManager != null;
-    }
-
-    public ClassifierManager getClassifierManager() {
-        return classifierManager;
-    }
-
-    public void createClassifierManager(final String responsibleURL) throws IOException {
-        if (responsibleURL.startsWith("http")) {
+    public synchronized ClassifierManager getClassifierManager(String uriString) throws URISyntaxException, IOException {
+        if (uriString.startsWith("http")) {
             // if HTTP URL: Web Service Client
-            classifierManager = new WebClassifierManagerClient(responsibleURL);
+            URI uri = new URI(uriString);
+            if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
+                classifierManager = new WebClassifierManagerClient(uri);
+            }
         } else {
             // if file URL
-            classifierManager = new LocalClassifierManager(responsibleURL);
+            URI uri;
+            if (uriString.startsWith("file://")) {
+                uri = new URI(uriString);
+            } else {
+                File file = new File(uriString);
+                uri = file.toURI();
+            }
+            if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
+                classifierManager = new LocalClassifierManager(uri);
+            }
         }
+        return classifierManager;
     }
 
     public void createClassifier(String classifierName, PFAApplicationDescriptor applicationDescriptor) throws IOException {
