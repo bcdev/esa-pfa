@@ -159,16 +159,18 @@ public class RealLocalClassifier implements RealClassifier {
     public void populateArchivePatches(final ProgressMonitor pm) {
         final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
 
-        int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
-        int numFeaturesDB = archivePatches[0].getFeatures().length;
-        if (numFeaturesDB != numFeaturesQuery) {
-            String msg = String.format("Incompatible Database.\n" +
-                                               "The patches in the database have %d features.\n" +
-                                               "The query patches have %d features.", numFeaturesDB, numFeaturesQuery);
-            throw new IllegalArgumentException(msg);
-        }
+        if(archivePatches.length > 0) {
+            int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
+            int numFeaturesDB = archivePatches[0].getFeatures().length;
+            if (numFeaturesDB != numFeaturesQuery) {
+                String msg = String.format("Incompatible Database.\n" +
+                                                   "The patches in the database have %d features.\n" +
+                                                   "The query patches have %d features.", numFeaturesDB, numFeaturesQuery);
+                throw new IllegalArgumentException(msg);
+            }
 
-        al.setRandomPatches(archivePatches, pm);
+            al.setRandomPatches(archivePatches, pm);
+        }
     }
 
     @Override
