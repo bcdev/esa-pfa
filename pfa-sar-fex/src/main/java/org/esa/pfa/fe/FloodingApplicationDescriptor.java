@@ -40,7 +40,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
                                                         "speckle_divergence.maxspeckle_divergence.percentOverPnt4" +
                                                         "speckle_divergence.largestConnectedBlob";
     private static final String DEFAULT_QL_NAME = "sigma0_ql.png";
-    private static final String DEFAULT_ALL_QUERY = "product:ENVI*";
+    private static final String DEFAULT_ALL_QUERY = "product:ASA*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
 
