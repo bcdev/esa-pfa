@@ -228,6 +228,8 @@ public class CBIRSession {
     }
 
     public Patch[] getQueryPatches() {
+        if(queryPatches == null)
+            return new Patch[] {};
         return queryPatches.toArray(new Patch[queryPatches.size()]);
     }
 
