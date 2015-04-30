@@ -104,14 +104,28 @@ public class PatchAccess {
         File fexDir = new File(patchRootDir, productName + ".fex");
         File fezFile = new File(patchRootDir, productName + ".fex.zip");
         if (fexDir.isDirectory()) {
-            File[] patchFiles = fexDir.listFiles((dir, name) -> name.matches("x0*" + patchX + "y0*" + patchY));
-            if (patchFiles != null && patchFiles.length == 1) {
-                return patchFiles[0];
+            File patchFile = new File(fexDir, getPatchName(patchX, patchY));
+            if(patchFile.exists()) {
+                return patchFile;
             }
         } else if (fezFile.isFile()) {
             // TODO read from zip
             throw new UnsupportedOperationException("Reading patch from zip not implemented!!");
         }
         throw new IOException("Could not load patch for: " + productName + "  x: " + patchX + "  y:" + patchY);
+    }
+
+    private String getPatchName(final int patchX, final int patchY) {
+        return "x"+ padZeros(patchX) + "y" + padZeros(patchY);
+    }
+
+    private String padZeros(final int val) {
+        String str = "";
+        if(val < 10) {
+            str = "00";
+        } else if(val < 100) {
+            str = "0";
+        }
+        return str + String.valueOf(val);
     }
 }

@@ -19,8 +19,7 @@ import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.ui.product.ProductSceneView;
-import org.esa.snap.visat.VisatApp;
-import org.esa.snap.visat.actions.InsertFigureInteractorInterceptor;
+import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.classifier.Classifier;
@@ -172,7 +171,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
             startTrainingBtn.setEnabled(hasQueryImages);
             editBtn.setEnabled(false); //todo //hasQueryImages);
         } catch (Exception e) {
-            VisatApp.getApp().handleUnknownException(e);
+            SnapApp.getDefault().handleError("Error updating controls", e);
         }
     }
 
@@ -195,7 +194,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 interactor.addListener(new InsertFigureInteractorInterceptor());
                 interactor.activate();
 
-                VisatApp.getApp().setActiveInteractor(interactor);
+                SnapApp.getDefault().getSelectedProductSceneView().getFigureEditor().setInteractor(interactor);
             } else if (command.equals("startTrainingBtn")) {
                 final Patch[] processedPatches = session.getQueryPatches();
 

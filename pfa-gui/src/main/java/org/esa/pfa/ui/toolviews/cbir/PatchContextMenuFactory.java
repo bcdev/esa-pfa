@@ -2,14 +2,6 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.ui.ModelessDialog;
-import org.esa.snap.framework.ui.product.ProductSceneView;
-import org.esa.snap.util.Debug;
-import org.esa.snap.util.ProductUtils;
-import org.esa.snap.visat.VisatApp;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
@@ -17,22 +9,31 @@ import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.ui.ModelessDialog;
+import org.esa.snap.framework.ui.product.ProductSceneView;
+import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.actions.view.OpenImageViewAction;
+import org.esa.snap.rcp.windows.ProductSceneViewTopComponent;
+import org.esa.snap.util.Debug;
+import org.esa.snap.util.ProductUtils;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import javax.swing.event.InternalFrameAdapter;
-import javax.swing.event.InternalFrameEvent;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * @author Norman Fomferra
@@ -232,11 +233,12 @@ public class PatchContextMenuFactory {
         if (product == null) {
             return;
         }
-        JInternalFrame frame = findFrameForProductSceneView(product);
+
+        ProductSceneViewTopComponent frame = findFrameForProductSceneView(product);
         // First check if we can reuse the currently selected view
         if (frame != null) {
-            frame.setSelected(true);
-            ProductSceneView sceneView = (ProductSceneView) frame.getContentPane();
+            frame.requestSelected();
+            ProductSceneView sceneView = frame.getView();
             Dimension patchDimension = getPatchDimension();
             if (sceneView != null && patchDimension != null) {
                 zoomToPatch(sceneView, product, patch, patchDimension);
@@ -254,7 +256,7 @@ public class PatchContextMenuFactory {
             if (patchDimension != null) {
                 zoomToPatchOnViewSelected(product, patch, patchDimension);
             }
-            VisatApp.getApp().openProductSceneView(band);
+            new OpenImageViewAction(band).openProductSceneView();
         }
     }
 
@@ -270,29 +272,8 @@ public class PatchContextMenuFactory {
     }
 
     private static void zoomToPatchOnViewSelected(final Product product, final Patch patch, final Dimension patchDimension) {
-        VisatApp visatApp = VisatApp.getApp();
-        final InternalFrameAdapter sceneViewTracker = new InternalFrameAdapter() {
 
-            @Override
-            public void internalFrameActivated(InternalFrameEvent e) {
-                JInternalFrame internalFrame = e.getInternalFrame();
-                ProductSceneView sceneView = getProductSceneView(internalFrame);
-                if (sceneView != null) {
-                    zoomToPatch(sceneView, product, patch, patchDimension);
-                    VisatApp.getApp().removeInternalFrameListener(this);
-                }
-            }
-
-        };
-        visatApp.addInternalFrameListener(sceneViewTracker);
-        Timer timer = new Timer(5000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                VisatApp.getApp().removeInternalFrameListener(sceneViewTracker);
-            }
-        });
-        timer.setRepeats(false);
-        timer.start();
+        SnapApp.getDefault().getSelectionSupport(ProductSceneView.class).addHandler((oldValue, newValue) -> zoomToPatch(newValue, product, patch, patchDimension));
     }
 
     private static void zoomToPatch(ProductSceneView sceneView, Product product, Patch patch, Dimension patchDimension) {
@@ -311,13 +292,20 @@ public class PatchContextMenuFactory {
         return internalFrame != null && internalFrame.getContentPane() instanceof ProductSceneView ? (ProductSceneView) internalFrame.getContentPane() : null;
     }
 
+    public static Product getOpenProduct(final File productFile) {
+
+        return Arrays.stream(SnapApp.getDefault().getProductManager().getProducts())
+                .filter(product -> product.getFileLocation().equals(productFile))
+                .findFirst().get();
+    }
+
     public static Product openProduct(final File productFile) throws Exception {
-        final VisatApp visat = VisatApp.getApp();
-        Product product = visat.getOpenProduct(productFile);
-        if (product != null) {
+
+        Product product = getOpenProduct(productFile);
+            if (product != null) {
             return product;
         }
-        ProgressMonitorSwingWorker<Product, Void> worker = new ProgressMonitorSwingWorker<Product, Void>(VisatApp.getApp().getApplicationWindow(), "Navigate to patch") {
+        ProgressMonitorSwingWorker<Product, Void> worker = new ProgressMonitorSwingWorker<Product, Void>(SnapApp.getDefault().getMainFrame(), "Navigate to patch") {
             @Override
             protected Product doInBackground(ProgressMonitor progressMonitor) throws Exception {
                 return ProductIO.readProduct(productFile);
@@ -326,10 +314,10 @@ public class PatchContextMenuFactory {
             @Override
             protected void done() {
                 try {
-                    visat.getProductManager().addProduct(get());
+                    SnapApp.getDefault().getProductManager().addProduct(get());
                 } catch (InterruptedException | ExecutionException e) {
                     Debug.trace(e);
-                    VisatApp.getApp().handleError("Failed to open product.", e);
+                    SnapDialogs.showError("Failed to open product.", e.getMessage());
                 }
             }
         };
@@ -375,28 +363,25 @@ public class PatchContextMenuFactory {
     }
 
 
-    public static JInternalFrame findFrameForProductSceneView(Product product) {
-        final JInternalFrame[] frames = VisatApp.getApp().getAllInternalFrames();
-        JInternalFrame selectedView = null;
-        JInternalFrame multiBandView = null;
-        JInternalFrame anyView = null;
-        for (final JInternalFrame frame : frames) {
-            final Container contentPane = frame.getContentPane();
-            if (contentPane instanceof ProductSceneView) {
-                final ProductSceneView view = (ProductSceneView) contentPane;
-                if (view.getProduct() == product) {
-                    if (frame.isSelected()) {
-                        selectedView = frame;
-                    }
-                    if (view.getNumRasters() > 1) {
-                        multiBandView = frame;
-                    }
-                    anyView = frame;
+    public static ProductSceneViewTopComponent findFrameForProductSceneView(Product product) {
+        ProductSceneViewTopComponent selectedView = null;
+        ProductSceneViewTopComponent multiBandView = null;
+        ProductSceneViewTopComponent anyView = null;
+        List<ProductSceneViewTopComponent> viewTopComponentList = WindowUtilities.getOpened(ProductSceneViewTopComponent.class).collect(Collectors.toList());
+
+        for(ProductSceneViewTopComponent productSceneViewTopComponent : viewTopComponentList) {
+            final ProductSceneView view = productSceneViewTopComponent.getView();
+
+            if (view.getProduct() == product) {
+                if (productSceneViewTopComponent.isSelected()) {
+                    selectedView = productSceneViewTopComponent;
                 }
+                if (view.getNumRasters() > 1) {
+                    multiBandView = productSceneViewTopComponent;
+                }
+                anyView = productSceneViewTopComponent;
             }
         }
         return selectedView != null ? selectedView : multiBandView != null ? multiBandView : anyView;
     }
-
-
 }
