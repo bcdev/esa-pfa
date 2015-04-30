@@ -20,13 +20,13 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.snap.framework.ui.GridBagUtils;
-import org.esa.snap.framework.ui.ModalDialog;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.snap.framework.ui.GridBagUtils;
+import org.esa.snap.framework.ui.ModalDialog;
 import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
@@ -35,6 +35,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -44,7 +45,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
@@ -335,6 +335,22 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         return panel;
     }
 
+    public static void showWindow(final Class windowClass, final String windowID) {
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                boolean windowOpen = WindowUtilities.getOpened(windowClass).count() > 0;
+                if(windowOpen) {
+                    WindowUtilities.getOpened(CBIRQueryToolView.class).findFirst().get().setVisible(true);
+                } else {
+                    final TopComponent window = WindowManager.getDefault().findTopComponent(windowID);
+                    window.open();
+                    window.requestActive();
+                }
+            }
+        });
+    }
+
     private JPanel createSideButtonPanel() {
         final JPanel panel = new JPanel(new GridLayout(-1, 1, 2, 2));
         final Window parentWindow = SwingUtilities.getWindowAncestor(this);
@@ -342,7 +358,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         queryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    WindowUtilities.getOpened(CBIRQueryToolView.class).findFirst().get().setVisible(true);
+                    showWindow(CBIRQueryToolView.class, "CBIRQueryToolView");
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error calling Query", t);
                 }

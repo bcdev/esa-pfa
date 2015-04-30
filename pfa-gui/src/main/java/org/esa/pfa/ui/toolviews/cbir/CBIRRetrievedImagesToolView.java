@@ -17,13 +17,12 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.classifier.Classifier;
-import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.windows.ToolTopComponent;
@@ -174,7 +173,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 };
                 worker.executeWithBlocking();
                 if (worker.get()) {
-                    WindowUtilities.getOpened(CBIRLabelingToolView.class).findFirst().get().setVisible(true);
+                    CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
                 }
             }
         } catch (Exception e) {

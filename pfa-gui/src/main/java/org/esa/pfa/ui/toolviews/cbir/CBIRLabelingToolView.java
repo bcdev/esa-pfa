@@ -17,10 +17,9 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.classifier.Classifier;
-import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
@@ -215,7 +214,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 };
                 worker.executeWithBlocking();
                 if (worker.get()) {
-                    WindowUtilities.getOpened(CBIRRetrievedImagesToolView.class).findFirst().get().setVisible(true);
+                    CBIRControlCentreToolView.showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
                 }
             }
         } catch (Exception e) {

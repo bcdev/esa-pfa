@@ -15,16 +15,18 @@
  */
 package org.esa.pfa.ui.toolviews.cbir;
 
+import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.ui.product.ProductSceneView;
-import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -210,7 +212,8 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 }
                 final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
 
-            /*    ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(getControl(), "Getting images to label") {
+                final Window parentWindow = SwingUtilities.getWindowAncestor(this);
+                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
@@ -227,8 +230,8 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 };
                 worker.executeWithBlocking();
                 if (worker.get()) {
-                    getContext().getPage().showToolView(CBIRLabelingToolView.ID);
-                }*/
+                    CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+                }
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);
