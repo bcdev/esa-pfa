@@ -14,23 +14,25 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.pfa.classifier;
+package org.esa.pfa.activelearning;
 
-import java.io.IOException;
-import java.net.URI;
+import libsvm.svm_model;
 
 /**
- * CRUD interface for the Classifier
+ * Holds a reference to the svm_model
  */
-public interface ClassifierManager {
+public class SvmModelReference {
+    private svm_model svmModel;
 
-    URI getURI();
+    public SvmModelReference() {
+        this.svmModel = new svm_model();
+    }
 
-    String[] list();
+    public svm_model getSvmModel() {
+        return svmModel;
+    }
 
-    ClassifierDelegate create(String classifierName, String applicationName) throws IOException;
-
-    void delete(String classifierName) throws IOException;
-
-    ClassifierDelegate get(String classifierName) throws IOException;
+    public void setSvmModel(svm_model svmModel) {
+        this.svmModel = svmModel;
+    }
 }

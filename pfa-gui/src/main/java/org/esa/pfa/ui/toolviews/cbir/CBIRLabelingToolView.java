@@ -17,7 +17,7 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
@@ -165,8 +165,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 iterationsLabel.setText("Training iterations: " + session.getNumIterations());
 
                 if (irrelImages.length > 0 || relImages.length > 0) {
-                    final Patch patch = irrelImages.length > 0 ? irrelImages[0] : relImages[0];
-                    final String[] bandNames = session.getAvailableQuickLooks(patch);
+                    final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
                     topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
                 }
@@ -242,7 +241,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {

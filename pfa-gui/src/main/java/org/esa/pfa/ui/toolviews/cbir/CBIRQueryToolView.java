@@ -19,7 +19,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
@@ -163,7 +163,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 hasQueryImages = queryPatches.length > 0;
 
                 if (hasQueryImages) {
-                    final String[] bandNames = session.getAvailableQuickLooks(queryPatches[0]);
+                    final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
                     topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
                 }
@@ -203,7 +203,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 //only add patches with features
                 final List<Patch> queryPatches = new ArrayList<>(processedPatches.length);
                 for (Patch patch : processedPatches) {
-                    if (patch.getFeatures().length > 0 && patch.getLabel() == Patch.Label.RELEVANT) {
+                    if (patch.getFeatureValues().length > 0 && patch.getLabel() == Patch.Label.RELEVANT) {
                         queryPatches.add(patch);
                     }
                 }
@@ -280,7 +280,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 e.printStackTrace();
                 SnapApp.getDefault().handleError("Failed to extract patch", e);
             }
-            if (patch != null && patch.getFeatures().length > 0) {
+            if (patch != null && patch.getFeatureValues().length > 0) {
                 session.addQueryPatch(patch);
                 drawer.update(session.getQueryPatches());
                 updateControls();
@@ -315,7 +315,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {

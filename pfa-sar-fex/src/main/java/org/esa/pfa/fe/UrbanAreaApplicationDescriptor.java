@@ -113,6 +113,11 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
     }
 
     @Override
+    public String[] getQuicklookFileNames() {
+        return new String[]{"sigma0_ql.png", "speckle_divergence_ql.png"};
+    }
+
+    @Override
     public Set<String> getDefaultFeatureSet() {
         if (defaultFeatureSet == null) {
             String property = properties.getProperty("pfa.urbanarea.featureSet", DEFAULT_FEATURE_SET);

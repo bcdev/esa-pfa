@@ -17,7 +17,7 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
@@ -137,7 +137,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 float pct = accuracy / (float) retrievedPatches.length * 100;
                 accuracyLabel.setText("Accuracy: " + accuracy + '/' + retrievedPatches.length + " (" + (int) pct + "%)");
 
-                topOptionsPanel.populateQuicklookList(session.getAvailableQuickLooks(retrievedPatches[0]),
+                topOptionsPanel.populateQuicklookList(session.getApplicationDescriptor().getQuicklookFileNames(),
                         session.getApplicationDescriptor().getDefaultQuicklookFileName());
             }
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
         switch (msg) {
             case NewClassifier:
                 retrievedPatches = new Patch[0];

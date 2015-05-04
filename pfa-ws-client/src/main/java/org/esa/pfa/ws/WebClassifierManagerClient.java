@@ -16,7 +16,7 @@
 
 package org.esa.pfa.ws;
 
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 
 import javax.ws.rs.client.Client;
@@ -53,7 +53,7 @@ public class WebClassifierManagerClient implements ClassifierManager {
     }
 
     @Override
-    public Classifier create(String classifierName, String applicationName) throws IOException {
+    public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
 //        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
 //        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
 //        RealWebClassifier realClassifier = new RealWebClassifier(classifierName, applicationName);
@@ -68,7 +68,7 @@ public class WebClassifierManagerClient implements ClassifierManager {
     }
 
     @Override
-    public Classifier get(String classifierName) throws IOException {
+    public ClassifierDelegate get(String classifierName) throws IOException {
         Response response = target.path("getClassifier").queryParam("classifierName", classifierName).request().get();
         String readEntity = response.readEntity(String.class);
         System.out.println("get: readEntity = " + readEntity);
@@ -86,7 +86,7 @@ public class WebClassifierManagerClient implements ClassifierManager {
         WebClassifierManagerClient client = new WebClassifierManagerClient(uri);
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
-        Classifier classifier = client.get(list[0]);
+        ClassifierDelegate classifier = client.get(list[0]);
         System.out.println("classifier = " + classifier);
     }
 }

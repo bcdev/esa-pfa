@@ -18,7 +18,6 @@ package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
-import org.esa.pfa.activelearning.ClassifierPersitable;
 import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -41,10 +40,8 @@ import java.util.List;
 /**
  * A local implementation
  */
-public class RealLocalClassifier implements RealClassifier {
+public class LocalClassifier implements Classifier {
 
-    private static final int NUM_TRAINING_IMAGES_DEFAULT = 12;
-    private static final int NUM_RETRIEVED_IMAGES_DEFAULT = 50;
     private static final int NUM_HITS_MAX = 500;
 
     private final Path classifierPath;
@@ -53,13 +50,13 @@ public class RealLocalClassifier implements RealClassifier {
     private final PatchQuery db;
     private final PatchAccess patchAccess;
 
-    private int numTrainingImages = NUM_TRAINING_IMAGES_DEFAULT;
-    private int numRetrievedImages = NUM_RETRIEVED_IMAGES_DEFAULT;
+    private final ClassifierModel model;
 
-    public RealLocalClassifier(Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
+    public LocalClassifier(ClassifierModel model, Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
+        this.model = model;
         this.classifierPath = classifierPath;
         this.applicationDescriptor = applicationDescriptor;
-        this.al = new ActiveLearning();
+        this.al = new ActiveLearning(model);
         if (Files.exists(dbPath.resolve("ds-descriptor.xml"))) {
             db = new PatchQuery(dbPath.toFile(), applicationDescriptor.getDefaultFeatureSet());
             patchAccess = new PatchAccess(patchPath.toFile(), db.getEffectiveFeatureTypes());
@@ -72,79 +69,58 @@ public class RealLocalClassifier implements RealClassifier {
 
     @Override
     public int getNumTrainingImages() {
-        return numTrainingImages;
+        return model.getNumTrainingImages();
     }
 
     @Override
     public void setNumTrainingImages(int numTrainingImages) {
-        this.numTrainingImages = numTrainingImages;
+        model.setNumTrainingImages(numTrainingImages);
     }
 
     @Override
     public int getNumRetrievedImages() {
-        return numRetrievedImages;
+        return model.getNumRetrievedImages();
     }
 
     @Override
     public void setNumRetrievedImages(int numRetrievedImages) {
-        this.numRetrievedImages = numRetrievedImages;
+        model.setNumRetrievedImages(numRetrievedImages);
     }
 
     @Override
     public int getNumIterations() {
-        return al.getNumIterations();
+        return model.getNumIterations();
     }
 
     @Override
     public void saveClassifier() throws IOException {
-        final ClassifierPersitable persitable = new ClassifierPersitable(applicationDescriptor.getName(), numTrainingImages, numRetrievedImages, al);
-        persitable.write(classifierPath.toFile());
+        model.toFile(classifierPath.toFile());
     }
 
 
-    static Classifier loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
+    static ClassifierDelegate loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
-        final ClassifierPersitable persitable = ClassifierPersitable.read(classifierPath.toFile());
-        String applicationName = persitable.getApplicationName();
-        PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(applicationName);
+        ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
+        PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(classifierModel.getApplicationName());
 
 
-        RealLocalClassifier realLocalClassifier = new RealLocalClassifier(classifierPath, applicationDescriptor, patchPath, dbPath);
-        realLocalClassifier.numTrainingImages = persitable.getNumTrainingImages();
-        realLocalClassifier.numRetrievedImages = persitable.getNumRetrievedImages();
+        LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        realLocalClassifier.al.setTrainingData(ProgressMonitor.NULL);
 
-        // TODO this method re-trains the svm
-        realLocalClassifier.initActiveLearningAfterLoading(persitable, ProgressMonitor.NULL); // TODO pm
-
-        return new Classifier(classifierName, applicationDescriptor, realLocalClassifier);
+        return new ClassifierDelegate(classifierName, applicationDescriptor, realLocalClassifier);
     }
 
-    private void initActiveLearningAfterLoading(ClassifierPersitable storedClassifier, ProgressMonitor pm) throws IOException {
-        al.setModel(storedClassifier.getModel());
-
-        final Patch[] queryPatches = loadPatches(storedClassifier.getQueryPatchInfo());
-        if (queryPatches != null && queryPatches.length > 0) {
-            al.setQueryPatches(queryPatches);
-        }
-
-        final Patch[] patches = loadPatches(storedClassifier.getTrainingPatchInfo());
-        if (patches != null && patches.length > 0) {
-            al.setTrainingData(patches, storedClassifier.getNumIterations(), pm);
-        }
+    @Override
+    public void addQueryPatch(Patch patch) {
+        model.getQueryData().add(patch);
     }
 
-    private Patch[] loadPatches(final ClassifierPersitable.PatchInfo[] patchInfo) throws IOException {
-        if (patchInfo != null && patchInfo.length > 0) {
-            final Patch[] patches = new Patch[patchInfo.length];
-            int i = 0;
-            for (ClassifierPersitable.PatchInfo info : patchInfo) {
-                patches[i++] = patchAccess.loadPatch(info.parentProductName, info.patchX, info.patchY, info.label);
-            }
-            return patches;
-        }
-        return null;
+    @Override
+    public Patch[] getQueryPatches() {
+        List<Patch> queryData = model.getQueryData();
+        return queryData.toArray(new Patch[queryData.size()]);
     }
 
     @Override
@@ -160,8 +136,8 @@ public class RealLocalClassifier implements RealClassifier {
         final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
 
         if(archivePatches.length > 0) {
-            int numFeaturesQuery = al.getQueryPatches()[0].getFeatures().length;
-            int numFeaturesDB = archivePatches[0].getFeatures().length;
+            int numFeaturesQuery = model.getQueryData().get(0).getFeatureValues().length;
+            int numFeaturesDB = archivePatches[0].getFeatureValues().length;
             if (numFeaturesDB != numFeaturesQuery) {
                 String msg = String.format("Incompatible Database.\n" +
                                                    "The patches in the database have %d features.\n" +
@@ -175,7 +151,7 @@ public class RealLocalClassifier implements RealClassifier {
 
     @Override
     public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
-        return al.getMostAmbiguousPatches(numTrainingImages, pm);
+        return al.getMostAmbiguousPatches(model.getNumTrainingImages(), pm);
     }
 
     @Override
@@ -186,10 +162,10 @@ public class RealLocalClassifier implements RealClassifier {
 
     @Override
     public Patch[] classify() {
-        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), numRetrievedImages * 10);
+        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 10);
         al.classify(archivePatches);
-        final List<Patch> relavantImages = new ArrayList<>(numRetrievedImages);
-        for (int i = 0; i < archivePatches.length && relavantImages.size() < numRetrievedImages; i++) {
+        final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
+        for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
             if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
                 relavantImages.add(archivePatches[i]);
             }
@@ -200,11 +176,6 @@ public class RealLocalClassifier implements RealClassifier {
     @Override
     public FeatureType[] getEffectiveFeatureTypes() {
         return db.getEffectiveFeatureTypes();
-    }
-
-    @Override
-    public String[] getAvailableQuickLooks(Patch patch) throws IOException {
-        return patchAccess.getAvailableQuickLooks(patch);
     }
 
     @Override

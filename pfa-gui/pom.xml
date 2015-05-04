@@ -28,11 +28,17 @@
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-ws-client</artifactId>
         </dependency>
-        <!--dependency>
-            <groupId>org.esa.pfa</groupId>
-            <artifactId>pfa-algalblooms</artifactId>
-            <version>0.2-SNAPSHOT</version>
-        </dependency-->
+
+        <!--<dependency>-->
+            <!--<groupId>org.esa.pfa</groupId>-->
+            <!--<artifactId>pfa-algalblooms</artifactId>-->
+            <!--<version>${pfa.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.esa.snap</groupId>-->
+            <!--<artifactId>snap-envisat-reader</artifactId>-->
+        <!--</dependency>-->
+
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>ceres-core</artifactId>

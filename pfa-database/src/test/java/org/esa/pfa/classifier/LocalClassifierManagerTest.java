@@ -76,7 +76,7 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void createClassifier() throws Exception {
-        Classifier classifier = localClassifierManager.create("cName", "testAppDesc");
+        ClassifierDelegate classifier = localClassifierManager.create("cName", "testAppDesc");
         assertNotNull(classifier);
         assertEquals("cName", classifier.getName());
         assertSame(testPFAApplicationDescriptor, classifier.getApplicationDescriptor());
@@ -108,8 +108,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void getExisting() throws Exception {
-        Classifier classifier1 = localClassifierManager.create("cName", "testAppDesc");
-        Classifier classifier2 = localClassifierManager.get("cName");
+        ClassifierDelegate classifier1 = localClassifierManager.create("cName", "testAppDesc");
+        ClassifierDelegate classifier2 = localClassifierManager.get("cName");
 
         assertNotNull(classifier1);
         assertNotNull(classifier2);

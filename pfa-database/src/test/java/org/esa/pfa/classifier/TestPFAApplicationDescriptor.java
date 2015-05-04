@@ -70,6 +70,9 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     }
 
     @Override
+    public String[] getQuicklookFileNames() {return new String[0];}
+
+    @Override
     public Set<String> getDefaultFeatureSet() {
         return null;
     }

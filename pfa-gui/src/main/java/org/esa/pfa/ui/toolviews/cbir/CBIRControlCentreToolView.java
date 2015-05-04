@@ -20,7 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -164,7 +164,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (!e.getValueIsAdjusting()) {
                         String classifierName = classifierList.getSelectedValue();
                         if (classifierName != null) {
-                            Classifier classifier = session.getClassifier();
+                            ClassifierDelegate classifier = session.getClassifier();
                             if (classifier == null || !classifierName.equals(classifier.getName())) {
                                 session.loadClassifier(classifierName);
                             }
@@ -369,6 +369,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 if (!session.hasClassifier()) {
                     return;
                 }
+                System.out.println("Classifier present !!!");
                 try {
                     ProgressMonitorSwingWorker<Boolean, Void> worker =
                             new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
@@ -389,7 +390,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        //todo WindowUtilities.getOpened(CBIRLabelingToolView.class).findFirst().get().setVisible(true);
+                        showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
                     }
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error getting images", t);
@@ -421,7 +422,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        //todo getContext().getPage().showToolView(CBIRRetrievedImagesToolView.ID);
+                        showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
                     }
 
                 } catch (Throwable t) {
@@ -545,7 +546,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
         switch (msg) {
             case NewClassifier:
                 final String name = classifier.getName();

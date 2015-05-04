@@ -17,7 +17,6 @@ package org.esa.pfa.activelearning;
 
 import com.bc.ceres.core.ProgressMonitor;
 import libsvm.*;
-import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 
 import java.util.List;
@@ -46,7 +45,7 @@ public class SVM {
 
     private svm_problem problem = new svm_problem();
     private svm_parameter modelParameters = new svm_parameter();
-    private svm_model model = new svm_model();
+    private SvmModelReference modelReference;
 
     private static final boolean debug = false;
 
@@ -61,27 +60,20 @@ public class SVM {
         }
     }
 
-	public SVM(final int numFolds, final double lower, final double upper) {
+	public SVM(final int numFolds, final double lower, final double upper, final SvmModelReference modelReference) {
         this.numFolds = numFolds;
         this.lower = lower;
         this.upper = upper;
+        this.modelReference = modelReference;
 	}
-
-    public void setModel(final svm_model model) {
-        this.model = model;
-    }
-
-    public svm_model getModel() {
-        return model;
-    }
 
     /**
 	 * Train SVM model with given training data.
-     * @param trainingSet The training data set.
+     * @param trainingPatches The training patches.
 	 */
-	public void train(final List<Patch> trainingSet, final ProgressMonitor pm) {
+	public void train(final List<Patch> trainingPatches, final ProgressMonitor pm) {
 
-        setProblem(trainingSet);
+        setProblem(trainingPatches);
 
         scaleData();
 
@@ -115,52 +107,30 @@ public class SVM {
 
     /**
      * Classify given test data using the trained SVM model.
-     * @param testData A sample to classify.
+     * @param featureValues A samples values to be classified.
      * @param decValues Decision values.
      * @return The predicted class label.
      */
-    public double classify(Patch testData, double[] decValues) {
-
+    public double classify(double[] featureValues, double[] decValues) {
         svm_node[] x = new svm_node[numFeatures];
-        final Feature[] features = testData.getFeatures();
         for (int i = 0; i < numFeatures; i++) {
             x[i] = new svm_node();
             x[i].index = i + 1;
-            x[i].value = scale(i, Double.valueOf(features[i].getValue().toString()));
+            x[i].value = scale(i, featureValues[i]);
         }
 
         //return svm.svm_predict(model, x);
-        return svm.svm_predict_values(model, x, decValues);
-    }
-
-    /**
-     * Save SVM model to file.
-     * @param fileName The file name string.
-     * @throws Exception The exception.
-     */
-    public void saveSVMModel(String fileName) throws Exception {
-
-        svm.svm_save_model(fileName, model);
-    }
-
-    /**
-     * Load the SVM model saved in file.
-     * @param fileName The file name string.
-     * @throws Exception The exception.
-     */
-    public void loadSVMModel(String fileName) throws Exception {
-
-        model = svm.svm_load_model(fileName);
+        return svm.svm_predict_values(modelReference.getSvmModel(), x, decValues);
     }
 
     /**
      * Define SVM problem.
-     * @param dataSet The training data set.
+     * @param trainingPatches The training data set.
      */
-	private void setProblem(List<Patch> dataSet) {
+	private void setProblem(List<Patch> trainingPatches) {
 
-		numSamples = dataSet.size();
-		numFeatures = dataSet.get(0).getFeatures().length;
+		numSamples = trainingPatches.size();
+		numFeatures = trainingPatches.get(0).getFeatureValues().length;
 
         featureMin = new double[numFeatures];
         featureMax = new double[numFeatures];
@@ -179,11 +149,12 @@ public class SVM {
         }
 
 		for (int i = 0; i < numSamples; i++) {
-			problem.y[i] = dataSet.get(i).getLabel().getValue();
-            final Feature[] features = dataSet.get(i).getFeatures();
-			for (int j = 0; j < numFeatures; j++) {
+            Patch patch = trainingPatches.get(i);
+            problem.y[i] = patch.getLabel().getValue();
+            double[] featureValues = patch.getFeatureValues();
+            for (int j = 0; j < numFeatures; j++) {
 				problem.x[i][j].index = j+1;
-				problem.x[i][j].value = Double.valueOf(features[j].getValue().toString());
+				problem.x[i][j].value = featureValues[j];
 				if (problem.x[i][j].value < featureMin[j]) {
 					featureMin[j] = problem.x[i][j].value;
 				}
@@ -305,6 +276,6 @@ public class SVM {
      * Train SVM model.
      */
     private void trainSVMModel() {
-            model = svm.svm_train(problem, modelParameters);
+        modelReference.setSvmModel(svm.svm_train(problem, modelParameters));
     }
 }

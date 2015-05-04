@@ -17,7 +17,7 @@ package org.esa.pfa.search;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
@@ -59,12 +59,11 @@ public class CBIRSession {
 
     private final List<Listener> listenerList = new ArrayList<>(1);
 
-    private Classifier classifier;
+    private ClassifierDelegate classifier;
     private ClassifierManager classifierManager;
 
     private String quicklookBandName1;
     private String quicklookBandName2;
-    private List<Patch> queryPatches;
 
     public enum ImageMode { SINGLE, DUAL, FADE }
     private ImageMode imageMode = ImageMode.SINGLE;
@@ -85,7 +84,7 @@ public class CBIRSession {
         return classifier != null;
     }
 
-    public Classifier getClassifier() {
+    public ClassifierDelegate getClassifier() {
         return classifier;
     }
 
@@ -99,7 +98,7 @@ public class CBIRSession {
         } else {
             // if file URL
             URI uri;
-            if (uriString.startsWith("file://")) {
+            if (uriString.startsWith("file:")) {
                 uri = new URI(uriString);
             } else {
                 File file = new File(uriString);
@@ -117,7 +116,6 @@ public class CBIRSession {
             quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
             quicklookBandName2 = quicklookBandName1;
             classifier = classifierManager.create(classifierName, applicationDescriptor.getName());
-            queryPatches = new ArrayList<>();
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);
         } catch (IOException e) {
@@ -147,7 +145,7 @@ public class CBIRSession {
 
     public void deleteClassifier() throws Exception {
         try {
-            Classifier deletedClassifier = classifier;
+            ClassifierDelegate deletedClassifier = classifier;
             if (classifierManager != null) {
                 classifierManager.delete(classifier.getName());
             }
@@ -219,18 +217,12 @@ public class CBIRSession {
         this.quicklookBandName2 = quicklookBandName;
     }
 
-    public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
-        return classifier.getAvailableQuickLooks(patch);
-    }
-
     public void addQueryPatch(final Patch patch) {
-        queryPatches.add(patch);
+        classifier.addQueryPatch(patch);
     }
 
     public Patch[] getQueryPatches() {
-        if(queryPatches == null)
-            return new Patch[] {};
-        return queryPatches.toArray(new Patch[queryPatches.size()]);
+        return classifier.getQueryPatches();
     }
 
     public void setQueryImages(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
@@ -320,7 +312,7 @@ public class CBIRSession {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 
-    private void fireNotification(final Notification msg, final Classifier classifier) {
+    private void fireNotification(final Notification msg, final ClassifierDelegate classifier) {
         for (Listener listener : listenerList) {
             listener.notifySessionMsg(msg, classifier);
         }
@@ -333,6 +325,6 @@ public class CBIRSession {
     }
 
     public interface Listener {
-        void notifySessionMsg(final Notification msg, Classifier classifier);
+        void notifySessionMsg(final Notification msg, ClassifierDelegate classifier);
     }
 }

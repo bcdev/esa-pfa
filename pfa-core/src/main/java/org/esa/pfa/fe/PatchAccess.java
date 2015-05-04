@@ -53,6 +53,7 @@ public class PatchAccess {
         patch.readFeatureFile(featureFile, effectiveFeatureTypes);
     }
 
+    @Deprecated
     public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
         File patchFile = findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
         final File[] imageFiles = patchFile.listFiles(new FileFilter() {
@@ -104,9 +105,9 @@ public class PatchAccess {
         File fexDir = new File(patchRootDir, productName + ".fex");
         File fezFile = new File(patchRootDir, productName + ".fex.zip");
         if (fexDir.isDirectory()) {
-            File patchFile = new File(fexDir, getPatchName(patchX, patchY));
-            if(patchFile.exists()) {
-                return patchFile;
+            File[] patchFiles = fexDir.listFiles((dir, name) -> name.matches("x0*" + patchX + "y0*" + patchY));
+            if (patchFiles != null && patchFiles.length == 1) {
+                return patchFiles[0];
             }
         } else if (fezFile.isFile()) {
             // TODO read from zip

@@ -19,7 +19,8 @@ import java.util.List;
  */
 public final class Patch {
 
-    public enum Label {NONE(-1), RELEVANT(1), IRRELEVANT(0);
+    public enum Label {
+        NONE(-1), RELEVANT(1), IRRELEVANT(0);
 
         private final int value;
 
@@ -31,9 +32,11 @@ public final class Patch {
         public int getValue() {
             return value;
         }
+
     }
 
     private static int uidCnt = 0;
+
     private final int uid;
 
     private final String parentProductName;
@@ -42,20 +45,25 @@ public final class Patch {
     private final Rectangle patchRegion;
     private final Product patchProduct;
 
-    private final List<Feature> featureList = new ArrayList<>(10);
-    private final Map<String, BufferedImage> imageMap = new HashMap<>();
-    private final List<PatchListener> listenerList = new ArrayList<>(1);
+    private List<Feature> featureList = new ArrayList<>(10);
+    private Map<String, BufferedImage> imageMap = new HashMap<>();
+    private List<PatchListener> listenerList = new ArrayList<>(1);
 
     private Label label;
     private double distance;   // functional distance of a patch to the hyperplane in SVM
+    private double[] featureValues;
+
+    public Patch(String parentProductName, int patchX, int patchY) {
+        this(parentProductName, patchX, patchY, null, null);
+    }
 
     public Patch(String parentProductName, int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
         this.parentProductName = parentProductName;
-        this.uid = createUniqueID();
         this.patchX = patchX;
         this.patchY = patchY;
         this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
+        this.uid = createUniqueID();
         this.label = Label.NONE;
     }
 
@@ -91,10 +99,19 @@ public final class Patch {
         return patchProduct;
     }
 
-    public void setImage(final String name, final BufferedImage img) { imageMap.put(name, img); }
+    public void setImage(final String name, final BufferedImage img) {
+        imageMap.put(name, img);
+    }
 
     public BufferedImage getImage(final String name) {
         return imageMap.get(name);
+    }
+
+    public synchronized double[] getFeatureValues() {
+        if (featureValues == null) {
+            featureValues = getFeatureValues(featureList);
+        }
+        return featureValues;
     }
 
     public void clearFeatures() {
@@ -105,7 +122,7 @@ public final class Patch {
         featureList.add(fea);
     }
 
-    public void setFeatures(final Feature ... features) {
+    public void setFeatures(final Feature... features) {
         featureList.clear();
         Collections.addAll(featureList, features);
     }
@@ -131,9 +148,15 @@ public final class Patch {
         return distance;
     }
 
+    private Patch readResolve() {
+        featureList = new ArrayList<>(10);
+        imageMap = new HashMap<>();
+        listenerList = new ArrayList<>(1);
+        return this;
+    }
 
     private void updateState() {
-        for(PatchListener listener : listenerList) {
+        for (PatchListener listener : listenerList) {
             listener.notifyStateChanged(this);
         }
     }
@@ -172,7 +195,7 @@ public final class Patch {
 
     private static Feature createFeature(FeatureType feaType, String value) {
         final Class<?> valueType = feaType.getValueType();
-        if(value.equals("NaN")) {
+        if (value.equals("NaN")) {
             value = "0";
         }
 
@@ -190,5 +213,18 @@ public final class Patch {
             return new Feature(feaType, value);
         }
         return null;
+    }
+
+    public static double[] getFeatureValues(final List<Feature> features) {
+        double[] values = new double[features.size()];
+        for (int i = 0; i < features.size(); i++) {
+            Object value = features.get(i).getValue();
+            if (value instanceof Number) {
+                values[i] = ((Number) value).doubleValue();
+            } else {
+                throw new IllegalArgumentException("feature is not numeric.");
+            }
+        }
+        return values;
     }
 }

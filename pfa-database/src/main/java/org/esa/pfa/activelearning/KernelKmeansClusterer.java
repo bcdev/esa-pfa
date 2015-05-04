@@ -16,7 +16,6 @@
 package org.esa.pfa.activelearning;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class KernelKmeansClusterer {
     private int maxIterations = 0;
     private int numClusters = 0;
     private int numSamples = 0;
-    private List<Patch> samples = new ArrayList<Patch>();
+    private List<Patch> samples = new ArrayList<>();
     private Cluster[] clusters = null;
     private SVM svmClassifier = null;
     private boolean debug = false;
@@ -54,7 +53,6 @@ public class KernelKmeansClusterer {
      * @param uncertainSamples List of m most uncertain samples.
      */
     public void setData(final List<Patch> uncertainSamples) {
-
         this.numSamples = uncertainSamples.size();
         this.samples = uncertainSamples;
     }
@@ -109,7 +107,7 @@ public class KernelKmeansClusterer {
      */
     private void setInitialClusterCenters() {
 
-        ArrayList<Integer> randomNumbers = new ArrayList<Integer>();
+        ArrayList<Integer> randomNumbers = new ArrayList<>();
         int k = 0;
         while (k < numClusters) {
             final int idx = (int)(Math.random()*numSamples);
@@ -190,21 +188,10 @@ public class KernelKmeansClusterer {
      */
     private double computeDistance(final int sampleIdx1, final int sampleIdx2) {
 
-        final double[] x1 = getFeatures(samples.get(sampleIdx1));
-        final double[] x2 = getFeatures(samples.get(sampleIdx2));
+        final double[] x1 = samples.get(sampleIdx1).getFeatureValues();
+        final double[] x2 = samples.get(sampleIdx2).getFeatureValues();
 
         return svmClassifier.kernel(x1,x1) - 2*svmClassifier.kernel(x1,x2) + svmClassifier.kernel(x2,x2);
-    }
-
-    private static double[] getFeatures(final Patch patch) {
-
-        final Feature[] features = patch.getFeatures();
-        double[] featureArray = new double[features.length];
-        int idx = 0;
-        for (Feature feature:features) {
-            featureArray[idx++] = Double.parseDouble(feature.getValue().toString());
-        }
-        return featureArray;
     }
 
     /**
@@ -257,9 +244,9 @@ public class KernelKmeansClusterer {
 
         double sum2 = 0.0;
         for (Integer memberSampleIndice : memberSampleIndices) {
-            final double[] xi = getFeatures(samples.get(memberSampleIndice));
+            final double[] xi = samples.get(memberSampleIndice).getFeatureValues();
             for (Integer memberSampleIndice1 : memberSampleIndices) {
-                final double[] xj = getFeatures(samples.get(memberSampleIndice1));
+                final double[] xj = samples.get(memberSampleIndice1).getFeatureValues();
                 sum2 += svmClassifier.kernel(xi, xj);
             }
         }
@@ -277,11 +264,11 @@ public class KernelKmeansClusterer {
             final int sampleIdx, final List<Integer> memberSampleIndices, final double sum2) {
 
         final int numSamples = memberSampleIndices.size();
-        final double[] x = getFeatures(samples.get(sampleIdx));
+        final double[] x = samples.get(sampleIdx).getFeatureValues();
 
         double sum1 = 0.0;
         for (Integer idx:memberSampleIndices) {
-            final double[] xi = getFeatures(samples.get(idx));
+            final double[] xi = samples.get(idx).getFeatureValues();
             sum1 += svmClassifier.kernel(x,xi);
         }
 
@@ -342,11 +329,11 @@ public class KernelKmeansClusterer {
     private double computeAverageDistance(final int sampleIdx, final List<Integer> memberSampleIndices) {
 
         final int numSamples = memberSampleIndices.size();
-        final double[] x = getFeatures(samples.get(sampleIdx));
+        final double[] x = samples.get(sampleIdx).getFeatureValues();
 
         double sum1 = 0.0, sum2 = 0.0;
         for (Integer idx:memberSampleIndices) {
-            final double[] xi = getFeatures(samples.get(idx));
+            final double[] xi = samples.get(idx).getFeatureValues();
             sum1 += svmClassifier.kernel(x,xi);
             sum2 += svmClassifier.kernel(xi,xi);
         }
@@ -356,7 +343,7 @@ public class KernelKmeansClusterer {
 
 
     public static class Cluster {
-        public List<Integer> memberSampleIndices = new ArrayList<Integer>();
+        public List<Integer> memberSampleIndices = new ArrayList<>();
         public int centerSampleIdx;
     }
 }

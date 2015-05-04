@@ -113,6 +113,11 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     }
 
     @Override
+    public String[] getQuicklookFileNames() {
+        return new String[]{"sigma0_ql.png", "speckle_divergence_ql.png"};
+    }
+
+    @Override
     public Set<String> getDefaultFeatureSet() {
         if (defaultFeatureSet == null) {
             String property = properties.getProperty("pfa.flood.featureSet", DEFAULT_FEATURE_SET);

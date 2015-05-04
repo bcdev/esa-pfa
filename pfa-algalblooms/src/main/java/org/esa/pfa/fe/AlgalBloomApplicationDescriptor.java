@@ -40,7 +40,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
 
     private static Properties properties = new Properties(System.getProperties());
 
-    private static Dimension patchDimension = new Dimension(200, 200);
+    private static Dimension    patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
     private static File localProductDir;
 
@@ -108,6 +108,11 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     @Override
     public String getDefaultQuicklookFileName() {
         return properties.getProperty("pfa.algalblooms.qlName", DEFAULT_QL_NAME);
+    }
+
+    @Override
+    public String[] getQuicklookFileNames() {
+        return new String[]{"rgb1_ql.png", "rgb2_ql.png", "flh_ql.png", "mci_ql.png", "chl_ql.png"};
     }
 
     @Override

@@ -16,10 +16,9 @@
 
 package org.esa.pfa.ws;
 
-import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
-import org.esa.pfa.classifier.RealLocalClassifier;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -60,7 +59,7 @@ public class WebClassifierManagerServer {
         System.out.println("classifierName = [" + classifierName + "]");
 
         try {
-            Classifier classifier = localClassifier.get(classifierName);
+            ClassifierDelegate classifier = localClassifier.get(classifierName);
             System.out.println("classifier = " + classifier);
         } catch (Throwable ioe) {
             ioe.printStackTrace();
@@ -68,5 +67,10 @@ public class WebClassifierManagerServer {
         }
         return "bar";
     }
+
+//    @DELETE
+//    public void delete() {
+//
+//    }
 
 }

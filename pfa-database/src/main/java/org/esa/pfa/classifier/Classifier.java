@@ -17,7 +17,6 @@
 package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
@@ -25,92 +24,40 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * The classifier
+ * The part of the classifier that does the "real" work.
  */
-public class Classifier {
+public interface Classifier {
 
-    private final String classifierName;
-    private final PFAApplicationDescriptor applicationDescriptor;
-    private final RealClassifier realClassifier;
+    int getNumTrainingImages();
 
-    public Classifier(String classifierName, PFAApplicationDescriptor applicationDescriptor, RealClassifier realClassifier) {
-        this.classifierName = classifierName;
-        this.applicationDescriptor = applicationDescriptor;
-        this.realClassifier = realClassifier;
-    }
+    void setNumTrainingImages(int numTrainingImages);
 
-    public String getName() {
-        return classifierName;
-    }
+    int getNumRetrievedImages();
 
-    public PFAApplicationDescriptor getApplicationDescriptor() {
-        return applicationDescriptor;
-    }
+    void setNumRetrievedImages(int numRetrievedImages);
 
-    public int getNumTrainingImages() {
-        return realClassifier.getNumTrainingImages();
-    }
+    void saveClassifier() throws IOException;
 
-    public void setNumTrainingImages(int numTrainingImages) {
-        realClassifier.setNumTrainingImages(numTrainingImages);
-    }
+    void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
 
-    public int getNumRetrievedImages() {
-        return realClassifier.getNumRetrievedImages();
-    }
+    Patch[] getMostAmbigousPatches(ProgressMonitor pm);
 
-    public void setNumRetrievedImages(int numRetrievedImages) {
-        realClassifier.setNumRetrievedImages(numRetrievedImages);
-    }
+    void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
 
-    public int getNumIterations() {
-        return realClassifier.getNumIterations();
-    }
+    Patch[] classify();
 
+    int getNumIterations();
 
-    // org.esa.pfa.search.Classifier.setQueryImages()
-    public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-        realClassifier.startTraining(queryPatches, pm);
-    }
+    FeatureType[] getEffectiveFeatureTypes();
 
-    // org.esa.pfa.search.Classifier.getImagesToLabel()
-    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
-        return realClassifier.getMostAmbigousPatches(pm);
-    }
+    void populateArchivePatches(ProgressMonitor pm);
 
-    // org.esa.pfa.search.Classifier.trainModel()
-    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-        realClassifier.train(labeledPatches, pm);
-    }
+    void getPatchQuicklook(Patch patch, String quicklookBandName);
 
-    // org.esa.pfa.search.Classifier.getRetrievedImages()
-    public Patch[] classify() {
-        return realClassifier.classify();
-    }
+    File getPatchProductFile(Patch patch) throws IOException;
 
-    public void populateArchivePatches(ProgressMonitor pm) {
-        realClassifier.populateArchivePatches(pm);
-    }
+    void addQueryPatch(Patch patch);
 
-    public void getPatchQuicklook(Patch patch, String quicklookBandName) {
-        realClassifier.getPatchQuicklook(patch, quicklookBandName);
-    }
-
-    public File getPatchProductFile(Patch patch) throws IOException {
-        return realClassifier.getPatchProductFile(patch);
-    }
-
-    //=============================================
-    //mz: I'm not sure , if they belong here....
-    //=============================================
-
-    public FeatureType[] getEffectiveFeatureTypes() {
-        return realClassifier.getEffectiveFeatureTypes();
-    }
-
-    public String[] getAvailableQuickLooks(Patch patch) throws IOException {
-        return realClassifier.getAvailableQuickLooks(patch);
-    }
-
+    Patch[] getQueryPatches();
 
 }

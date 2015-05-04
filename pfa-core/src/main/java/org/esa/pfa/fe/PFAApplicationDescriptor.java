@@ -79,9 +79,15 @@ public interface PFAApplicationDescriptor {
     String getAllQueryExpr();
 
     /**
-     * @return The name of the default quicklook file to be used. May be {@code null}, and if so, an arbitrary quicklook file will be used.
+     * @return The name of the default quicklook file to be used.
+     * May be {@code null}, and if so, an arbitrary quicklook file will be used.
      */
     String getDefaultQuicklookFileName();
+
+    /**
+     * @return The names of all quicklook file names produced.
+     */
+    String[] getQuicklookFileNames();
 
     /**
      * @return The name of the numeric features to be used by the classifier. May be {@code null}, and if so, all numeric features will be used.
@@ -93,4 +99,6 @@ public interface PFAApplicationDescriptor {
      * @return The file path of the local (cache) products directory. May be {@code null}, if unknown.
      */
     File getLocalProductDir();
+
+
 }

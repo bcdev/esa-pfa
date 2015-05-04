@@ -17,8 +17,7 @@
 package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.classifier.RealClassifier;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
@@ -28,13 +27,13 @@ import java.io.IOException;
 /**
  * Created by marcoz on 24.04.15.
  */
-public class RealWebClassifier implements RealClassifier {
+public class WebClassifier implements Classifier {
 
 
     private final String classifierName;
     private final String applicationName;
 
-    public RealWebClassifier(String classifierName, String applicationName) {
+    public WebClassifier(String classifierName, String applicationName) {
         this.classifierName = classifierName;
         this.applicationName = applicationName;
     }
@@ -95,11 +94,6 @@ public class RealWebClassifier implements RealClassifier {
     }
 
     @Override
-    public String[] getAvailableQuickLooks(Patch patch) throws IOException {
-        return new String[0];
-    }
-
-    @Override
     public void populateArchivePatches(ProgressMonitor pm) {
 
     }
@@ -112,5 +106,15 @@ public class RealWebClassifier implements RealClassifier {
     @Override
     public File getPatchProductFile(Patch patch) throws IOException {
         return null;
+    }
+
+    @Override
+    public void addQueryPatch(Patch patch) {
+
+    }
+
+    @Override
+    public Patch[] getQueryPatches() {
+        return new Patch[0];
     }
 }
