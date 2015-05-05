@@ -34,6 +34,7 @@ import java.util.Set;
 public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescriptor {
 
     private static final String NAME = "Algal Bloom Detection";
+    private static final String ID = "AlgalBloom";
     public static final String DEFAULT_FEATURE_SET = "flh.mean,mci.mean,flh_hg_pixels";
     public static final String DEFAULT_QL_NAME = "rgb1_ql.png";
     public static final String DEFAULT_ALL_QUERY = "product:MER*";
@@ -59,7 +60,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     }
 
     public AlgalBloomApplicationDescriptor() {
-        super(NAME);
+        super(NAME, ID);
     }
 
     /**

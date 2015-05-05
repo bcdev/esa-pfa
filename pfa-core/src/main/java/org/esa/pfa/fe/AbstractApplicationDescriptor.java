@@ -22,14 +22,19 @@ import java.awt.*;
  */
 public abstract class AbstractApplicationDescriptor implements PFAApplicationDescriptor {
 
-    private String name;
+    private final String name;
+    private final String id;
 
-    protected AbstractApplicationDescriptor(final String name) {
+    protected AbstractApplicationDescriptor(final String name, final String id) {
         this.name = name;
+        this.id = id;
     }
 
     public String getName() {
         return name;
+    }
+    public String getId() {
+        return id;
     }
 
     /**

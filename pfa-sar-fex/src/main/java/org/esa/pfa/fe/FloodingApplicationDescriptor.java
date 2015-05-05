@@ -33,6 +33,7 @@ import java.util.Set;
 public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor {
 
     private static final String NAME = "Flood Detection";
+    private static final String ID = "Flood";
     private static final String DEFAULT_FEATURE_SET =   "speckle_divergence.mean," +
                                                         "speckle_divergence.stdev," +
                                                         "speckle_divergence.cvar," +
@@ -58,7 +59,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     }
 
     public FloodingApplicationDescriptor() {
-        super(NAME);
+        super(NAME, ID);
     }
 
     /**

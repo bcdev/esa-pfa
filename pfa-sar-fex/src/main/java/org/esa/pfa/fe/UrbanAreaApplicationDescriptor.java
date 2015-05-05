@@ -33,6 +33,7 @@ import java.util.Set;
 public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescriptor {
 
     private static final String NAME = "Urban Area Detection";
+    private static final String ID = "UrbanArea";
     private static final String DEFAULT_FEATURE_SET =   "speckle_divergence.mean," +
                                                         "speckle_divergence.stdev," +
                                                         "speckle_divergence.cvar," +
@@ -58,7 +59,7 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
     }
 
     public UrbanAreaApplicationDescriptor() {
-        super(NAME);
+        super(NAME, ID);
     }
 
     /**

@@ -49,11 +49,20 @@ public class PFAApplicationRegistry {
         descriptors.removeService(modelDescriptor);
     }
 
-    public PFAApplicationDescriptor getDescriptor(String name) {
+    public PFAApplicationDescriptor getDescriptorByName(String name) {
         Guardian.assertNotNullOrEmpty("name", name);
-        Set<PFAApplicationDescriptor> services = descriptors.getServices();
-        for (PFAApplicationDescriptor descriptor : services) {
+        for (PFAApplicationDescriptor descriptor : descriptors.getServices()) {
             if (name.equalsIgnoreCase(descriptor.getName())) {
+                return descriptor;
+            }
+        }
+        return null;
+    }
+
+    public PFAApplicationDescriptor getDescriptorById(String id) {
+        Guardian.assertNotNullOrEmpty("id", id);
+        for (PFAApplicationDescriptor descriptor : descriptors.getServices()) {
+            if (id.equalsIgnoreCase(descriptor.getId())) {
                 return descriptor;
             }
         }

@@ -73,7 +73,7 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
         Path classifierPath = getClassifierPath(classifierStoragePath, classifierName);
         ClassifierModel classifierModel = new ClassifierModel(applicationName);
         LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);

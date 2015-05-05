@@ -84,7 +84,7 @@ public class Workflow {
         System.out.println("classifierManager = " + classifierManager);
 
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(appName);
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(appName);
         session.createClassifier(classifierName, applicationDescriptor);
         ClassifierDelegate classifier = session.getClassifier();
         System.out.println("classifier = " + classifier);

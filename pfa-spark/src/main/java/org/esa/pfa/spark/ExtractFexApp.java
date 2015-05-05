@@ -257,7 +257,7 @@ public class ExtractFexApp {
 
     static PFAApplicationDescriptor getApplicationDescriptor(String applicationName) {
         PFAApplicationRegistry registry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor descriptor = registry.getDescriptor(applicationName);
+        PFAApplicationDescriptor descriptor = registry.getDescriptorByName(applicationName);
         if (descriptor == null) {
             String msg = String.format("No descriptor with name '%s' available.", applicationName);
             throw new IllegalArgumentException(msg);

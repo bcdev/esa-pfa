@@ -310,7 +310,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (!classifierName.isEmpty()) {
                         String applicationName = dlg.getApplicationName();
                         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-                        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
+                        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
                         String dbPath = dbFolderTextField.getText();
                         createNewClassifier(applicationDescriptor, classifierName, dbPath);
                     }

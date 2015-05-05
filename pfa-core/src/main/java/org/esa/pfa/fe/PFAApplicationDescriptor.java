@@ -37,6 +37,13 @@ public interface PFAApplicationDescriptor {
     String getName();
 
     /**
+     * The (unique) ID
+     *
+     * @return the ID
+     */
+    String getId();
+
+    /**
      * Gets the width and height of the patch segmentation.
      *
      * @return the  dimension

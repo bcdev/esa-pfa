@@ -103,7 +103,7 @@ public class LocalClassifier implements Classifier {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
         ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-        PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptor(classifierModel.getApplicationName());
+        PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
 
         LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);

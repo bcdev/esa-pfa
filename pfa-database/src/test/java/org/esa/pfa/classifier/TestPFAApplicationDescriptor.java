@@ -35,6 +35,11 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     }
 
     @Override
+    public String getId() {
+        return "testApp";
+    }
+
+    @Override
     public Dimension getPatchDimension() {
         return null;
     }
