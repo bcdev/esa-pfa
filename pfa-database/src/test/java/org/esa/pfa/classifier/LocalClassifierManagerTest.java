@@ -46,8 +46,8 @@ public class LocalClassifierManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        localClassifierManager = new LocalClassifierManager(testFolder.getRoot().toURI(), "testAppDesc");
         testPFAApplicationDescriptor = new TestPFAApplicationDescriptor();
+        localClassifierManager = new LocalClassifierManager(testFolder.getRoot().toURI(), testPFAApplicationDescriptor.getId());
         PFAApplicationRegistry.getInstance().addDescriptor(testPFAApplicationDescriptor);
     }
 
