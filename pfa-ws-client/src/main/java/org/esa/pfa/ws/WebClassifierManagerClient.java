@@ -18,10 +18,17 @@ package org.esa.pfa.ws;
 
 import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
+import org.esa.pfa.classifier.ClassifierModel;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
@@ -29,15 +36,17 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 
-public class WebClassifierManagerClient implements ClassifierManager {
+public class WebClassifierManagerClient implements ClassifierManager, RestClient {
 
     private final WebTarget target;
     private final URI uri;
+    private final String appId;
 
-    public WebClassifierManagerClient(URI uri) {
+    public WebClassifierManagerClient(URI uri, String appId) {
         this.uri = uri;
+        this.appId = appId;
         Client client = ClientBuilder.newClient();
-        this.target = client.target(uri).path("manager");
+        this.target = client.target(uri).path("v1/apps").path(appId);
     }
 
     @Override
@@ -47,46 +56,73 @@ public class WebClassifierManagerClient implements ClassifierManager {
 
     @Override
     public String[] list() {
-        Response response = target.path("list").request().get();
+        WebTarget path = target.path("classifiers");
+        Invocation.Builder request = path.request();
+        Response response = request.get();
         String readEntity = response.readEntity(String.class);
         return readEntity.split("\n");
     }
 
     @Override
     public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
-//        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-//        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
-//        RealWebClassifier realClassifier = new RealWebClassifier(classifierName, applicationName);
-//        realClassifier.saveClassifier();
-//        return new Classifier(classifierName, applicationDescriptor, realClassifier);
-        return null;
+        ClassifierModel classifierModel = new ClassifierModel(applicationName);
+
+        Form form = new Form();
+
+        target.path("classifiers").path(classifierName).request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+
+        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
+        System.out.println("applicationDescriptor = " + applicationDescriptor);
+
+        WebClassifier classifier = new WebClassifier(classifierName, classifierModel, this);
+        return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
     }
 
     @Override
     public void delete(String classifierName) throws IOException {
-
+        // TODO later
     }
 
     @Override
     public ClassifierDelegate get(String classifierName) throws IOException {
-        Response response = target.path("getClassifier").queryParam("classifierName", classifierName).request().get();
-        String readEntity = response.readEntity(String.class);
-        System.out.println("get: readEntity = " + readEntity);
+        WebTarget path = target.path("classifiers").path(classifierName);
+        System.out.println("path = " + path);
+        Response response = path.request().get();
+        String classifierModelAsXML = response.readEntity(String.class);
 
-//        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-//        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptor(applicationName);
-//        RealWebClassifier realClassifier = new RealWebClassifier(classifierName, applicationName);
-//        realClassifier.saveClassifier();
-//        return new Classifier(classifierName, applicationDescriptor, realClassifier);
-        return null;
+        ClassifierModel classifierModel = ClassifierModel.fromXML(classifierModelAsXML);
+
+        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+        String applicationName = classifierModel.getApplicationName();
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
+        System.out.println("applicationDescriptor = " + applicationDescriptor);
+
+        WebClassifier classifier = new WebClassifier(classifierName, classifierModel, this);
+        return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
+    }
+
+    @Override
+    public String populateArchivePatches(String classifierName, String modelXML) {
+        Form form = new Form();
+        form.param("modelXML", modelXML);
+
+        Response response = target.path("classifiers").path(classifierName).path("populateArchivePatches").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        return response.readEntity(String.class);
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
         URI uri = new URI("http://localhost:8089/pfa/");
-        WebClassifierManagerClient client = new WebClassifierManagerClient(uri);
+        WebClassifierManagerClient client = new WebClassifierManagerClient(uri, "AlgalBloom");
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
         ClassifierDelegate classifier = client.get(list[0]);
         System.out.println("classifier = " + classifier);
+
+        ClassifierDelegate classifierDelegate = client.create("web", "Algal Bloom Detection");
+        System.out.println("classifierDelegate = " + classifierDelegate);
     }
 }

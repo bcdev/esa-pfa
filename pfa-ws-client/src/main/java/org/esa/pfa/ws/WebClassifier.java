@@ -17,12 +17,16 @@
 package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierModel;
+import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by marcoz on 24.04.15.
@@ -31,41 +35,56 @@ public class WebClassifier implements Classifier {
 
 
     private final String classifierName;
-    private final String applicationName;
+    private ClassifierModel model;
+    private ActiveLearning al;
+    private final RestClient restClient;
 
-    public WebClassifier(String classifierName, String applicationName) {
+
+    public WebClassifier(String classifierName, ClassifierModel model, RestClient restClient) {
         this.classifierName = classifierName;
-        this.applicationName = applicationName;
+        this.model = model;
+        this.restClient = restClient;
+        this.al = new ActiveLearning(model);
     }
 
     @Override
     public int getNumTrainingImages() {
-        return 0;
+        return model.getNumTrainingImages();
     }
 
     @Override
     public void setNumTrainingImages(int numTrainingImages) {
-
+        model.setNumTrainingImages(numTrainingImages);
     }
 
     @Override
     public int getNumRetrievedImages() {
-        return 0;
+        return model.getNumRetrievedImages();
     }
 
     @Override
     public void setNumRetrievedImages(int numRetrievedImages) {
-
+        model.setNumRetrievedImages(numRetrievedImages);
     }
 
     @Override
     public void saveClassifier() throws IOException {
+        // TODO
 
     }
 
     @Override
     public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        al.resetQuery();
+        al.setQueryPatches(queryPatches);
+        String modelXML = model.toXML();
 
+//        populateArchivePatches(pm);
+//        saveClassifier();
+        String newModelXML = restClient.populateArchivePatches(classifierName, modelXML);
+        model = ClassifierModel.fromXML(newModelXML);
+        al = new ActiveLearning(model);
+        al.setTrainingData(pm);
     }
 
     @Override
@@ -85,7 +104,7 @@ public class WebClassifier implements Classifier {
 
     @Override
     public int getNumIterations() {
-        return 0;
+        return model.getNumIterations();
     }
 
     @Override
@@ -110,11 +129,12 @@ public class WebClassifier implements Classifier {
 
     @Override
     public void addQueryPatch(Patch patch) {
-
+        model.getQueryData().add(patch);
     }
 
     @Override
     public Patch[] getQueryPatches() {
-        return new Patch[0];
+        List<Patch> queryData = model.getQueryData();
+        return queryData.toArray(new Patch[queryData.size()]);
     }
 }

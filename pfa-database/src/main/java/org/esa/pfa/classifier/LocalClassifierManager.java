@@ -74,7 +74,7 @@ public class LocalClassifierManager implements ClassifierManager {
     public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
-        Path classifierPath = getClassifierPath(classifierStoragePath, classifierName);
+        Path classifierPath = getClassifierPath(classifierName);
         ClassifierModel classifierModel = new ClassifierModel(applicationName);
         LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
         realLocalClassifier.saveClassifier();
@@ -83,7 +83,7 @@ public class LocalClassifierManager implements ClassifierManager {
 
     @Override
     public void delete(String classifierName) throws IOException {
-        Path classifierPath = getClassifierPath(classifierStoragePath, classifierName);
+        Path classifierPath = getClassifierPath(classifierName);
         if (Files.exists(classifierPath)) {
             Files.delete(classifierPath);
         }
@@ -91,12 +91,20 @@ public class LocalClassifierManager implements ClassifierManager {
 
     @Override
     public ClassifierDelegate get(String classifierName) throws IOException {
-        Path classifierPath = getClassifierPath(classifierStoragePath, classifierName);
+        Path classifierPath = getClassifierPath(classifierName);
         return LocalClassifier.loadClassifier(classifierName, classifierPath, patchPath, dbPath);
     }
 
-    public static Path getClassifierPath(Path storageDirectory, String classifierName) {
-        return storageDirectory.resolve(classifierName + ".xml");
+    public Path getPatchPath() {
+        return patchPath;
+    }
+
+    public Path getDbPath() {
+        return dbPath;
+    }
+
+    public Path getClassifierPath(String classifierName) {
+        return classifierStoragePath.resolve(classifierName + ".xml");
     }
 
 }

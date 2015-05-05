@@ -93,7 +93,7 @@ public class CBIRSession {
             // if HTTP URL: Web Service Client
             URI uri = new URI(uriString);
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new WebClassifierManagerClient(uri);
+                classifierManager = new WebClassifierManagerClient(uri, "AlgalBloom"); // TODO
             }
         } else {
             // if file URL

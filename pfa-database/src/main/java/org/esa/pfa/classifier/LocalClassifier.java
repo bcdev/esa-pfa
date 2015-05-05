@@ -105,11 +105,10 @@ public class LocalClassifier implements Classifier {
         ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
+        LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        localClassifier.al.setTrainingData(ProgressMonitor.NULL);
 
-        LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
-        realLocalClassifier.al.setTrainingData(ProgressMonitor.NULL);
-
-        return new ClassifierDelegate(classifierName, applicationDescriptor, realLocalClassifier);
+        return new ClassifierDelegate(classifierName, applicationDescriptor, localClassifier);
     }
 
     @Override
@@ -210,5 +209,9 @@ public class LocalClassifier implements Classifier {
     @Override
     public File getPatchProductFile(Patch patch) throws IOException {
         return patchAccess.getPatchProductFile(patch);
+    }
+
+    public ActiveLearning getActiveLearning() {
+        return al;
     }
 }

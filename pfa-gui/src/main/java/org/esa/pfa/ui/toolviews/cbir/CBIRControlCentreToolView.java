@@ -369,7 +369,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 if (!session.hasClassifier()) {
                     return;
                 }
-                System.out.println("Classifier present !!!");
                 try {
                     ProgressMonitorSwingWorker<Boolean, Void> worker =
                             new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {

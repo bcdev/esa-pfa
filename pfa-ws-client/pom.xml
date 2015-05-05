@@ -45,6 +45,11 @@
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-algalblooms</artifactId>
+            <version>${pfa.version}</version>
+        </dependency>
 
         <!-- JAX-RS implementation -->
 
