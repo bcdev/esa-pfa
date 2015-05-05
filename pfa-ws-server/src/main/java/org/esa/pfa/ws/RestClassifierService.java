@@ -32,6 +32,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 
@@ -39,13 +40,15 @@ import java.nio.file.Files;
 @Path("/v1/apps")
 public class RestClassifierService {
 
-    private final LocalClassifierManager localClassifierManager;
+//    private final File dbFile = new File("/home/marcoz/Scratch/pfa/output-snap");
+    private final URI dbUri;
 
     public RestClassifierService() throws IOException, URISyntaxException {
         System.out.println("WebClassifierManagerServer.WebClassifierManagerServer " + this);
+        String dbUriProperty = System.getProperty("dbUri", null);
+        System.out.println("dbUriProperty = " + dbUriProperty);
 
-        File file = new File("/home/marcoz/Scratch/pfa/output-snap");
-        localClassifierManager = new LocalClassifierManager(file.toURI());
+        dbUri = new File(dbUriProperty).toURI();
     }
 
 
@@ -56,6 +59,7 @@ public class RestClassifierService {
         System.out.println("WebClassifierManagerServer.list " + this);
         System.out.println("appId = " + appId);
 
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
         return String.join("\n", localClassifierManager.list());
     }
 
@@ -70,6 +74,7 @@ public class RestClassifierService {
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
             java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
             if (!Files.exists(classifierPath)) {
                 throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
@@ -91,8 +96,8 @@ public class RestClassifierService {
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
-            String appName = PFAApplicationRegistry.getInstance().getDescriptorById(appId).getName();
-            localClassifierManager.create(classifierName, appName);
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            localClassifierManager.create(classifierName);
         } catch (Throwable ioe) {
             ioe.printStackTrace();
         }
@@ -110,6 +115,7 @@ public class RestClassifierService {
         System.out.println("modelXML = " + modelXML);
 
         try {
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
             java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
             if (!Files.exists(classifierPath)) {
                 throw new IllegalArgumentException("Classifier does not exist. " + classifierName);

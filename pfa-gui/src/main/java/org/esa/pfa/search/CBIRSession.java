@@ -21,6 +21,7 @@ import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
@@ -88,12 +89,24 @@ public class CBIRSession {
         return classifier;
     }
 
-    public synchronized ClassifierManager getClassifierManager(String uriString) throws URISyntaxException, IOException {
+    public boolean hasClassifierManager() {
+        return classifierManager != null;
+    }
+
+    public String[] listClassifiers() {
+        if (hasClassifierManager()) {
+            return classifierManager.list();
+        } else {
+            return new String[0];
+        }
+    }
+
+    public synchronized ClassifierManager createClassifierManager(String uriString, String appId) throws URISyntaxException, IOException {
         if (uriString.startsWith("http")) {
             // if HTTP URL: Web Service Client
             URI uri = new URI(uriString);
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new RestClassifierManagerClient(uri, "AlgalBloom"); // TODO
+                classifierManager = new RestClassifierManagerClient(uri, appId);
             }
         } else {
             // if file URL
@@ -105,17 +118,19 @@ public class CBIRSession {
                 uri = file.toURI();
             }
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new LocalClassifierManager(uri);
+                classifierManager = new LocalClassifierManager(uri, appId);
             }
         }
         return classifierManager;
     }
 
-    public void createClassifier(String classifierName, PFAApplicationDescriptor applicationDescriptor) throws IOException {
+    public void createClassifier(String classifierName) throws IOException {
         try {
-            quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
+            String appId = classifierManager.getApplicationId();
+            PFAApplicationDescriptor descriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
+            quicklookBandName1 = descriptor.getDefaultQuicklookFileName();
             quicklookBandName2 = quicklookBandName1;
-            classifier = classifierManager.create(classifierName, applicationDescriptor.getName());
+            classifier = classifierManager.create(classifierName);
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);
         } catch (IOException e) {

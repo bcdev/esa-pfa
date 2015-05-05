@@ -34,12 +34,14 @@ import java.util.List;
 public class LocalClassifierManager implements ClassifierManager {
 
     private final URI uri;
+    private final String appId;
     private final Path classifierStoragePath;
     private final Path patchPath;
     private final Path dbPath;
 
-    public LocalClassifierManager(URI uri) throws IOException {
+    public LocalClassifierManager(URI uri, String appId) throws IOException {
         this.uri = uri;
+        this.appId = appId;
         Path auxPath = Paths.get(uri);
         classifierStoragePath = auxPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
@@ -52,6 +54,11 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public URI getURI() {
         return uri;
+    }
+
+    @Override
+    public String getApplicationId() {
+        return appId;
     }
 
     @Override
@@ -71,11 +78,11 @@ public class LocalClassifierManager implements ClassifierManager {
     }
 
     @Override
-    public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
+    public ClassifierDelegate create(String classifierName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
         Path classifierPath = getClassifierPath(classifierName);
-        ClassifierModel classifierModel = new ClassifierModel(applicationName);
+        ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
         LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
         realLocalClassifier.saveClassifier();
         return new ClassifierDelegate(classifierName, applicationDescriptor, realLocalClassifier);

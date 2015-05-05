@@ -26,9 +26,11 @@ public interface ClassifierManager {
 
     URI getURI();
 
+    String getApplicationId();
+
     String[] list();
 
-    ClassifierDelegate create(String classifierName, String applicationName) throws IOException;
+    ClassifierDelegate create(String classifierName) throws IOException;
 
     void delete(String classifierName) throws IOException;
 

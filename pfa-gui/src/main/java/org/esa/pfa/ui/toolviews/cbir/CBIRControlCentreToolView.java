@@ -21,7 +21,6 @@ import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.ClassifierDelegate;
-import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
@@ -45,6 +44,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.prefs.Preferences;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
@@ -75,6 +75,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     private final static Dimension preferredDimension = new Dimension(550, 300);
     private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
+    private final static String PROPERTY_KEY_DB_REMOTE = "app.file.cbir.remoteAddress";
 
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
@@ -83,9 +84,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JTextField numRetrievedImages;
     private JButton updateBtn;
     private JLabel iterationsLabel = new JLabel();
-
-    private File dbFolder;
-    private JTextField dbFolderTextField;
+    private JLabel dbLabel;
 
     private final CBIRSession session;
 
@@ -100,6 +99,11 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     public JComponent createControl() {
+        Preferences preferences = SnapApp.getDefault().getPreferences();
+        String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
+        String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "");
+        String uri = !remoteValue.isEmpty() ? remoteValue : folderValue;
+        dbLabel = new JLabel(uri);
 
         final JPanel contentPane = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
@@ -108,42 +112,43 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        dbFolder = new File(SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_PATH, ""));
-        dbFolderTextField = new JTextField();
-        if (dbFolder.exists()) {
-            dbFolderTextField.setText(dbFolder.getAbsolutePath());
-        }
-
         gbc.gridwidth = 1;
         gbc.gridy++;
-        contentPane.add(new JLabel("Local database:"), gbc);
+        contentPane.add(new JLabel("DB:"), gbc);
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        contentPane.add(dbFolderTextField, gbc);
+        contentPane.add(dbLabel, gbc);
         gbc.gridwidth = 1;
         gbc.gridx = 2;
         gbc.fill = GridBagConstraints.NONE;
 
-        final JButton fileChooserButton = new JButton(new AbstractAction("...") {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                JFileChooser chooser = new FolderChooser();
-                chooser.setDialogTitle("Find database folder");
-                if (dbFolder.exists()) {
-                    chooser.setCurrentDirectory(dbFolder.getParentFile());
-                }
-                final Window window = SwingUtilities.getWindowAncestor((JComponent) event.getSource());
-                if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
-                    dbFolder = chooser.getSelectedFile();
-                    dbFolderTextField.setText(dbFolder.getAbsolutePath());
-                    SnapApp.getDefault().getPreferences().put(PROPERTY_KEY_DB_PATH, dbFolder.getAbsolutePath());
+        JButton dbSelectButton = new JButton(new AbstractAction("Select DB") {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Preferences preferences = SnapApp.getDefault().getPreferences();
+                    String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
+                    String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "");
+                    final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue);
+                    dlg.show();
+
+                    String localFolder = dlg.getLocalFolder();
+                    String remoteAddress = dlg.getRemoteAddress();
+                    String uri = dlg.isLocal() ? localFolder : remoteAddress;
+
+                    PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+                    PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(dlg.getApplicationName());
+                    session.createClassifierManager(uri, applicationDescriptor.getId());
+
+                    dbLabel.setText(uri);
                     initClassifierList();
+                } catch (Throwable t) {
+                    SnapApp.getDefault().handleError("Error creating new classifier", t);
                 }
             }
         });
 
-        contentPane.add(fileChooserButton, gbc);
+        contentPane.add(dbSelectButton, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridx = 0;
@@ -156,7 +161,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         classifierList = new JList<>();
         classifierList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         classifierList.setLayoutOrientation(JList.VERTICAL);
-        classifierList.setPrototypeCellValue("123456789012345678901234567890");
+        classifierList.setPrototypeCellValue("12345678901234567890");
         classifierList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -265,8 +270,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         initClassifierList();
         updateControls();
+        setDbUri("TODO");
 
         return mainPane;
+    }
+
+    private void setDbUri(String uri) {
+        dbLabel.setText(uri);
     }
 
     //todo @Override
@@ -281,17 +291,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     private void initClassifierList() {
         final DefaultListModel<String> modelList = new DefaultListModel<>();
-        String auxPath = dbFolder.getAbsolutePath();
-        if (!auxPath.isEmpty()) {
-            try {
-                CBIRSession instance = CBIRSession.getInstance();
-                ClassifierManager classifierManager = instance.getClassifierManager(auxPath);
-                for (String name : classifierManager.list()) {
-                    modelList.addElement(name);
-                }
-            } catch (Exception ioe) {
-                SnapApp.getDefault().handleError("I/O Problem", ioe);
-            }
+        for (String name : session.listClassifiers()) {
+            modelList.addElement(name);
         }
         classifierList.setModel(modelList);
         updateControls();
@@ -303,16 +304,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         newBtn = new JButton(new AbstractAction("New") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    final PromptDialog dlg = new PromptDialog("New Classifier", "Name:", "");
+                    final NewClassifierDialog dlg = new NewClassifierDialog("New Classifier", "Name:", "");
                     dlg.show();
 
                     String classifierName = dlg.getClassifierName();
                     if (!classifierName.isEmpty()) {
-                        String applicationName = dlg.getApplicationName();
-                        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-                        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
-                        String dbPath = dbFolderTextField.getText();
-                        createNewClassifier(applicationDescriptor, classifierName, dbPath);
+                        createNewClassifier(classifierName, session);
                     }
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error creating new classifier", t);
@@ -340,7 +337,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 boolean windowOpen = WindowUtilities.getOpened(windowClass).count() > 0;
-                if(windowOpen) {
+                if (windowOpen) {
                     WindowUtilities.getOpened(CBIRQueryToolView.class).findFirst().get().setVisible(true);
                 } else {
                     final TopComponent window = WindowManager.getDefault().findTopComponent(windowID);
@@ -372,21 +369,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 try {
                     ProgressMonitorSwingWorker<Boolean, Void> worker =
                             new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
-                        @Override
-                        protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                            pm.beginTask("Getting images...", 100);
-                            try {
-                                session.populateArchivePatches(SubProgressMonitor.create(pm, 50));
-                                session.getImagesToLabel(SubProgressMonitor.create(pm, 50));
-                                if (!pm.isCanceled()) {
-                                    return Boolean.TRUE;
+                                @Override
+                                protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
+                                    pm.beginTask("Getting images...", 100);
+                                    try {
+                                        session.populateArchivePatches(SubProgressMonitor.create(pm, 50));
+                                        session.getImagesToLabel(SubProgressMonitor.create(pm, 50));
+                                        if (!pm.isCanceled()) {
+                                            return Boolean.TRUE;
+                                        }
+                                    } finally {
+                                        pm.done();
+                                    }
+                                    return Boolean.FALSE;
                                 }
-                            } finally {
-                                pm.done();
-                            }
-                            return Boolean.FALSE;
-                        }
-                    };
+                            };
                     worker.executeWithBlocking();
                     if (worker.get()) {
                         showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
@@ -404,21 +401,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     }
                     ProgressMonitorSwingWorker<Boolean, Void> worker =
                             new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {
-                        @Override
-                        protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                            pm.beginTask("Retrieving images...", 100);
-                            try {
-                                session.populateArchivePatches(SubProgressMonitor.create(pm, 50));  // not needed to train model but needed for next iteration
-                                session.trainModel(SubProgressMonitor.create(pm, 50));
-                                if (!pm.isCanceled()) {
-                                    return Boolean.TRUE;
+                                @Override
+                                protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
+                                    pm.beginTask("Retrieving images...", 100);
+                                    try {
+                                        session.populateArchivePatches(SubProgressMonitor.create(pm, 50));  // not needed to train model but needed for next iteration
+                                        session.trainModel(SubProgressMonitor.create(pm, 50));
+                                        if (!pm.isCanceled()) {
+                                            return Boolean.TRUE;
+                                        }
+                                    } finally {
+                                        pm.done();
+                                    }
+                                    return Boolean.FALSE;
                                 }
-                            } finally {
-                                pm.done();
-                            }
-                            return Boolean.FALSE;
-                        }
-                    };
+                            };
                     worker.executeWithBlocking();
                     if (worker.get()) {
                         showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
@@ -442,7 +439,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private void updateControls() {
-        newBtn.setEnabled(dbFolder.exists());
+        newBtn.setEnabled(session.hasClassifierManager());
 
         final boolean hasActiveClassifier = session.hasClassifier();
         deleteBtn.setEnabled(hasActiveClassifier);
@@ -467,12 +464,11 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
 
-    private static class PromptDialog extends ModalDialog {
+    private static class NewClassifierDialog extends ModalDialog {
 
         private final JTextField nameTextField;
-        private final JComboBox<String> applicationCombo;
 
-        public PromptDialog(String title, String labelStr, String defaultValue) {
+        public NewClassifierDialog(String title, String labelStr, String defaultValue) {
             super(SnapApp.getDefault().getMainFrame(), title, ModalDialog.ID_OK, null);
 
             final JPanel contentPane = new JPanel(new GridBagLayout());
@@ -489,28 +485,11 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             gbc.gridx = 1;
             contentPane.add(nameTextField, gbc);
 
-            gbc.gridx = 0;
-            gbc.gridy = 1;
-            contentPane.add(new Label("Application:"), gbc);
-
-            applicationCombo = new JComboBox<>();
-            for (PFAApplicationDescriptor app : PFAApplicationRegistry.getInstance().getAllDescriptors()) {
-                applicationCombo.addItem(app.getName());
-            }
-            applicationCombo.setEditable(false);
-
-            gbc.gridx = 1;
-            contentPane.add(applicationCombo, gbc);
-
             setContent(contentPane);
         }
 
         String getClassifierName() {
             return nameTextField.getText();
-        }
-
-        String getApplicationName() {
-            return (String) applicationCombo.getSelectedItem();
         }
 
         @Override
@@ -519,14 +498,123 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         }
     }
 
-    private static void createNewClassifier(final PFAApplicationDescriptor applicationDescriptor, final String classifierName, final String dbPath) {
+    private static class SelectDbDialog extends ModalDialog {
+
+        private final JTextField localFolder;
+        private final JTextField remoteAddress;
+        private final JComboBox<String> applicationCombo;
+        private final JRadioButton isLocal;
+        private final JRadioButton isRemote;
+
+        public SelectDbDialog(String folderValue, String remoteValue) {
+            super(SnapApp.getDefault().getMainFrame(), "Select Database", ModalDialog.ID_OK, null);
+
+            applicationCombo = new JComboBox<>();
+            for (PFAApplicationDescriptor app : PFAApplicationRegistry.getInstance().getAllDescriptors()) {
+                applicationCombo.addItem(app.getName());
+            }
+            applicationCombo.setEditable(false);
+
+            ButtonGroup group = new ButtonGroup();
+            isLocal = new JRadioButton("Local", true);
+            isRemote = new JRadioButton("Remote", false);
+            group.add(isLocal);
+            group.add(isRemote);
+
+            localFolder = new JTextField(folderValue);
+            remoteAddress = new JTextField(remoteValue);
+            localFolder.setColumns(24);
+            remoteAddress.setColumns(24);
+
+            folderValue = folderValue != null ? folderValue : "";
+            final File dbFolder = new File(folderValue);
+
+            final JButton fileChooserButton = new JButton(new AbstractAction("...") {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    FolderChooser chooser = new FolderChooser();
+                    chooser.setDialogTitle("Find database folder");
+                    if (dbFolder.exists()) {
+                        chooser.setSelectedFolder(dbFolder);
+                    }
+                    final Window window = SwingUtilities.getWindowAncestor((JComponent) event.getSource());
+                    if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
+                        File selectedFolder = chooser.getSelectedFolder();
+                        localFolder.setText(selectedFolder.getAbsolutePath());
+
+                    }
+                }
+            });
+
+            final JPanel contentPane = new JPanel(new GridBagLayout());
+            final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.NORTHWEST;
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+
+            contentPane.add(new Label("Application:"), gbc);
+
+            gbc.gridx = 1;
+            gbc.gridwidth = 2;
+            contentPane.add(applicationCombo, gbc);
+            gbc.gridwidth = 1;
+
+            //////////
+
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            contentPane.add(this.isLocal, gbc);
+            gbc.gridx = 1;
+            contentPane.add(localFolder, gbc);
+            gbc.gridx = 2;
+            contentPane.add(fileChooserButton, gbc);
+
+            //////////
+
+            gbc.gridx = 0;
+            gbc.gridy = 2;
+            contentPane.add(isRemote, gbc);
+
+            gbc.gridx = 1;
+            gbc.gridwidth = 2;
+            contentPane.add(remoteAddress, gbc);
+
+            setContent(contentPane);
+        }
+
+        boolean isLocal() {
+            return isLocal.isSelected();
+        }
+
+        String getLocalFolder() {
+            return localFolder.getText();
+        }
+
+        String getRemoteAddress() {
+            return remoteAddress.getText();
+        }
+
+        String getApplicationName() {
+            return (String) applicationCombo.getSelectedItem();
+        }
+
+        @Override
+        protected void onOK() {
+            Preferences preferences = SnapApp.getDefault().getPreferences();
+            preferences.put(PROPERTY_KEY_DB_PATH, getLocalFolder());
+            preferences.put(PROPERTY_KEY_DB_REMOTE, getRemoteAddress());
+            hide();
+        }
+    }
+
+    private static void createNewClassifier(final String classifierName, final CBIRSession session) {
         ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(SnapApp.getDefault().getMainFrame(), "Loading") {
             @Override
             protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                 pm.beginTask("Creating classifier...", 100);
                 try {
-                    CBIRSession instance = CBIRSession.getInstance();
-                    instance.createClassifier(classifierName, applicationDescriptor);
+                    session.createClassifier(classifierName);
                     if (!pm.isCanceled()) {
                         return Boolean.TRUE;
                     }

@@ -79,13 +79,15 @@ public class Workflow {
         Product product = ProductIO.readProduct(queryProductFile);
         System.out.println("product = " + product);
 
+        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+        PFAApplicationDescriptor appDesc = applicationRegistry.getDescriptorByName(appName);
+
         CBIRSession session = CBIRSession.getInstance();
-        ClassifierManager classifierManager = session.getClassifierManager(uri.toString());
+        ClassifierManager classifierManager = session.createClassifierManager(uri.toString(), appDesc.getId());
         System.out.println("classifierManager = " + classifierManager);
 
-        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(appName);
-        session.createClassifier(classifierName, applicationDescriptor);
+
+        session.createClassifier(classifierName);
         ClassifierDelegate classifier = session.getClassifier();
         System.out.println("classifier = " + classifier);
 

@@ -55,6 +55,11 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
+      public String getApplicationId() {
+          return appId;
+      }
+
+    @Override
     public String[] list() {
         WebTarget path = target.path("classifiers");
         Invocation.Builder request = path.request();
@@ -64,16 +69,17 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
-    public ClassifierDelegate create(String classifierName, String applicationName) throws IOException {
-        ClassifierModel classifierModel = new ClassifierModel(applicationName);
+    public ClassifierDelegate create(String classifierName) throws IOException {
+        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
+        ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
 
         Form form = new Form();
 
         target.path("classifiers").path(classifierName).request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
-        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
+
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
         RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
@@ -122,7 +128,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         ClassifierDelegate classifier = client.get(list[0]);
         System.out.println("classifier = " + classifier);
 
-        ClassifierDelegate classifierDelegate = client.create("web", "Algal Bloom Detection");
+        ClassifierDelegate classifierDelegate = client.create("web");
         System.out.println("classifierDelegate = " + classifierDelegate);
     }
 }
