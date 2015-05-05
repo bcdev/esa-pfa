@@ -37,11 +37,11 @@ import java.nio.file.Files;
 
 
 @Path("/v1/apps")
-public class WebClassifierManagerService {
+public class RestClassifierService {
 
     private final LocalClassifierManager localClassifierManager;
 
-    public WebClassifierManagerService() throws IOException, URISyntaxException {
+    public RestClassifierService() throws IOException, URISyntaxException {
         System.out.println("WebClassifierManagerServer.WebClassifierManagerServer " + this);
 
         File file = new File("/home/marcoz/Scratch/pfa/output-snap");
