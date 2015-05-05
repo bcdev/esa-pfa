@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * Created by marcoz on 24.04.15.
  */
-public class WebClassifier implements Classifier {
+public class RestClassifier implements Classifier {
 
 
     private final String classifierName;
@@ -40,7 +40,7 @@ public class WebClassifier implements Classifier {
     private final RestClient restClient;
 
 
-    public WebClassifier(String classifierName, ClassifierModel model, RestClient restClient) {
+    public RestClassifier(String classifierName, ClassifierModel model, RestClient restClient) {
         this.classifierName = classifierName;
         this.model = model;
         this.restClient = restClient;

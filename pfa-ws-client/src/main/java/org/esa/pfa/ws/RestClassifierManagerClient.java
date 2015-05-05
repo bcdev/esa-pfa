@@ -36,13 +36,13 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 
-public class WebClassifierManagerClient implements ClassifierManager, RestClient {
+public class RestClassifierManagerClient implements ClassifierManager, RestClient {
 
     private final WebTarget target;
     private final URI uri;
     private final String appId;
 
-    public WebClassifierManagerClient(URI uri, String appId) {
+    public RestClassifierManagerClient(URI uri, String appId) {
         this.uri = uri;
         this.appId = appId;
         Client client = ClientBuilder.newClient();
@@ -76,7 +76,7 @@ public class WebClassifierManagerClient implements ClassifierManager, RestClient
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
-        WebClassifier classifier = new WebClassifier(classifierName, classifierModel, this);
+        RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
         return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
     }
 
@@ -99,7 +99,7 @@ public class WebClassifierManagerClient implements ClassifierManager, RestClient
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
-        WebClassifier classifier = new WebClassifier(classifierName, classifierModel, this);
+        RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
         return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
     }
 
@@ -116,7 +116,7 @@ public class WebClassifierManagerClient implements ClassifierManager, RestClient
 
     public static void main(String[] args) throws IOException, URISyntaxException {
         URI uri = new URI("http://localhost:8089/pfa/");
-        WebClassifierManagerClient client = new WebClassifierManagerClient(uri, "AlgalBloom");
+        RestClassifierManagerClient client = new RestClassifierManagerClient(uri, "AlgalBloom");
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
         ClassifierDelegate classifier = client.get(list[0]);

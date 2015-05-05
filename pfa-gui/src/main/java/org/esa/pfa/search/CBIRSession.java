@@ -25,7 +25,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
-import org.esa.pfa.ws.WebClassifierManagerClient;
+import org.esa.pfa.ws.RestClassifierManagerClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class CBIRSession {
             // if HTTP URL: Web Service Client
             URI uri = new URI(uriString);
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new WebClassifierManagerClient(uri, "AlgalBloom"); // TODO
+                classifierManager = new RestClassifierManagerClient(uri, "AlgalBloom"); // TODO
             }
         } else {
             // if file URL
