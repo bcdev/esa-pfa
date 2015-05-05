@@ -155,6 +155,9 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
         try {
             final String command = event.getActionCommand();
             if (command.equals("improveBtn")) {
+
+                CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+
                 ProgressMonitorSwingWorker<Boolean, Void> worker =
                         new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                     @Override
@@ -172,9 +175,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                     }
                 };
                 worker.executeWithBlocking();
-                if (worker.get()) {
-                    CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
-                }
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);

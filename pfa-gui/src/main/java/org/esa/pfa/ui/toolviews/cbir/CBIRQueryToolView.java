@@ -212,6 +212,9 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 }
                 final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
 
+                // create window if needed first and add to session listeners
+                CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+
                 final Window parentWindow = SwingUtilities.getWindowAncestor(this);
                 ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                     @Override
@@ -229,9 +232,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     }
                 };
                 worker.executeWithBlocking();
-                if (worker.get()) {
-                    CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
-                }
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);

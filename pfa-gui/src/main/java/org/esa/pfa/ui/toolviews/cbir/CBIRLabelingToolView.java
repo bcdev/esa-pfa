@@ -195,6 +195,9 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     return;
                 }
 
+                // create window if needed first and add to session listeners
+                CBIRControlCentreToolView.showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
+
                 ProgressMonitorSwingWorker<Boolean, Void> worker =
                         new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {
                     @Override
@@ -212,9 +215,6 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     }
                 };
                 worker.executeWithBlocking();
-                if (worker.get()) {
-                    CBIRControlCentreToolView.showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
-                }
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error retrieving images", e);
