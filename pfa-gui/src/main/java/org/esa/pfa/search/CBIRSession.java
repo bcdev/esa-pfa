@@ -199,11 +199,7 @@ public class CBIRSession {
         PFAApplicationDescriptor appDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
         FeatureType[] featureTypes = appDescriptor.getFeatureTypes();
         Set<String> defaultFeatureSet = appDescriptor.getDefaultFeatureSet();
-        FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
-        for (FeatureType effectiveFeatureType : effectiveFeatureTypes) {
-            System.out.println(effectiveFeatureType.getName());
-        }
-        return effectiveFeatureTypes;
+        return AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
     }
 
     public void setNumTrainingImages(final int numTrainingImages) throws Exception {
