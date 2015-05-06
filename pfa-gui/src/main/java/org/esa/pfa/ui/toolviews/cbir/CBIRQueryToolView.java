@@ -276,11 +276,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
             Patch patch = null;
             try {
                 patch = patchProcessor.get();
-                System.out.println("patchProcessor.patch = " + patch);
-                System.out.println("patchProcessor.patch.feat = " + patch.getFeatures());
-                System.out.println("patchProcessor.patch.feat.l = " + patch.getFeatures().length);
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
                 SnapApp.getDefault().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatureValues().length > 0) {
