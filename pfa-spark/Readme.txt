@@ -1,5 +1,6 @@
 mvn clean package
 mvn --offline -DskipTests=true clean package
+mvn --offline -DskipTests=true clean install
 
 #######################################################################################################################
 export HADOOP_CONF_DIR=/home/marcoz/Projects/BC/IT/bc-it-admin/calvalus/config/cv2/conf-common
@@ -42,8 +43,19 @@ $SPARK_HOME/bin/spark-submit \
     --jars ${jars} \
     pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
     "Algal Bloom Detection" \
-    "hdfs://calvalus/calvalus/eodata/MER_RR__1P/r03/2003/12/*/*.N1" \
+    "hdfs://calvalus/calvalus/eodata/MER_RR__1P/r03/2003/*/*/*.N1" \
     hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-2003
 
+$SPARK_HOME/bin/spark-submit \
+    --class org.esa.pfa.spark.ExtractFexApp \
+    --master yarn-cluster \
+    --executor-memory 2G \
+    --num-executors 3 \
+    --conf spark.yarn.queue=lc \
+    --jars ${jars} \
+    pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
+    "Algal Bloom Detection" \
+    "hdfs://calvalus//calvalus/eodata/MER_RR__1P/r03/2003/12/12/MER_RR__1PRACR20031212_094346_000026272022_00251_09323_0000.N1" \
+    hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-one-product
 
 
