@@ -365,8 +365,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                                 protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                                     pm.beginTask("Getting images...", 100);
                                     try {
-                                        session.populateArchivePatches(SubProgressMonitor.create(pm, 50));
-                                        session.getImagesToLabel(SubProgressMonitor.create(pm, 50));
+                                        session.getMostAmbigousPatches(true, pm);
                                         if (!pm.isCanceled()) {
                                             return Boolean.TRUE;
                                         }
@@ -397,8 +396,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                                 protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                                     pm.beginTask("Retrieving images...", 100);
                                     try {
-                                        session.populateArchivePatches(SubProgressMonitor.create(pm, 50));  // not needed to train model but needed for next iteration
-                                        session.trainModel(SubProgressMonitor.create(pm, 50));
+                                        // not needed to train model but needed for next iteration ??
+                                        session.trainAndClassify(true, SubProgressMonitor.create(pm, 50));
                                         if (!pm.isCanceled()) {
                                             return Boolean.TRUE;
                                         }

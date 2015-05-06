@@ -16,7 +16,6 @@
 package org.esa.pfa.search;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
@@ -66,7 +65,8 @@ public class CBIRSession {
     private String quicklookBandName1;
     private String quicklookBandName2;
 
-    public enum ImageMode { SINGLE, DUAL, FADE }
+    public enum ImageMode {SINGLE, DUAL, FADE}
+
     private ImageMode imageMode = ImageMode.SINGLE;
 
     private CBIRSession() {
@@ -240,18 +240,42 @@ public class CBIRSession {
         return classifier.getQueryPatches();
     }
 
-    public void setQueryImages(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
-        pm.beginTask("Getting Images to Label", 100);
-        try {
-            classifier.startTraining(queryImages, SubProgressMonitor.create(pm, 50));
-            getImagesToLabel(SubProgressMonitor.create(pm, 50));
-        } finally {
-            pm.done();
-        }
+    public void startTraining(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
+        Patch[] ambigousPatches = classifier.startTraining(queryImages, pm);
+        getImagesToLabel(ambigousPatches);
     }
 
-    public void populateArchivePatches(final ProgressMonitor pm) throws Exception {
-        classifier.populateArchivePatches(pm);
+    public void trainAndClassify(boolean prePopulate, final ProgressMonitor pm) throws IOException {
+        final List<Patch> labeledList = new ArrayList<>(30);
+        labeledList.addAll(relevantImageList);
+        labeledList.addAll(irrelevantImageList);
+        Patch[] labeledPatches = labeledList.toArray(new Patch[labeledList.size()]);
+
+        Patch[] ambigousPatches = classifier.trainAndClassify(prePopulate, labeledPatches, pm);
+        retrievedImageList.clear();
+        retrievedImageList.addAll(Arrays.asList(ambigousPatches));
+
+        fireNotification(Notification.ModelTrained, classifier);
+    }
+
+    public void getMostAmbigousPatches(boolean prePopulate, final ProgressMonitor pm) throws IOException {
+        Patch[] mostAmbigous = classifier.getMostAmbigous(prePopulate, pm);
+        getImagesToLabel(mostAmbigous);
+    }
+
+    private void getImagesToLabel(Patch[] ambigousPatches) throws IOException {
+        relevantImageList.clear();
+        irrelevantImageList.clear();
+        for (Patch patch : ambigousPatches) {
+            if (patch.getLabel() == Patch.Label.RELEVANT) {
+                relevantImageList.add(patch);
+            } else {
+                // default to irrelevant so user only needs to select the relevant
+                patch.setLabel(Patch.Label.IRRELEVANT);
+                irrelevantImageList.add(patch);
+            }
+        }
+        fireNotification(Notification.NewTrainingImages, classifier);
     }
 
     public void reassignTrainingImage(final Patch patch) {
@@ -281,47 +305,13 @@ public class CBIRSession {
     /**
      * Not all patches need quicklooks. This function adds quicklooks to the patches requested
      *
-     * @param patch the patches to get quicklooks for
+     * @param patch             the patches to get quicklooks for
      * @param quicklookBandName the quicklook to retrieve
      */
     public void getPatchQuicklook(final Patch patch, final String quicklookBandName) {
         classifier.getPatchQuicklook(patch, quicklookBandName);
     }
 
-    public void getImagesToLabel(final ProgressMonitor pm) throws Exception {
-
-        relevantImageList.clear();
-        irrelevantImageList.clear();
-
-        final Patch[] imagesToLabel = classifier.getMostAmbigousPatches(pm);
-        for (Patch patch : imagesToLabel) {
-            if (patch.getLabel() == Patch.Label.RELEVANT) {
-                relevantImageList.add(patch);
-            } else {
-                // default to irrelevant so user only needs to select the relevant
-                patch.setLabel(Patch.Label.IRRELEVANT);
-                irrelevantImageList.add(patch);
-            }
-        }
-        if (!pm.isCanceled()) {
-            fireNotification(Notification.NewTrainingImages, classifier);
-        }
-    }
-
-    public void trainModel(final ProgressMonitor pm) throws Exception {
-        final List<Patch> labeledList = new ArrayList<>(30);
-        labeledList.addAll(relevantImageList);
-        labeledList.addAll(irrelevantImageList);
-
-        classifier.train(labeledList.toArray(new Patch[labeledList.size()]), pm);
-
-        fireNotification(Notification.ModelTrained, classifier);
-    }
-
-    public void retrieveImages() throws Exception {
-        retrievedImageList.clear();
-        retrievedImageList.addAll(Arrays.asList(classifier.classify()));
-    }
 
     public Patch[] getRetrievedImages() {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);

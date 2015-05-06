@@ -133,6 +133,9 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
 //            SnapDialogs.showError(msg);
 //        }
 
+        System.out.println("datasetDir = " + datasetDir);
+
+
         // TODO maybe harmonize with PatchAccess, but structure is abit different
         try {
             final File[] fexDirs = datasetDir.listFiles(new FileFilter() {
@@ -144,6 +147,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             if (fexDirs == null || fexDirs.length == 0) {
                 return;
             }
+            System.out.println("fexDirs = " + fexDirs);
 
             final File[] patchDirs = fexDirs[0].listFiles(new FileFilter() {
                 @Override
@@ -154,8 +158,11 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             if (patchDirs == null || patchDirs.length == 0) {
                 return;
             }
+            System.out.println("patchDirs = " + patchDirs);
 
             final File featureFile = new File(patchDirs[0], "features.txt");
+            System.out.println("featureFile = " + featureFile);
+
             patch.readFeatureFile(featureFile, session.getEffectiveFeatureTypes());
 
         } catch (IOException ioe) {

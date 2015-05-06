@@ -17,6 +17,7 @@
 package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
@@ -123,15 +124,57 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-        al.resetQuery();
-        al.setQueryPatches(queryPatches);
-        populateArchivePatches(pm);
-        saveClassifier();
+    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        pm.beginTask("start training", 100);
+        try {
+            al.resetQuery();
+            al.setQueryPatches(queryPatches);
+            populateArchivePatches(SubProgressMonitor.create(pm, 50));
+            return al.getMostAmbiguousPatches(model.getNumTrainingImages(), SubProgressMonitor.create(pm, 50));
+        } finally {
+            saveClassifier();
+            pm.done();
+        }
     }
 
     @Override
-    public void populateArchivePatches(final ProgressMonitor pm) {
+    public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+        pm.beginTask("train and classify", 100);
+        try {
+            if (prePopulate) {
+                populateArchivePatches(SubProgressMonitor.create(pm, 50));
+            }
+            al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
+            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 10);
+            al.classify(archivePatches);
+            final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
+            for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
+                if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
+                    relavantImages.add(archivePatches[i]);
+                }
+            }
+            return relavantImages.toArray(new Patch[relavantImages.size()]);
+        } finally {
+            saveClassifier();
+            pm.done();
+        }
+    }
+
+    @Override
+    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+        pm.beginTask("train and classify", 100);
+        try {
+            if (prePopulate) {
+                populateArchivePatches(SubProgressMonitor.create(pm, 50));
+            }
+            return al.getMostAmbiguousPatches(model.getNumTrainingImages(), SubProgressMonitor.create(pm, 50));
+        } finally {
+            saveClassifier();
+            pm.done();
+        }
+    }
+
+    private void populateArchivePatches(final ProgressMonitor pm) {
         final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
 
         if(archivePatches.length > 0) {
@@ -148,31 +191,7 @@ public class LocalClassifier implements Classifier {
         }
     }
 
-    @Override
-    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
-        return al.getMostAmbiguousPatches(model.getNumTrainingImages(), pm);
-    }
-
-    @Override
-    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-        al.train(labeledPatches, pm);
-        saveClassifier();
-    }
-
-    @Override
-    public Patch[] classify() {
-        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 10);
-        al.classify(archivePatches);
-        final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
-        for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
-            if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
-                relavantImages.add(archivePatches[i]);
-            }
-        }
-        return relavantImages.toArray(new Patch[relavantImages.size()]);
-    }
-
-    @Override
+       @Override
     public FeatureType[] getEffectiveFeatureTypes() {
         return db.getEffectiveFeatureTypes();
     }

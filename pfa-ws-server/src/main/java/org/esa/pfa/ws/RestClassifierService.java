@@ -20,8 +20,10 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.classifier.LocalClassifierManager;
+import org.esa.pfa.classifier.PatchList;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.op.Patch;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -44,10 +46,7 @@ public class RestClassifierService {
     private final URI dbUri;
 
     public RestClassifierService() throws IOException, URISyntaxException {
-        System.out.println("WebClassifierManagerServer.WebClassifierManagerServer " + this);
         String dbUriProperty = System.getProperty("dbUri", null);
-        System.out.println("dbUriProperty = " + dbUriProperty);
-
         dbUri = new File(dbUriProperty).toURI();
     }
 
@@ -103,16 +102,50 @@ public class RestClassifierService {
         }
     }
 
+//    @POST
+//    @Path("/{appId}/classifiers/{classifierName}/populateArchivePatches")
+//    public String populateArchivePatches(
+//            @PathParam(value = "appId") final String appId,
+//            @PathParam(value = "classifierName") final String classifierName,
+//            @FormParam("modelXML") final String modelXML
+//    ) {
+//        System.out.println("WebClassifierManagerServer.populateArchivePatches" + this);
+//        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
+//        System.out.println("modelXML = " + modelXML);
+//
+//        try {
+//            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+//            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
+//            if (!Files.exists(classifierPath)) {
+//                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
+//            }
+//            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
+//            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+//
+//            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+//                                                                  localClassifierManager.getPatchPath(),
+//                                                                  localClassifierManager.getDbPath());
+//            localClassifier.getActiveLearning().setTrainingData(ProgressMonitor.NULL);
+//            localClassifier.populateArchivePatches(ProgressMonitor.NULL);
+//            localClassifier.saveClassifier();
+//
+//            return  classifierModel.toXML();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return "";
+//        }
+//    }
+
     @POST
-    @Path("/{appId}/classifiers/{classifierName}/populateArchivePatches")
+    @Path("/{appId}/classifiers/{classifierName}/startTraining")
     public String populateArchivePatches(
             @PathParam(value = "appId") final String appId,
             @PathParam(value = "classifierName") final String classifierName,
-            @FormParam("modelXML") final String modelXML
+            @FormParam("queryPatches") final String queryPatches
     ) {
         System.out.println("WebClassifierManagerServer.populateArchivePatches" + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-        System.out.println("modelXML = " + modelXML);
+        System.out.println("queryPatches = " + queryPatches);
 
         try {
             LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
@@ -126,11 +159,14 @@ public class RestClassifierService {
             LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
-            localClassifier.getActiveLearning().setTrainingData(ProgressMonitor.NULL);
-            localClassifier.populateArchivePatches(ProgressMonitor.NULL);
+            Patch[] qPatches = PatchList.fromXML(queryPatches);
+            Patch[] rPatches = localClassifier.startTraining(qPatches, ProgressMonitor.NULL);
+            String resultXML = PatchList.toXML(rPatches);
+//            localClassifier.getActiveLearning().setTrainingData(ProgressMonitor.NULL);
+//            localClassifier.populateArchivePatches(ProgressMonitor.NULL);
             localClassifier.saveClassifier();
 
-            return  classifierModel.toXML();
+            return resultXML;
         } catch (IOException e) {
             e.printStackTrace();
             return "";
@@ -139,6 +175,8 @@ public class RestClassifierService {
 
 
 
+
+    // TODO
 //    @DELETE
 //    public void delete() {
 //

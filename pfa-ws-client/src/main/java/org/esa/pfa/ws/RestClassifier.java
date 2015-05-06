@@ -20,7 +20,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierModel;
-import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
@@ -70,37 +69,38 @@ public class RestClassifier implements Classifier {
     @Override
     public void saveClassifier() throws IOException {
         // TODO
-
     }
 
     @Override
-    public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-        al.resetQuery();
-        al.setQueryPatches(queryPatches);
-        String modelXML = model.toXML();
+    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        return restClient.startTraining(classifierName, queryPatches);
+    }
 
-//        populateArchivePatches(pm);
+    @Override
+    public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+        return new Patch[0];
+    }
+
+    @Override
+    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+        return new Patch[0];
+    }
+
+    //    @Override
+//    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+//        al.resetQuery();
+//        al.setQueryPatches(queryPatches);
+//        String modelXML = model.toXML();
+//
+////        populateArchivePatches(pm);
+////        saveClassifier();
+//        String newModelXML = restClient.populateArchivePatches(classifierName, modelXML);
+//        model = ClassifierModel.fromXML(newModelXML);
+//        al = new ActiveLearning(model);
+//        al.setTrainingData(pm);
 //        saveClassifier();
-        String newModelXML = restClient.populateArchivePatches(classifierName, modelXML);
-        model = ClassifierModel.fromXML(newModelXML);
-        al = new ActiveLearning(model);
-        al.setTrainingData(pm);
-    }
-
-    @Override
-    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
-        return new Patch[0];
-    }
-
-    @Override
-    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-
-    }
-
-    @Override
-    public Patch[] classify() {
-        return new Patch[0];
-    }
+//        return al.getMostAmbiguousPatches(model.getNumTrainingImages(), pm);
+//    }
 
     @Override
     public int getNumIterations() {
@@ -112,10 +112,6 @@ public class RestClassifier implements Classifier {
         return new FeatureType[0];
     }
 
-    @Override
-    public void populateArchivePatches(ProgressMonitor pm) {
-
-    }
 
     @Override
     public void getPatchQuicklook(Patch patch, String quicklookBandName) {

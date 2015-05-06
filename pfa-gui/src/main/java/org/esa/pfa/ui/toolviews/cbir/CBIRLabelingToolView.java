@@ -204,7 +204,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Retrieving images...", 100);
                         try {
-                            session.trainModel(pm);
+                            session.trainAndClassify(false, pm);
                             if (!pm.isCanceled()) {
                                 return Boolean.TRUE;
                             }

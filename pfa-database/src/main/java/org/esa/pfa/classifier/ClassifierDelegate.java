@@ -76,28 +76,41 @@ public class ClassifierDelegate {
     }
 
     // org.esa.pfa.search.Classifier.setQueryImages()
-    public void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-        classifier.startTraining(queryPatches, pm);
-    }
+//    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+//        return classifier.startTraining(queryPatches, pm);
+//    }
 
     // org.esa.pfa.search.Classifier.getImagesToLabel()
-    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
-        return classifier.getMostAmbigousPatches(pm);
-    }
+//    public Patch[] getMostAmbigousPatches(ProgressMonitor pm) {
+//        return classifier.getMostAmbigousPatches(pm);
+//    }
 
     // org.esa.pfa.search.Classifier.trainModel()
-    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-        classifier.train(labeledPatches, pm);
-    }
+//    public void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+//        classifier.trainAndClassify(labeledPatches, pm);
+//    }
 
     // org.esa.pfa.search.Classifier.getRetrievedImages()
-    public Patch[] classify() {
-        return classifier.classify();
+//    public Patch[] classify() {
+//        return classifier.classify();
+//    }
+
+//    public void populateArchivePatches(ProgressMonitor pm) {
+//        classifier.populateArchivePatches(pm);
+//    }
+
+    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        return classifier.startTraining(queryPatches, pm);
     }
 
-    public void populateArchivePatches(ProgressMonitor pm) {
-        classifier.populateArchivePatches(pm);
-    }
+    public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+            return classifier.trainAndClassify(prePopulate, labeledPatches, pm);
+        }
+
+    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+            return classifier.getMostAmbigous(prePopulate, pm);
+        }
+
 
     public void getPatchQuicklook(Patch patch, String quicklookBandName) {
         classifier.getPatchQuicklook(patch, quicklookBandName);
