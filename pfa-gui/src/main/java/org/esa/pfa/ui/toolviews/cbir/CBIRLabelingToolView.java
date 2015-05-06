@@ -196,7 +196,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 }
 
                 // create window if needed first and add to session listeners
-                CBIRControlCentreToolView.showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
+                CBIRControlCentreToolView.showWindow("CBIRRetrievedImagesToolView");
 
                 ProgressMonitorSwingWorker<Boolean, Void> worker =
                         new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {

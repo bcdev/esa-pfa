@@ -213,7 +213,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
 
                 // create window if needed first and add to session listeners
-                CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+                CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
 
                 final Window parentWindow = SwingUtilities.getWindowAncestor(this);
                 ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {

@@ -156,7 +156,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
             final String command = event.getActionCommand();
             if (command.equals("improveBtn")) {
 
-                CBIRControlCentreToolView.showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+                CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
 
                 ProgressMonitorSwingWorker<Boolean, Void> worker =
                         new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {

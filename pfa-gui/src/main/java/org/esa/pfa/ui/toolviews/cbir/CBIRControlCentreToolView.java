@@ -26,7 +26,6 @@ import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.ui.GridBagUtils;
 import org.esa.snap.framework.ui.ModalDialog;
-import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
@@ -324,18 +323,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         return panel;
     }
 
-    public static void showWindow(final Class windowClass, final String windowID) {
+    public static void showWindow(final String windowID) {
 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                boolean windowOpen = WindowUtilities.getOpened(windowClass).count() > 0;
-                if (windowOpen) {
-                    WindowUtilities.getOpened(CBIRQueryToolView.class).findFirst().get().setVisible(true);
-                } else {
-                    final TopComponent window = WindowManager.getDefault().findTopComponent(windowID);
-                    window.open();
-                    window.requestActive();
-                }
+                final TopComponent window = WindowManager.getDefault().findTopComponent(windowID);
+                window.open();
+                window.requestActive();
             }
         });
     }
@@ -347,7 +341,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         queryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    showWindow(CBIRQueryToolView.class, "CBIRQueryToolView");
+                    showWindow("CBIRQueryToolView");
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error calling Query", t);
                 }
@@ -378,7 +372,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                             };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        showWindow(CBIRLabelingToolView.class, "CBIRLabelingToolView");
+                        showWindow("CBIRLabelingToolView");
                     }
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error getting images", t);
@@ -410,7 +404,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                             };
                     worker.executeWithBlocking();
                     if (worker.get()) {
-                        showWindow(CBIRRetrievedImagesToolView.class, "CBIRRetrievedImagesToolView");
+                        showWindow("CBIRRetrievedImagesToolView");
                     }
 
                 } catch (Throwable t) {
