@@ -27,6 +27,7 @@ import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
+import org.esa.snap.util.SystemUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -69,6 +70,7 @@ public class LocalClassifier implements Classifier {
             db = new PatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
             patchAccess = new PatchAccess(patchPath.toFile(), effectiveFeatureTypes);
         } else {
+            SystemUtils.LOG.severe("LocalClassifier database not found");
             // currently for test only
             db = null;
             patchAccess = null;
