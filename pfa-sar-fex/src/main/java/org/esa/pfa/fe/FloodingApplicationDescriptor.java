@@ -15,9 +15,13 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.pfa.fe.op.FeatureType;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.util.SystemUtils;
 
 import java.awt.*;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -44,6 +48,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static final String DEFAULT_ALL_QUERY = "product:ASA*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
+    private static FeatureType[] featureTypes = createFeatureTypes();
 
     private static Properties properties = new Properties(System.getProperties());
 
@@ -127,6 +132,11 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
         return defaultFeatureSet;
     }
 
+    @Override
+    public FeatureType[] getFeatureTypes() {
+        return featureTypes;
+    }
+
     private static Set<String> getStringSet(String csv) {
         String[] values = csv.split(",");
         for (int i = 0; i < values.length; i++) {
@@ -138,5 +148,16 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     @Override
     public File getLocalProductDir() {
         return null;
+    }
+
+    private static FeatureType[] createFeatureTypes() {
+        return new FeatureType[]{
+                    /*00*/ new FeatureType("patch", "Patch product", Product.class),
+                    /*01*/ new FeatureType("sigma0_ql", "Sigma0 quicklook", RenderedImage.class),
+                    /*02*/ new FeatureType("speckle_divergence_ql", "Speckle_divergence quicklook", RenderedImage.class),
+                    /*03*/ new FeatureType("speckle_divergence", "Speckle divergence statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*04*/ new FeatureType("speckle_divergence.percentOverPnt4", "Sample percent over threshold of 0.4", Double.class),
+                    /*05*/ new FeatureType("speckle_divergence.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
+        };
     }
 }

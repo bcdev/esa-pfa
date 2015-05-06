@@ -20,9 +20,11 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.db.PatchQuery;
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.PatchAccess;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
@@ -37,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A local implementation
@@ -59,8 +62,12 @@ public class LocalClassifier implements Classifier {
         this.applicationDescriptor = applicationDescriptor;
         this.al = new ActiveLearning(model);
         if (Files.exists(dbPath.resolve("ds-descriptor.xml"))) {
-            db = new PatchQuery(dbPath.toFile(), applicationDescriptor.getDefaultFeatureSet());
-            patchAccess = new PatchAccess(patchPath.toFile(), db.getEffectiveFeatureTypes());
+            DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
+            Set<String> defaultFeatureSet = applicationDescriptor.getDefaultFeatureSet();
+            FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
+            FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
+            db = new PatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
+            patchAccess = new PatchAccess(patchPath.toFile(), effectiveFeatureTypes);
         } else {
             // currently for test only
             db = null;
@@ -189,11 +196,6 @@ public class LocalClassifier implements Classifier {
 
             al.setRandomPatches(archivePatches, pm);
         }
-    }
-
-       @Override
-    public FeatureType[] getEffectiveFeatureTypes() {
-        return db.getEffectiveFeatureTypes();
     }
 
     @Override

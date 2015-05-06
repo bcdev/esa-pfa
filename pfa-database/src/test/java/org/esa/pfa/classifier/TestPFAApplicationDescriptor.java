@@ -17,6 +17,7 @@
 package org.esa.pfa.classifier;
 
 import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.op.FeatureType;
 
 import java.awt.*;
 import java.io.File;
@@ -80,6 +81,11 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     @Override
     public Set<String> getDefaultFeatureSet() {
         return null;
+    }
+
+    @Override
+    public FeatureType[] getFeatureTypes() {
+        return new FeatureType[0];
     }
 
     @Override

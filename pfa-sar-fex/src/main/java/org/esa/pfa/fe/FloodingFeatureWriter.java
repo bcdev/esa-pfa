@@ -17,7 +17,6 @@ package org.esa.pfa.fe;
 
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductNodeGroup;
 import org.esa.snap.framework.datamodel.Stx;
 import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.framework.gpf.OperatorSpi;
@@ -54,14 +53,7 @@ public class FloodingFeatureWriter extends FeatureWriter {
     @Override
     protected FeatureType[] getFeatureTypes() {
         if (featureTypes == null) {
-            featureTypes = new FeatureType[]{
-                    /*00*/ new FeatureType("patch", "Patch product", Product.class),
-                    /*01*/ new FeatureType("sigma0_ql", "Sigma0 quicklook", RenderedImage.class),
-                    /*02*/ new FeatureType("speckle_divergence_ql", "Speckle_divergence quicklook", RenderedImage.class),
-                    /*03*/ new FeatureType("speckle_divergence", "Speckle divergence statistics", STX_ATTRIBUTE_TYPES),
-                    /*04*/ new FeatureType("speckle_divergence.percentOverPnt4", "Sample percent over threshold of 0.4", Double.class),
-                    /*05*/ new FeatureType("speckle_divergence.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
-            };
+            featureTypes = new FloodingApplicationDescriptor().getFeatureTypes();
         }
         return featureTypes;
     }

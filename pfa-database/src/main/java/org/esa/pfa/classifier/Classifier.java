@@ -46,8 +46,6 @@ public interface Classifier {
 
     Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
 
-    FeatureType[] getEffectiveFeatureTypes();
-
     void getPatchQuicklook(Patch patch, String quicklookBandName);
 
     File getPatchProductFile(Patch patch) throws IOException;

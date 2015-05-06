@@ -15,7 +15,12 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.pfa.fe.op.AttributeType;
+import org.esa.pfa.fe.op.FeatureType;
+
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Set;
 
 /**
 
@@ -43,5 +48,29 @@ public abstract class AbstractApplicationDescriptor implements PFAApplicationDes
      * @return the  dimension
      */
     public abstract Dimension getPatchDimension();
+
+    public static FeatureType[] getEffectiveFeatureTypes(FeatureType[] featureTypes, Set<String> featureNames) {
+        ArrayList<FeatureType> effectiveFeatureTypes = new ArrayList<>();
+        for (FeatureType featureType : featureTypes) {
+            if (featureType.hasAttributes()) {
+                for (AttributeType attrib : featureType.getAttributeTypes()) {
+                    final String effectiveName = featureType.getName() + '.' + attrib.getName();
+                    if (acceptFeatureTypeName(featureNames, effectiveName)) {
+                        FeatureType newFeaType = new FeatureType(effectiveName, attrib.getDescription(), attrib.getValueType());
+                        effectiveFeatureTypes.add(newFeaType);
+                    }
+                }
+            } else {
+                if (acceptFeatureTypeName(featureNames, featureType.getName())) {
+                    effectiveFeatureTypes.add(featureType);
+                }
+            }
+        }
+        return effectiveFeatureTypes.toArray(new FeatureType[effectiveFeatureTypes.size()]);
+    }
+
+    private static boolean acceptFeatureTypeName(Set<String> allowedNames, String name) {
+        return allowedNames == null || allowedNames.contains(name);
+    }
 
 }

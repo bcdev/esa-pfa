@@ -11,7 +11,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.NumericUtils;
-import org.esa.pfa.fe.op.AttributeType;
 import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
@@ -21,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executors;
 
 /**
@@ -39,9 +37,9 @@ public class PatchQuery implements QueryInterface {
     private final IndexSearcher indexSearcher;
     private final FeatureType[] effectiveFeatureTypes;
 
-    public PatchQuery(final File datasetDir, Set<String> defaultFeatureSet) throws IOException {
-        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
-        effectiveFeatureTypes = getEffectiveFeatureTypes(dsDescriptor.getFeatureTypes(), defaultFeatureSet);
+    public PatchQuery(final File datasetDir, DatasetDescriptor dsDescriptor, FeatureType[] effectiveFeatureTypes) throws IOException {
+        this.effectiveFeatureTypes = effectiveFeatureTypes;
+
         parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
         NumericConfiguration numConf = new NumericConfiguration(precisionStep);
         parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
@@ -52,10 +50,6 @@ public class PatchQuery implements QueryInterface {
             IndexReader indexReader = DirectoryReader.open(indexDirectory);
             indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
         }
-    }
-
-    public FeatureType[] getEffectiveFeatureTypes() {
-        return effectiveFeatureTypes;
     }
 
     public Patch[] query(String queryExpr, int hitCount) {
@@ -128,27 +122,5 @@ public class PatchQuery implements QueryInterface {
     }
 
 
-    public static FeatureType[] getEffectiveFeatureTypes(FeatureType[] featureTypes, Set<String> featureNames) {
-        ArrayList<FeatureType> effectiveFeatureTypes = new ArrayList<>();
-        for (FeatureType featureType : featureTypes) {
-            if (featureType.hasAttributes()) {
-                for (AttributeType attrib : featureType.getAttributeTypes()) {
-                    final String effectiveName = featureType.getName() + '.' + attrib.getName();
-                    if (acceptFeatureTypeName(featureNames, effectiveName)) {
-                        FeatureType newFeaType = new FeatureType(effectiveName, attrib.getDescription(), attrib.getValueType());
-                        effectiveFeatureTypes.add(newFeaType);
-                    }
-                }
-            } else {
-                if (acceptFeatureTypeName(featureNames, featureType.getName())) {
-                    effectiveFeatureTypes.add(featureType);
-                }
-            }
-        }
-        return effectiveFeatureTypes.toArray(new FeatureType[effectiveFeatureTypes.size()]);
-    }
 
-    private static boolean acceptFeatureTypeName(Set<String> allowedNames, String name) {
-        return allowedNames == null || allowedNames.contains(name);
-    }
 }

@@ -15,6 +15,8 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.pfa.fe.op.FeatureType;
+
 import java.awt.Dimension;
 import java.io.File;
 import java.io.InputStream;
@@ -100,6 +102,11 @@ public interface PFAApplicationDescriptor {
      * @return The name of the numeric features to be used by the classifier. May be {@code null}, and if so, all numeric features will be used.
      */
     Set<String> getDefaultFeatureSet();
+
+    /**
+     * @return The features types provided
+     */
+    FeatureType[] getFeatureTypes();
 
     // todo - remove it once we are done with this demo hacking...
     /**

@@ -88,9 +88,6 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
-    public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
-    public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
-    public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
     public static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "pfa-algalblooms/auxdata");
 
     String OC4_R = "log10(max(max(reflec_2, reflec_3), reflec_4) / reflec_5)";
@@ -208,50 +205,9 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     @Override
     protected FeatureType[] getFeatureTypes() {
+
         if (featureTypes == null) {
-            featureTypes = new FeatureType[]{
-                        /*00*/
-                    new FeatureType("patch", "Patch product", Product.class),
-                        /*01*/
-                    new FeatureType("rgb1_ql", "RGB quicklook for TOA reflectances (fixed range)", RenderedImage.class),
-                        /*02*/
-                    new FeatureType("rgb2_ql", "RGB quicklook for TOA reflectances (dynamic range, ROI only)",
-                                    RenderedImage.class),
-                        /*03*/
-                    new FeatureType("flh_ql",
-                                    "Grey-scale quicklook for 'flh' [" + minSampleFlh + ", " + maxSampleFlh + "]",
-                                    RenderedImage.class),
-                        /*04*/
-                    new FeatureType("mci_ql",
-                                    "Grey-scale quicklook for 'mci' [" + minSampleMci + ", " + maxSampleMci + "]",
-                                    RenderedImage.class),
-                        /*05*/
-                    new FeatureType("chl_ql",
-                                    "Grey-scale quicklook for 'chl' [" + minSampleChl + ", " + maxSampleChl + "]",
-                                    RenderedImage.class),
-                        /*06*/
-                    new FeatureType("flh", "Fluorescence Line Height", STX_ATTRIBUTE_TYPES),
-                        /*07*/
-                    new FeatureType("mci", "Maximum Chlorophyll Index", STX_ATTRIBUTE_TYPES),
-                        /*08*/
-                    new FeatureType("chl", "Chlorophyll Concentration", STX_ATTRIBUTE_TYPES),
-                        /*09*/
-                    new FeatureType("red", "Red channel (" + R_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*10*/
-                    new FeatureType("green", "Green channel (" + G_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*11*/
-                    new FeatureType("blue", "Blue channel (" + B_EXPR + ")", STX_ATTRIBUTE_TYPES),
-                        /*12*/
-                    new FeatureType("coast_dist", "Distance from next coast pixel (km)", STX_ATTRIBUTE_TYPES),
-                        /*13*/
-                    new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
-                        /*14*/
-                    new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
-                        /*15*/
-                    new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
-                        /*16*/
-                    new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
-            };
+            featureTypes = new AlgalBloomApplicationDescriptor().getFeatureTypes();
         }
         return featureTypes;
     }
@@ -516,14 +472,14 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     private void addTriStimulusBands(Product product) {
 
-        Band r = product.addBand("vis_red", R_EXPR);
-        Band g = product.addBand("vis_green", G_EXPR);
-        Band b = product.addBand("vis_blue", B_EXPR);
+        Band r = product.addBand("vis_red", AlgalBloomApplicationDescriptor.R_EXPR);
+        Band g = product.addBand("vis_green", AlgalBloomApplicationDescriptor.G_EXPR);
+        Band b = product.addBand("vis_blue", AlgalBloomApplicationDescriptor.B_EXPR);
         applyValidPixelExpr("NOT l1_flags.INVALID", r, g, b);
 
-        Band mr = product.addBand("red", R_EXPR);
-        Band mg = product.addBand("green", G_EXPR);
-        Band mb = product.addBand("blue", B_EXPR);
+        Band mr = product.addBand("red", AlgalBloomApplicationDescriptor.R_EXPR);
+        Band mg = product.addBand("green", AlgalBloomApplicationDescriptor.G_EXPR);
+        Band mb = product.addBand("blue", AlgalBloomApplicationDescriptor.B_EXPR);
         applyValidPixelExpr(FEX_ROI_MASK_NAME, mr, mg, mb);
     }
 

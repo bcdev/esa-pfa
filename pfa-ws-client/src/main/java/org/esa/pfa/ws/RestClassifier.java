@@ -107,11 +107,6 @@ public class RestClassifier implements Classifier {
         return model.getNumIterations();
     }
 
-    @Override
-    public FeatureType[] getEffectiveFeatureTypes() {
-        return new FeatureType[0];
-    }
-
 
     @Override
     public void getPatchQuicklook(Patch patch, String quicklookBandName) {

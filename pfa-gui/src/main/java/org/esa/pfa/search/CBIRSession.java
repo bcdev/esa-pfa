@@ -19,6 +19,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.op.FeatureType;
@@ -34,6 +35,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Encapsulates the state of a user's CBIR session.
@@ -193,7 +195,15 @@ public class CBIRSession {
     }
 
     public FeatureType[] getEffectiveFeatureTypes() {
-        return classifier.getEffectiveFeatureTypes();
+        String applicationId = classifierManager.getApplicationId();
+        PFAApplicationDescriptor appDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
+        FeatureType[] featureTypes = appDescriptor.getFeatureTypes();
+        Set<String> defaultFeatureSet = appDescriptor.getDefaultFeatureSet();
+        FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
+        for (FeatureType effectiveFeatureType : effectiveFeatureTypes) {
+            System.out.println(effectiveFeatureType.getName());
+        }
+        return effectiveFeatureTypes;
     }
 
     public void setNumTrainingImages(final int numTrainingImages) throws Exception {

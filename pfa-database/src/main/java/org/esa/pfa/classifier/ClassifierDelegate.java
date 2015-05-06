@@ -120,12 +120,4 @@ public class ClassifierDelegate {
         return classifier.getPatchProductFile(patch);
     }
 
-    //=============================================
-    //mz: I'm not sure , if they belong here....
-    //=============================================
-
-    public FeatureType[] getEffectiveFeatureTypes() {
-        return classifier.getEffectiveFeatureTypes();
-    }
-
 }

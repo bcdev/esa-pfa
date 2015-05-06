@@ -15,10 +15,14 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.pfa.fe.op.FeatureType;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.SystemUtils;
 
 import java.awt.Dimension;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -39,11 +43,17 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     public static final String DEFAULT_QL_NAME = "rgb1_ql.png";
     public static final String DEFAULT_ALL_QUERY = "product:MER*";
 
+    public static final String R_EXPR = "log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7)";
+    public static final String G_EXPR = "log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6)";
+    public static final String B_EXPR = "log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4)";
+
+
     private static Properties properties = new Properties(System.getProperties());
 
-    private static Dimension    patchDimension = new Dimension(200, 200);
+    private static Dimension patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
     private static File localProductDir;
+    private static FeatureType[] featureTypes = createFeatureTypes();
 
 
     static {
@@ -126,6 +136,12 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     }
 
     @Override
+    public FeatureType[] getFeatureTypes() {
+        return featureTypes;
+    }
+
+
+    @Override
     public File getLocalProductDir() {
         if (localProductDir == null) {
             String property = properties.getProperty("pfa.algalblooms.localProductDir");
@@ -142,5 +158,51 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
             values[i] = values[i].trim();
         }
         return new HashSet<>(Arrays.asList(values));
+    }
+
+    private static FeatureType[] createFeatureTypes() {
+        return new FeatureType[]{
+                                /*00*/
+                new FeatureType("patch", "Patch product", Product.class),
+                                /*01*/
+                new FeatureType("rgb1_ql", "RGB quicklook for TOA reflectances (fixed range)", RenderedImage.class),
+                                /*02*/
+                new FeatureType("rgb2_ql", "RGB quicklook for TOA reflectances (dynamic range, ROI only)",
+                                RenderedImage.class),
+                                /*03*/
+                new FeatureType("flh_ql",
+                                "Grey-scale quicklook for 'flh'",
+                                RenderedImage.class),
+                                /*04*/
+                new FeatureType("mci_ql",
+                                "Grey-scale quicklook for 'mci'",
+                                RenderedImage.class),
+                                /*05*/
+                new FeatureType("chl_ql",
+                                "Grey-scale quicklook for 'chl'",
+                                RenderedImage.class),
+                                /*06*/
+                new FeatureType("flh", "Fluorescence Line Height", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*07*/
+                new FeatureType("mci", "Maximum Chlorophyll Index", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*08*/
+                new FeatureType("chl", "Chlorophyll Concentration", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*09*/
+                new FeatureType("red", "Red channel (" + R_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*10*/
+                new FeatureType("green", "Green channel (" + G_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*11*/
+                new FeatureType("blue", "Blue channel (" + B_EXPR + ")", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*12*/
+                new FeatureType("coast_dist", "Distance from next coast pixel (km)", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                                /*13*/
+                new FeatureType("flh_hg_pixels", "FLH high-gradient pixel ratio", Double.class),
+                                /*14*/
+                new FeatureType("valid_pixels", "Ratio of valid pixels in patch [0, 1]", Double.class),
+                                /*15*/
+                new FeatureType("fractal_index", "Fractal index estimation [1, 2]", Double.class),
+                                /*16*/
+                new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
+        };
     }
 }
