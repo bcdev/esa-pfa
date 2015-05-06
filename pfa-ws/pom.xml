@@ -13,7 +13,7 @@
     <artifactId>pfa-ws</artifactId>
     <name>ESA PFA Web Services Experiments</name>
 
-    <packaging>nbm</packaging>
+    <packaging>jar</packaging>
     
     <properties>
         <jersey.version>2.17</jersey.version>
@@ -97,22 +97,6 @@
                 </executions>
                 <configuration>
                     <mainClass>com.org.esa.pfa.ws.Main</mainClass>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>nbm-maven-plugin</artifactId>
-                <configuration>
-                    <publicPackages>
-                        <publicPackage>org.esa.pfa.*</publicPackage>
-                    </publicPackages>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
         </plugins>
