@@ -99,11 +99,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     public JComponent createControl() {
-        Preferences preferences = SnapApp.getDefault().getPreferences();
-        String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
-        String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "");
-        String uri = !remoteValue.isEmpty() ? remoteValue : folderValue;
-        dbLabel = new JLabel(uri);
+        dbLabel = new JLabel("");
 
         final JPanel contentPane = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
@@ -135,12 +131,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     String localFolder = dlg.getLocalFolder();
                     String remoteAddress = dlg.getRemoteAddress();
                     String uri = dlg.isLocal() ? localFolder : remoteAddress;
+                    String applicationName = dlg.getApplicationName();
 
                     PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-                    PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(dlg.getApplicationName());
+                    PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
                     session.createClassifierManager(uri, applicationDescriptor.getId());
 
-                    dbLabel.setText(uri);
+                    dbLabel.setText(applicationName + ":" + uri);
                     initClassifierList();
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error creating new classifier", t);
@@ -270,13 +267,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         initClassifierList();
         updateControls();
-        setDbUri("TODO");
 
         return mainPane;
-    }
-
-    private void setDbUri(String uri) {
-        dbLabel.setText(uri);
     }
 
     //todo @Override
