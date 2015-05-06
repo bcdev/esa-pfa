@@ -85,7 +85,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
         RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
-        return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
+        return new ClassifierDelegate(classifierName, classifier);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
         RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
-        return new ClassifierDelegate(classifierName, applicationDescriptor, classifier);
+        return new ClassifierDelegate(classifierName, classifier);
     }
 
     @Override

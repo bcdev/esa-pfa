@@ -29,7 +29,6 @@ import java.util.Arrays;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 
@@ -79,7 +78,6 @@ public class LocalClassifierManagerTest {
         ClassifierDelegate classifier = localClassifierManager.create("cName");
         assertNotNull(classifier);
         assertEquals("cName", classifier.getName());
-        assertSame(testPFAApplicationDescriptor, classifier.getApplicationDescriptor());
 
         String[] list = localClassifierManager.list();
         assertNotNull(list);
@@ -114,6 +112,5 @@ public class LocalClassifierManagerTest {
         assertNotNull(classifier1);
         assertNotNull(classifier2);
         assertEquals("cName", classifier2.getName());
-        assertSame(testPFAApplicationDescriptor, classifier2.getApplicationDescriptor());
     }
 }

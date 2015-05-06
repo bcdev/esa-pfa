@@ -115,7 +115,7 @@ public class LocalClassifier implements Classifier {
         LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
         localClassifier.al.setTrainingData(ProgressMonitor.NULL);
 
-        return new ClassifierDelegate(classifierName, applicationDescriptor, localClassifier);
+        return new ClassifierDelegate(classifierName, localClassifier);
     }
 
     @Override

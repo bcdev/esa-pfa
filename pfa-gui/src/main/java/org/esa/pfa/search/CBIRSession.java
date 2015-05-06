@@ -63,6 +63,7 @@ public class CBIRSession {
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private ClassifierDelegate classifier;
+    private PFAApplicationDescriptor applicationDescriptor;
     private ClassifierManager classifierManager;
 
 
@@ -111,6 +112,7 @@ public class CBIRSession {
             URI uri = new URI(uriString);
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
                 classifierManager = new RestClassifierManagerClient(uri, appId);
+                applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
             }
         } else {
             // if file URL
@@ -123,6 +125,7 @@ public class CBIRSession {
             }
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
                 classifierManager = new LocalClassifierManager(uri, appId);
+                applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
             }
         }
         return classifierManager;
@@ -130,9 +133,7 @@ public class CBIRSession {
 
     public void createClassifier(String classifierName) throws IOException {
         try {
-            String appId = classifierManager.getApplicationId();
-            PFAApplicationDescriptor descriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
-            quicklookBandName1 = descriptor.getDefaultQuicklookFileName();
+            quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
             quicklookBandName2 = quicklookBandName1;
             classifier = classifierManager.create(classifierName);
             clearPatchLists();
@@ -186,7 +187,7 @@ public class CBIRSession {
     }
 
     public PFAApplicationDescriptor getApplicationDescriptor() {
-        return classifier.getApplicationDescriptor();
+        return applicationDescriptor;
     }
 
     public ProductOrderBasket getProductOrderBasket() {
@@ -198,10 +199,8 @@ public class CBIRSession {
     }
 
     public FeatureType[] getEffectiveFeatureTypes() {
-        String applicationId = classifierManager.getApplicationId();
-        PFAApplicationDescriptor appDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
-        FeatureType[] featureTypes = appDescriptor.getFeatureTypes();
-        Set<String> defaultFeatureSet = appDescriptor.getDefaultFeatureSet();
+        FeatureType[] featureTypes = applicationDescriptor.getFeatureTypes();
+        Set<String> defaultFeatureSet = applicationDescriptor.getDefaultFeatureSet();
         return AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
     }
 
