@@ -86,27 +86,10 @@ public class RestClassifier implements Classifier {
         return new Patch[0];
     }
 
-    //    @Override
-//    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-//        al.resetQuery();
-//        al.setQueryPatches(queryPatches);
-//        String modelXML = model.toXML();
-//
-////        populateArchivePatches(pm);
-////        saveClassifier();
-//        String newModelXML = restClient.populateArchivePatches(classifierName, modelXML);
-//        model = ClassifierModel.fromXML(newModelXML);
-//        al = new ActiveLearning(model);
-//        al.setTrainingData(pm);
-//        saveClassifier();
-//        return al.getMostAmbiguousPatches(model.getNumTrainingImages(), pm);
-//    }
-
     @Override
     public int getNumIterations() {
         return model.getNumIterations();
     }
-
 
     @Override
     public void getPatchQuicklook(Patch patch, String quicklookBandName) {
@@ -118,14 +101,4 @@ public class RestClassifier implements Classifier {
         return null;
     }
 
-    @Override
-    public void addQueryPatch(Patch patch) {
-        model.getQueryData().add(patch);
-    }
-
-    @Override
-    public Patch[] getQueryPatches() {
-        List<Patch> queryData = model.getQueryData();
-        return queryData.toArray(new Patch[queryData.size()]);
-    }
 }

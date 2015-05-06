@@ -120,17 +120,6 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public void addQueryPatch(Patch patch) {
-        model.getQueryData().add(patch);
-    }
-
-    @Override
-    public Patch[] getQueryPatches() {
-        List<Patch> queryData = model.getQueryData();
-        return queryData.toArray(new Patch[queryData.size()]);
-    }
-
-    @Override
     public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
         pm.beginTask("start training", 100);
         try {

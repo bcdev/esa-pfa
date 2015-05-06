@@ -50,8 +50,4 @@ public interface Classifier {
 
     File getPatchProductFile(Patch patch) throws IOException;
 
-    void addQueryPatch(Patch patch);
-
-    Patch[] getQueryPatches();
-
 }

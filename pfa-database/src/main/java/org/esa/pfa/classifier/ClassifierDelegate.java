@@ -66,14 +66,6 @@ public class ClassifierDelegate {
         return classifier.getNumIterations();
     }
 
-    public void addQueryPatch(Patch patch) {
-        classifier.addQueryPatch(patch);
-    }
-
-    public Patch[] getQueryPatches() {
-        return classifier.getQueryPatches();
-    }
-
     public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
         return classifier.startTraining(queryPatches, pm);
     }

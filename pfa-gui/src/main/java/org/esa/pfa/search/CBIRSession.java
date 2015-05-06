@@ -58,11 +58,13 @@ public class CBIRSession {
     private final List<Patch> relevantImageList = new ArrayList<>(50);
     private final List<Patch> irrelevantImageList = new ArrayList<>(50);
     private final List<Patch> retrievedImageList = new ArrayList<>(500);
+    private final List<Patch> queryPatches = new ArrayList<>(5);
 
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private ClassifierDelegate classifier;
     private ClassifierManager classifierManager;
+
 
     private String quicklookBandName1;
     private String quicklookBandName2;
@@ -158,6 +160,7 @@ public class CBIRSession {
         relevantImageList.clear();
         irrelevantImageList.clear();
         retrievedImageList.clear();
+        queryPatches.clear();
     }
 
     public void deleteClassifier() throws Exception {
@@ -239,11 +242,11 @@ public class CBIRSession {
     }
 
     public void addQueryPatch(final Patch patch) {
-        classifier.addQueryPatch(patch);
+        queryPatches.add(patch);
     }
 
     public Patch[] getQueryPatches() {
-        return classifier.getQueryPatches();
+        return queryPatches.toArray(new Patch[queryPatches.size()]);
     }
 
     public void startTraining(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
