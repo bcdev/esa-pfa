@@ -13,7 +13,7 @@
         </sources>
         <parameters>
             <targetDir>${targetDir}</targetDir>
-            <disposeGlobalCaches>false</disposeGlobalCaches>
+            <disposeGlobalCaches>true</disposeGlobalCaches>
             <overwriteMode>true</overwriteMode>
             <skipFeaturesOutput>false</skipFeaturesOutput>
             <skipQuicklookOutput>false</skipQuicklookOutput>
