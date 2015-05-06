@@ -85,7 +85,7 @@ public class LocalClassifierManager implements ClassifierManager {
         ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
         LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
         realLocalClassifier.saveClassifier();
-        return new ClassifierDelegate(classifierName, applicationDescriptor, realLocalClassifier);
+        return new ClassifierDelegate(classifierName, realLocalClassifier);
     }
 
     @Override

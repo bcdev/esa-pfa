@@ -35,7 +35,6 @@ public class RestClassifier implements Classifier {
 
     private final String classifierName;
     private ClassifierModel model;
-    private ActiveLearning al;
     private final RestClient restClient;
 
 
@@ -43,7 +42,6 @@ public class RestClassifier implements Classifier {
         this.classifierName = classifierName;
         this.model = model;
         this.restClient = restClient;
-        this.al = new ActiveLearning(model);
     }
 
     @Override
@@ -67,24 +65,18 @@ public class RestClassifier implements Classifier {
     }
 
     @Override
-    public void saveClassifier() throws IOException {
-        // TODO
-    }
-
-    @Override
     public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
         return restClient.startTraining(classifierName, queryPatches);
     }
 
     @Override
     public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-        return new Patch[0];
+        return restClient.trainAndClassify(classifierName, prePopulate, labeledPatches);
     }
 
     @Override
     public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
-        return new Patch[0];
-    }
+        return restClient.getMostAmbigous(classifierName, prePopulate);    }
 
     @Override
     public int getNumIterations() {

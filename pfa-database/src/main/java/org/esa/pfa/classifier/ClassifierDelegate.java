@@ -17,7 +17,6 @@
 package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
@@ -29,21 +28,15 @@ import java.io.IOException;
 public class ClassifierDelegate {
 
     private final String classifierName;
-    private final PFAApplicationDescriptor applicationDescriptor;
     private final Classifier classifier;
 
-    public ClassifierDelegate(String classifierName, PFAApplicationDescriptor applicationDescriptor, Classifier classifier) {
+    public ClassifierDelegate(String classifierName, Classifier classifier) {
         this.classifierName = classifierName;
-        this.applicationDescriptor = applicationDescriptor;
         this.classifier = classifier;
     }
 
     public String getName() {
         return classifierName;
-    }
-
-    public PFAApplicationDescriptor getApplicationDescriptor() {
-        return applicationDescriptor;
     }
 
     public int getNumTrainingImages() {
