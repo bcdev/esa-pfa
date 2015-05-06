@@ -57,6 +57,7 @@ import org.esa.pfa.fe.op.FeatureWriterResult;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
+import org.esa.snap.util.io.FileUtils;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
@@ -68,6 +69,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -421,11 +424,17 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     }
 
     private void installAuxiliaryData(Path targetPath) {
-        final Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
-        final ResourceInstaller installer = new ResourceInstaller(basePath.resolve("auxdata"), targetPath);
         try {
+            Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
+            String baseUri = basePath.toUri().toString();
+            if (baseUri.startsWith("file:") && baseUri.endsWith("jar") && basePath.toFile().isFile()) {
+                basePath = FileUtils.getPathFromURI(new URI("jar:" + baseUri + "!/"));
+            }
+            Path auxdata = basePath.resolve("auxdata");
+
+            final ResourceInstaller installer = new ResourceInstaller(auxdata, targetPath);
             installer.install(".*", ProgressMonitor.NULL);
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             throw new OperatorException(e);
         }
     }
