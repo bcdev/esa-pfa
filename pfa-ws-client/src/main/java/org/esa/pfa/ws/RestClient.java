@@ -25,7 +25,9 @@ import java.io.IOException;
  */
 public interface RestClient {
 
-//    String populateArchivePatches(String classifierName, String modelXML);
-
     Patch[] startTraining(String classifierName, Patch[] queryPatches) throws IOException;
+
+    Patch[] trainAndClassify(String classifierName, boolean prePopulate, Patch[] labeledPatches) throws IOException;
+
+    Patch[] getMostAmbigous(String classifierName, boolean prePopulate) throws IOException;
 }

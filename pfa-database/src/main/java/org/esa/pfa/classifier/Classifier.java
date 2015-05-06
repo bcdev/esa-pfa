@@ -38,8 +38,6 @@ public interface Classifier {
 
     int getNumIterations();
 
-    void saveClassifier() throws IOException;
-
     Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
 
     Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException;

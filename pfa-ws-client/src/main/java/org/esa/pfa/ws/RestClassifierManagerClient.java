@@ -124,16 +124,31 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         return PatchList.fromXML(resultPatchesXML);
     }
 
-    //    @Override
-//    public String populateArchivePatches(String classifierName, String modelXML) {
-//        Form form = new Form();
-//        form.param("modelXML", modelXML);
-//
-//        Response response = target.path("classifiers").path(classifierName).path("populateArchivePatches").
-//                request().
-//                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-//        return response.readEntity(String.class);
-//    }
+    @Override
+    public Patch[] trainAndClassify(String classifierName, boolean prePopulate, Patch[] labeledPatches) throws IOException {
+        String xml = PatchList.toXML(labeledPatches);
+        Form form = new Form();
+        form.param("labeledPatches", xml);
+        form.param("prePopulate", Boolean.toString(prePopulate));
+
+        Response response = target.path("classifiers").path(classifierName).path("trainAndClassify").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        String resultPatchesXML = response.readEntity(String.class);
+        return PatchList.fromXML(resultPatchesXML);
+    }
+
+    @Override
+    public Patch[] getMostAmbigous(String classifierName, boolean prePopulate) throws IOException {
+        Form form = new Form();
+        form.param("prePopulate", Boolean.toString(prePopulate));
+
+        Response response = target.path("classifiers").path(classifierName).path("getMostAmbigous").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        String resultPatchesXML = response.readEntity(String.class);
+        return PatchList.fromXML(resultPatchesXML);
+    }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
         URI uri = new URI("http://localhost:8089/pfa/");

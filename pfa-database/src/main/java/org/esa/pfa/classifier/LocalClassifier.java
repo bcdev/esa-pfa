@@ -100,7 +100,6 @@ public class LocalClassifier implements Classifier {
         return model.getNumIterations();
     }
 
-    @Override
     public void saveClassifier() throws IOException {
         model.toFile(classifierPath.toFile());
     }
@@ -219,9 +218,5 @@ public class LocalClassifier implements Classifier {
     @Override
     public File getPatchProductFile(Patch patch) throws IOException {
         return patchAccess.getPatchProductFile(patch);
-    }
-
-    public ActiveLearning getActiveLearning() {
-        return al;
     }
 }
