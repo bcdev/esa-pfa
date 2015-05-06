@@ -164,7 +164,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                     protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
                         try {
-                            session.getImagesToLabel(pm);
+                            session.getMostAmbigousPatches(false, pm);
                             if (!pm.isCanceled()) {
                                 return Boolean.TRUE;
                             }
@@ -227,8 +227,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 break;
             case ModelTrained:
                 try {
-                    session.retrieveImages();
-
                     retrievedPatches = session.getRetrievedImages();
                     //initially remove label from all
                     for (Patch patch : retrievedPatches) {

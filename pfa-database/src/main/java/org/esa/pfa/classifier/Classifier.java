@@ -36,21 +36,17 @@ public interface Classifier {
 
     void setNumRetrievedImages(int numRetrievedImages);
 
-    void saveClassifier() throws IOException;
-
-    void startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
-
-    Patch[] getMostAmbigousPatches(ProgressMonitor pm);
-
-    void train(Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
-
-    Patch[] classify();
-
     int getNumIterations();
 
-    FeatureType[] getEffectiveFeatureTypes();
+    void saveClassifier() throws IOException;
 
-    void populateArchivePatches(ProgressMonitor pm);
+    Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
+
+    Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
+
+    Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
+
+    FeatureType[] getEffectiveFeatureTypes();
 
     void getPatchQuicklook(Patch patch, String quicklookBandName);
 

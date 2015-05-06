@@ -16,10 +16,16 @@
 
 package org.esa.pfa.ws;
 
+import org.esa.pfa.fe.op.Patch;
+
+import java.io.IOException;
+
 /**
  * Created by marcoz on 05.05.15.
  */
 public interface RestClient {
 
-    String populateArchivePatches(String classifierName, String modelXML);
+//    String populateArchivePatches(String classifierName, String modelXML);
+
+    Patch[] startTraining(String classifierName, Patch[] queryPatches) throws IOException;
 }

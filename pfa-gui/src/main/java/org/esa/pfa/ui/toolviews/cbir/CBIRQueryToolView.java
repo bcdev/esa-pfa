@@ -221,7 +221,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
                         try {
-                            session.setQueryImages(queryImages, pm);
+                            session.startTraining(queryImages, pm);
                             if (!pm.isCanceled()) {
                                 return Boolean.TRUE;
                             }
@@ -276,6 +276,9 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
             Patch patch = null;
             try {
                 patch = patchProcessor.get();
+                System.out.println("patchProcessor.patch = " + patch);
+                System.out.println("patchProcessor.patch.feat = " + patch.getFeatures());
+                System.out.println("patchProcessor.patch.feat.l = " + patch.getFeatures().length);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
                 SnapApp.getDefault().handleError("Failed to extract patch", e);

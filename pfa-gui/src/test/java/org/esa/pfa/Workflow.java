@@ -105,7 +105,7 @@ public class Workflow {
         }
 
 
-        session.setQueryImages(new Patch[]{queryPatch}, new PrintWriterProgressMonitor(System.out));
+        session.startTraining(new Patch[]{queryPatch}, new PrintWriterProgressMonitor(System.out));
 
         Patch[] relevantTrainingImages = session.getRelevantTrainingImages();
         System.out.println("relevantTrainingImages.length = " + relevantTrainingImages.length);

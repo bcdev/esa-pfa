@@ -19,8 +19,10 @@ package org.esa.pfa.ws;
 import org.esa.pfa.classifier.ClassifierDelegate;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.ClassifierModel;
+import org.esa.pfa.classifier.PatchList;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.op.Patch;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -110,15 +112,28 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
-    public String populateArchivePatches(String classifierName, String modelXML) {
+    public Patch[] startTraining(String classifierName, Patch[] queryPatches) throws IOException {
+        String xml = PatchList.toXML(queryPatches);
         Form form = new Form();
-        form.param("modelXML", modelXML);
+        form.param("queryPatches", xml);
 
-        Response response = target.path("classifiers").path(classifierName).path("populateArchivePatches").
+        Response response = target.path("classifiers").path(classifierName).path("startTraining").
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-        return response.readEntity(String.class);
+        String resultPatchesXML = response.readEntity(String.class);
+        return PatchList.fromXML(resultPatchesXML);
     }
+
+    //    @Override
+//    public String populateArchivePatches(String classifierName, String modelXML) {
+//        Form form = new Form();
+//        form.param("modelXML", modelXML);
+//
+//        Response response = target.path("classifiers").path(classifierName).path("populateArchivePatches").
+//                request().
+//                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+//        return response.readEntity(String.class);
+//    }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
         URI uri = new URI("http://localhost:8089/pfa/");
