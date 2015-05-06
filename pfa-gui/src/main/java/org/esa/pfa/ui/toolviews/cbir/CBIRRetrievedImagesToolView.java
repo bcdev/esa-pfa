@@ -47,9 +47,9 @@ import java.util.Set;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
-        mode = "navigator",
+        mode = "editor",
         openAtStartup = false,
-        position = 1
+        position = 4
 )
 @ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRRetrievedImagesToolView")
 @ActionReferences({

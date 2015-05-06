@@ -51,7 +51,7 @@ import java.util.prefs.Preferences;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
-        mode = "navigator",
+        mode = "editor",
         openAtStartup = false,
         position = 1
 )

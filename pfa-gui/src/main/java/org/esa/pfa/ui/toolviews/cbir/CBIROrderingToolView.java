@@ -46,9 +46,9 @@ import java.io.File;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
-        mode = "navigator",
+        mode = "editor",
         openAtStartup = false,
-        position = 1
+        position = 5
 )
 @ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIROrderingToolView")
 @ActionReferences({

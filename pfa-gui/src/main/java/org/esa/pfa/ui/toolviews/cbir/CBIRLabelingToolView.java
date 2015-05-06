@@ -40,9 +40,9 @@ import java.awt.event.ActionListener;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
-        mode = "navigator",
+        mode = "editor",
         openAtStartup = false,
-        position = 1
+        position = 3
 )
 @ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRLabelingToolView")
 @ActionReferences({
