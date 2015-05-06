@@ -60,8 +60,10 @@ public class PatchList {
 
     private static XStream getXStream() {
         XStream xStream = new XStream();
-//        xStream.alias("classifier", ClassifierModel.class);
-//        xStream.alias("patch", Patch.class);
+        xStream.omitField(Patch.class, "featureList");
+        xStream.omitField(Patch.class, "imageMap");
+        xStream.omitField(Patch.class, "listenerList");
+        xStream.omitField(Patch.class, "patchProduct");
         xStream.setClassLoader(PatchList.class.getClassLoader());
         return xStream;
     }
