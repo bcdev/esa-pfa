@@ -283,7 +283,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private void initClassifierList() {
         final DefaultListModel<String> modelList = new DefaultListModel<>();
         for (String name : session.listClassifiers()) {
-            modelList.addElement(name);
+            if(!name.isEmpty()) {
+                modelList.addElement(name);
+            }
         }
         classifierList.setModel(modelList);
         updateControls();
