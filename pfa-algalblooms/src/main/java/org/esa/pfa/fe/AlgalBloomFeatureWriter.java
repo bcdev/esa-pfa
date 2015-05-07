@@ -83,7 +83,8 @@ import java.util.List;
  * @author Norman Fomferra
  * @author Ralf Quast
  */
-@OperatorMetadata(alias = "AlgalBloomFeatureWriter", version = "1.1", autoWriteDisabled = true)
+@OperatorMetadata(alias = "AlgalBloomFeatureWriter", version = "1.1", autoWriteDisabled = true,
+        category = "Image Analysis/Feature Extraction")
 public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
