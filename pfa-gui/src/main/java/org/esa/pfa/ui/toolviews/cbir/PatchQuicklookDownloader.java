@@ -19,17 +19,11 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.util.SystemUtils;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.awt.image.renderable.RenderableImage;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
+import java.util.concurrent.ExecutionException;
 
-class PatchQuicklookDownloader extends SwingWorker {
+class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
 
     private final CBIRSession session;
     private final Patch patch;
@@ -44,31 +38,22 @@ class PatchQuicklookDownloader extends SwingWorker {
         this.drawing = drawing;
     }
 
-    /**
-     * Computes a result, or throws an exception if unable to do so.
-     * <p>
-     * Note that this method is executed only once.
-     * <p>
-     * Note: this method is executed in a background thread.
-     *
-     * @return the computed result
-     * @throws Exception if unable to compute a result
-     */
     @Override
-    protected Object doInBackground() throws Exception {
-        try {
-            BufferedImage img = session.getPatchQuicklook(patch, quickLookName);
-            System.out.println("img = " + img);
-            patch.setImage(quickLookName, img);
-        } catch (Exception e) {
-            String location = patch.getPatchName() + " " + quickLookName;
-            SystemUtils.LOG.severe("Failed to download or load quicklook " + location + ":" + e.toString());
-        }
-        return null;
+    protected BufferedImage doInBackground() throws Exception {
+        return session.getPatchQuicklook(patch, quickLookName);
     }
 
     protected void done() {
-        drawing.update();
-        drawing.invalidate();
+        try {
+            BufferedImage img = get();
+            System.out.println("img = " + img);
+            patch.setImage(quickLookName, img);
+            drawing.update();
+            drawing.invalidate();
+            drawing.repaint();
+        } catch (InterruptedException | ExecutionException e) {
+            String location = patch.getPatchName() + " " + quickLookName;
+            SystemUtils.LOG.severe("Failed to download or load quicklook " + location + ":" + e.toString());
+        }
     }
 }
