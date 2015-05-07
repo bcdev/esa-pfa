@@ -58,6 +58,7 @@ class PatchQuicklookDownloader extends SwingWorker {
     protected Object doInBackground() throws Exception {
         try {
             BufferedImage img = session.getPatchQuicklook(patch, quickLookName);
+            System.out.println("img = " + img);
             patch.setImage(quickLookName, img);
         } catch (Exception e) {
             String location = patch.getPatchName() + " " + quickLookName;
