@@ -77,7 +77,7 @@ public class RestClassifierManagerClient implements ClassifierManager {
 
     @Override
     public void delete(String classifierName) throws IOException {
-        // TODO later
+        target.path("classifiers").path(classifierName).request().delete();
     }
 
     @Override

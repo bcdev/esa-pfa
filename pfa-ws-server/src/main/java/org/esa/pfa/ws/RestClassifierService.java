@@ -22,6 +22,7 @@ import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -244,12 +245,20 @@ public class RestClassifierService {
         }
     }
 
-    // TODO
-//    @DELETE
-//    public void delete() {
-//
-//    }
-
+    @DELETE
+    @Path("/{appId}/classifiers/{classifierName}")
+    public void delete(
+        @PathParam(value = "appId") String appId,
+        @PathParam(value = "classifierName") String classifierName
+    ) {
+        System.out.println("deleteClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
+        try {
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            localClassifierManager.delete(classifierName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private LocalClassifier getLocalClassifier(String appId, String classifierName) throws IOException {
         LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
