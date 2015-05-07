@@ -16,7 +16,7 @@
 package org.esa.pfa.search;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
@@ -64,7 +64,7 @@ public class CBIRSession {
 
     private final List<Listener> listenerList = new ArrayList<>(1);
 
-    private ClassifierDelegate classifier;
+    private Classifier classifier;
     private PFAApplicationDescriptor applicationDescriptor;
     private ClassifierManager classifierManager;
 
@@ -91,7 +91,7 @@ public class CBIRSession {
         return classifier != null;
     }
 
-    public ClassifierDelegate getClassifier() {
+    public Classifier getClassifier() {
         return classifier;
     }
 
@@ -167,7 +167,7 @@ public class CBIRSession {
 
     public void deleteClassifier() throws Exception {
         try {
-            ClassifierDelegate deletedClassifier = classifier;
+            Classifier deletedClassifier = classifier;
             if (classifierManager != null) {
                 classifierManager.delete(classifier.getName());
             }
@@ -330,7 +330,7 @@ public class CBIRSession {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }
 
-    private void fireNotification(final Notification msg, final ClassifierDelegate classifier) {
+    private void fireNotification(final Notification msg, final Classifier classifier) {
         for (Listener listener : listenerList) {
             listener.notifySessionMsg(msg, classifier);
         }
@@ -343,6 +343,6 @@ public class CBIRSession {
     }
 
     public interface Listener {
-        void notifySessionMsg(final Notification msg, ClassifierDelegate classifier);
+        void notifySessionMsg(final Notification msg, Classifier classifier);
     }
 }

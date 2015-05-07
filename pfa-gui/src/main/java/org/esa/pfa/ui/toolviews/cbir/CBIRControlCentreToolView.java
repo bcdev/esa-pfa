@@ -20,7 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
@@ -165,7 +165,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (!e.getValueIsAdjusting()) {
                         String classifierName = classifierList.getSelectedValue();
                         if (classifierName != null) {
-                            ClassifierDelegate classifier = session.getClassifier();
+                            Classifier classifier = session.getClassifier();
                             if (classifier == null || !classifierName.equals(classifier.getName())) {
                                 session.loadClassifier(classifierName);
                             }
@@ -620,7 +620,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 final String name = classifier.getName();

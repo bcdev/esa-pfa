@@ -44,6 +44,11 @@ public class RestClassifier implements Classifier {
     }
 
     @Override
+    public String getName() {
+        return classifierName;
+    }
+
+    @Override
     public int getNumTrainingImages() {
         return model.getNumTrainingImages();
     }

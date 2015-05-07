@@ -126,7 +126,7 @@ public class RestClassifierService {
             ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
             PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
             Patch[] qPatches = PatchList.fromXML(queryPatches);
@@ -163,7 +163,7 @@ public class RestClassifierService {
             ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
             PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
             Patch[] lPatches = PatchList.fromXML(labeledPatches);
@@ -200,7 +200,7 @@ public class RestClassifierService {
             ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
             PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
@@ -238,7 +238,7 @@ public class RestClassifierService {
             ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
             PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
             Patch[] patches = PatchList.fromXML(patchesString);
@@ -275,7 +275,7 @@ public class RestClassifierService {
             ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
             PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
                                                                   localClassifierManager.getPatchPath(),
                                                                   localClassifierManager.getDbPath());
             Patch[] patches = PatchList.fromXML(patchesString);

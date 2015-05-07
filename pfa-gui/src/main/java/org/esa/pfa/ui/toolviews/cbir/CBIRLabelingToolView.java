@@ -17,7 +17,7 @@ package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
@@ -241,7 +241,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {

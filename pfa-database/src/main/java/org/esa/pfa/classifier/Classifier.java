@@ -29,6 +29,8 @@ import java.net.URL;
  */
 public interface Classifier {
 
+    String getName();
+
     int getNumTrainingImages();
 
     void setNumTrainingImages(int numTrainingImages);

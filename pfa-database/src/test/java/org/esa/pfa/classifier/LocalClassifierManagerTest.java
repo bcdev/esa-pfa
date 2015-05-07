@@ -75,7 +75,7 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void createClassifier() throws Exception {
-        ClassifierDelegate classifier = localClassifierManager.create("cName");
+        Classifier classifier = localClassifierManager.create("cName");
         assertNotNull(classifier);
         assertEquals("cName", classifier.getName());
 
@@ -106,8 +106,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void getExisting() throws Exception {
-        ClassifierDelegate classifier1 = localClassifierManager.create("cName");
-        ClassifierDelegate classifier2 = localClassifierManager.get("cName");
+        Classifier classifier1 = localClassifierManager.create("cName");
+        Classifier classifier2 = localClassifierManager.get("cName");
 
         assertNotNull(classifier1);
         assertNotNull(classifier2);

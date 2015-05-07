@@ -16,7 +16,7 @@
 
 package org.esa.pfa.ws;
 
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.classifier.PatchList;
@@ -76,7 +76,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
-    public ClassifierDelegate create(String classifierName) throws IOException {
+    public Classifier create(String classifierName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
         ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
@@ -89,8 +89,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
 
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
-        RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
-        return new ClassifierDelegate(classifierName, classifier);
+        return new RestClassifier(classifierName, classifierModel, this);
     }
 
     @Override
@@ -99,7 +98,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
-    public ClassifierDelegate get(String classifierName) throws IOException {
+    public Classifier get(String classifierName) throws IOException {
         WebTarget path = target.path("classifiers").path(classifierName);
         System.out.println("path = " + path);
         Response response = path.request().get();
@@ -112,8 +111,7 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
         System.out.println("applicationDescriptor = " + applicationDescriptor);
 
-        RestClassifier classifier = new RestClassifier(classifierName, classifierModel, this);
-        return new ClassifierDelegate(classifierName, classifier);
+        return new RestClassifier(classifierName, classifierModel, this);
     }
 
     @Override
@@ -198,10 +196,10 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         RestClassifierManagerClient client = new RestClassifierManagerClient(uri, "AlgalBloom");
         String[] list = client.list();
         System.out.println("list = " + Arrays.toString(list));
-        ClassifierDelegate classifier = client.get(list[0]);
+        Classifier classifier = client.get(list[0]);
         System.out.println("classifier = " + classifier);
 
-        ClassifierDelegate classifierDelegate = client.create("web");
+        Classifier classifierDelegate = client.create("web");
         System.out.println("classifierDelegate = " + classifierDelegate);
     }
 }

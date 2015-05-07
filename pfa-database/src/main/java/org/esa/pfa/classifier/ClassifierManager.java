@@ -30,9 +30,9 @@ public interface ClassifierManager {
 
     String[] list();
 
-    ClassifierDelegate create(String classifierName) throws IOException;
+    Classifier create(String classifierName) throws IOException;
 
     void delete(String classifierName) throws IOException;
 
-    ClassifierDelegate get(String classifierName) throws IOException;
+    Classifier get(String classifierName) throws IOException;
 }

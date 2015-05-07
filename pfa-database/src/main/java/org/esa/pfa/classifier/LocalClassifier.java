@@ -53,8 +53,10 @@ public class LocalClassifier implements Classifier {
     private final PatchAccess patchAccess;
 
     private final ClassifierModel model;
+    private final String classifierName;
 
-    public LocalClassifier(ClassifierModel model, Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
+    public LocalClassifier(String name, ClassifierModel model, Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
+        this.classifierName = name;
         this.model = model;
         this.classifierPath = classifierPath;
         this.applicationDescriptor = applicationDescriptor;
@@ -72,6 +74,11 @@ public class LocalClassifier implements Classifier {
             db = null;
             patchAccess = null;
         }
+    }
+
+    @Override
+    public String getName() {
+        return classifierName;
     }
 
     @Override
@@ -104,17 +111,17 @@ public class LocalClassifier implements Classifier {
     }
 
 
-    static ClassifierDelegate loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
+    static Classifier loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
         ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-        LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
         localClassifier.al.setTrainingData(ProgressMonitor.NULL);
 
-        return new ClassifierDelegate(classifierName, localClassifier);
+        return localClassifier;
     }
 
     @Override

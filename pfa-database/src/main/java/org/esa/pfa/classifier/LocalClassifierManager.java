@@ -78,14 +78,14 @@ public class LocalClassifierManager implements ClassifierManager {
     }
 
     @Override
-    public ClassifierDelegate create(String classifierName) throws IOException {
+    public Classifier create(String classifierName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
         PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
         Path classifierPath = getClassifierPath(classifierName);
         ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
-        LocalClassifier realLocalClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
-        realLocalClassifier.saveClassifier();
-        return new ClassifierDelegate(classifierName, realLocalClassifier);
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        localClassifier.saveClassifier();
+        return localClassifier;
     }
 
     @Override
@@ -97,7 +97,7 @@ public class LocalClassifierManager implements ClassifierManager {
     }
 
     @Override
-    public ClassifierDelegate get(String classifierName) throws IOException {
+    public Classifier get(String classifierName) throws IOException {
         Path classifierPath = getClassifierPath(classifierName);
         return LocalClassifier.loadClassifier(classifierName, classifierPath, patchPath, dbPath);
     }

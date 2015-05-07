@@ -20,7 +20,7 @@ import com.bc.ceres.binding.dom.DefaultDomElement;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.core.PrintWriterProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -88,7 +88,7 @@ public class Workflow {
 
 
         session.createClassifier(classifierName);
-        ClassifierDelegate classifier = session.getClassifier();
+        Classifier classifier = session.getClassifier();
         System.out.println("classifier = " + classifier);
 
         OperatorSpiRegistry operatorSpiRegistry = GPF.getDefaultInstance().getOperatorSpiRegistry();

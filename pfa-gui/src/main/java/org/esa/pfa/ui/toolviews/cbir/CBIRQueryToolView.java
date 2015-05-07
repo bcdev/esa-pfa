@@ -19,7 +19,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
-import org.esa.pfa.classifier.ClassifierDelegate;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
@@ -314,7 +314,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
     }
 
     @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final ClassifierDelegate classifier) {
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
                 if (isControlCreated()) {
