@@ -21,7 +21,9 @@ import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Service for accessing patches.
@@ -51,7 +53,11 @@ public class PatchAccess {
 
     public Path getPatchImagePath(String parentProductName, int patchX, int patchY, String patchImageFileName) throws IOException {
         Path patchPath = findPatchPath(parentProductName, patchX, patchY);
-        return patchPath.resolve(patchImageFileName);
+        Path patchImagePath = patchPath.resolve(patchImageFileName);
+        if (Files.exists(patchPath)) {
+            return patchImagePath;
+        }
+        return null;
     }
 
     public File getPatchProductFile(Patch patch) throws IOException {

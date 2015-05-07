@@ -21,27 +21,31 @@ import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.fe.op.Patch;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
 /**
- * Created by marcoz on 24.04.15.
+ * A REST based implementation
  */
 public class RestClassifier implements Classifier {
 
 
     private final String classifierName;
     private ClassifierModel model;
-    private final RestClient restClient;
+    private final WebTarget target;
 
 
-    public RestClassifier(String classifierName, ClassifierModel model, RestClient restClient) {
+    public RestClassifier(String classifierName, ClassifierModel model, WebTarget target) {
         this.classifierName = classifierName;
         this.model = model;
-        this.restClient = restClient;
+        this.target = target;
     }
 
     @Override
@@ -57,6 +61,11 @@ public class RestClassifier implements Classifier {
     @Override
     public void setNumTrainingImages(int numTrainingImages) {
         model.setNumTrainingImages(numTrainingImages);
+
+        target.path("classifiers").path(classifierName).path("setNumTrainingImages").
+                queryParam("value", numTrainingImages).
+                request().
+                post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
     }
 
     @Override
@@ -67,40 +76,101 @@ public class RestClassifier implements Classifier {
     @Override
     public void setNumRetrievedImages(int numRetrievedImages) {
         model.setNumRetrievedImages(numRetrievedImages);
-    }
 
-    @Override
-    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
-        return restClient.startTraining(classifierName, queryPatches);
-    }
+        target.path("classifiers").path(classifierName).path("setNumRetrievedImages").
+                queryParam("value", numRetrievedImages).
+                request().
+                post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
 
-    @Override
-    public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
-        return restClient.trainAndClassify(classifierName, prePopulate, labeledPatches);
     }
-
-    @Override
-    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
-        return restClient.getMostAmbigous(classifierName, prePopulate);    }
 
     @Override
     public int getNumIterations() {
         return model.getNumIterations();
     }
 
+
+    @Override
+    public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
+        RestTransferValue query = new RestTransferValue();
+        query.setPatches(queryPatches);
+        Form form = new Form();
+        form.param("queryPatches", query.toXML());
+
+        String resultXML = target.path("classifiers").path(classifierName).path("startTraining").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
+                readEntity(String.class);
+
+        RestTransferValue response = RestTransferValue.fromXML(resultXML);
+        model.setNumIterations(response.getNumIterations());
+        return response.getPatches();
+    }
+
+    @Override
+    public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
+        RestTransferValue query = new RestTransferValue();
+        query.setPatches(labeledPatches);
+        Form form = new Form();
+        form.param("labeledPatches", query.toXML());
+        form.param("prePopulate", Boolean.toString(prePopulate));
+
+        String resultXML = target.path("classifiers").path(classifierName).path("trainAndClassify").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
+                readEntity(String.class);
+
+        RestTransferValue response = RestTransferValue.fromXML(resultXML);
+        model.setNumIterations(response.getNumIterations());
+        return response.getPatches();
+    }
+
+    @Override
+    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+        Form form = new Form();
+        form.param("prePopulate", Boolean.toString(prePopulate));
+
+        String resultXML = target.path("classifiers").path(classifierName).path("getMostAmbigous").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
+                readEntity(String.class);
+
+        RestTransferValue response = RestTransferValue.fromXML(resultXML);
+        model.setNumIterations(response.getNumIterations());
+        return response.getPatches();
+    }
+
+
     @Override
     public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
-        return restClient.getPatchQuicklookUri(classifierName, patch, quicklookBandName);
+        return getPatchQuicklookTarget(patch, quicklookBandName).getUri();
     }
 
     @Override
     public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
-        return restClient.getPatchQuicklook(classifierName, patch, quicklookBandName);
+        Response response = getPatchQuicklookTarget(patch, quicklookBandName).request().get();
+        if (response.getStatusInfo() == Response.Status.OK) {
+            return response.readEntity(BufferedImage.class);
+        } else {
+            return null;
+        }
     }
 
     @Override
     public File getPatchProductFile(Patch patch) throws IOException {
-        return null;
+        return null; // TODO
+    }
+
+
+    private WebTarget getPatchQuicklookTarget(Patch patch, String quicklookBandName) {
+        String parentProductName = patch.getParentProductName();
+        int patchX = patch.getPatchX();
+        int patchY = patch.getPatchY();
+        return target.path("quicklook")
+                .queryParam("parentProductName", parentProductName)
+                .queryParam("patchX", patchX)
+                .queryParam("patchY", patchY)
+                .queryParam("quicklookBandName", quicklookBandName);
     }
 
 }

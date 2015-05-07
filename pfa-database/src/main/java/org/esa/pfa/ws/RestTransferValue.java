@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.pfa.classifier;
+package org.esa.pfa.ws;
 
 import com.thoughtworks.xstream.XStream;
 import org.esa.pfa.fe.op.Patch;
@@ -23,35 +23,36 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 /**
- * Created by marcoz on 06.05.15.
+ * Used for transfering information between the REST service and the client
  */
-public class PatchList {
+public class RestTransferValue {
 
-    private final Patch[] patches;
+    private int numIterations;
+    private Patch[] patches;
 
-    private PatchList(Patch... patches) {
-        this.patches = patches;
+    public int getNumIterations() {
+        return numIterations;
     }
 
-    private Patch[] getPatches() {
+    public void setNumIterations(int numIterations) {
+        this.numIterations = numIterations;
+    }
+
+    public Patch[] getPatches() {
         return patches;
     }
 
-    public static Patch[] fromXML(String xml) {
-          return PatchList.fromXMLImpl(xml).getPatches();
+    public void setPatches(Patch[] patches) {
+        this.patches = patches;
     }
 
-    public static String toXML(Patch[] patches) throws IOException {
-        return new PatchList(patches).toXMLImpl();
-    }
-
-    private static PatchList fromXMLImpl(String xml) {
-        PatchList model = new PatchList();
+    public static RestTransferValue fromXML(String xml) {
+        RestTransferValue model = new RestTransferValue();
         getXStream().fromXML(xml, model);
         return model;
     }
 
-    private String toXMLImpl() throws IOException {
+    public String toXML() throws IOException {
         try (StringWriter writer = new StringWriter()) {
             getXStream().toXML(this, writer);
             return writer.toString();
@@ -64,7 +65,7 @@ public class PatchList {
         xStream.omitField(Patch.class, "imageMap");
         xStream.omitField(Patch.class, "listenerList");
         xStream.omitField(Patch.class, "patchProduct");
-        xStream.setClassLoader(PatchList.class.getClassLoader());
+        xStream.setClassLoader(RestTransferValue.class.getClassLoader());
         return xStream;
     }
 }

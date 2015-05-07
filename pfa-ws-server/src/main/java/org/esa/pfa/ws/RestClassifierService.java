@@ -19,7 +19,6 @@ package org.esa.pfa.ws;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.classifier.LocalClassifierManager;
-import org.esa.pfa.classifier.PatchList;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
 
@@ -44,7 +43,6 @@ import java.nio.file.Paths;
 @Path("/v1/apps")
 public class RestClassifierService {
 
-//    private final File dbFile = new File("/home/marcoz/Scratch/pfa/output-snap");
     private final URI dbUri;
 
     public RestClassifierService() throws IOException, URISyntaxException {
@@ -57,8 +55,7 @@ public class RestClassifierService {
     @Path("/{appId}/classifiers")
     @Produces(MediaType.TEXT_PLAIN)
     public String listClassifiers(@PathParam(value = "appId") String appId) throws IOException {
-        System.out.println("WebClassifierManagerServer.list " + this);
-        System.out.println("appId = " + appId);
+        System.out.println("list appId = [" + appId + "]");
 
         LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
         return String.join("\n", localClassifierManager.list());
@@ -71,8 +68,7 @@ public class RestClassifierService {
             @PathParam(value = "appId") String appId,
             @PathParam(value = "classifierName") String classifierName
     ) {
-        System.out.println("WebClassifierManagerServer.getClassifier " + this);
-        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
+        System.out.println("getClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
@@ -93,8 +89,7 @@ public class RestClassifierService {
             @PathParam(value = "appId") String appId,
             @PathParam(value = "classifierName") String classifierName
     ) {
-        System.out.println("WebClassifierManagerServer.createClassifier " + this);
-        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
+        System.out.println("createClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
@@ -105,25 +100,62 @@ public class RestClassifierService {
     }
 
     @POST
+    @Path("/{appId}/classifiers/{classifierName}/setNumTrainingImages")
+    public void setNumTrainingImages(
+            @PathParam(value = "appId") String appId,
+            @PathParam(value = "classifierName") String classifierName,
+            @QueryParam(value = "value") int numTrainingImages
+    ) {
+        System.out.println("setNumTrainingImages appId = [" + appId + "], classifierName = [" + classifierName + "], numTrainingImages = [" + numTrainingImages + "]");
+
+        try {
+            LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
+            localClassifier.setNumTrainingImages(numTrainingImages);
+            localClassifier.saveClassifier();
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    @POST
+    @Path("/{appId}/classifiers/{classifierName}/setNumRetrievedImages")
+    public void setNumRetrievedImages(
+            @PathParam(value = "appId") String appId,
+            @PathParam(value = "classifierName") String classifierName,
+            @QueryParam(value = "value") int numRetrievedImages
+    ) {
+        System.out.println("createClassifier appId = [" + appId + "], classifierName = [" + classifierName + "], numRetrievedImages = [" + numRetrievedImages + "]");
+
+        try {
+            LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
+            localClassifier.setNumRetrievedImages(numRetrievedImages);
+            localClassifier.saveClassifier();
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+
+    @POST
     @Path("/{appId}/classifiers/{classifierName}/startTraining")
     public String populateArchivePatches(
             @PathParam(value = "appId") String appId,
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("queryPatches") String queryPatches
     ) {
-        System.out.println("WebClassifierManagerServer.startTraining " + this);
-        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-//        System.out.println("queryPatches = " + queryPatches);
+        System.out.println("startTraining appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
 
-            Patch[] qPatches = PatchList.fromXML(queryPatches);
-            Patch[] rPatches = localClassifier.startTraining(qPatches, ProgressMonitor.NULL);
-            String resultXML = PatchList.toXML(rPatches);
+            RestTransferValue query = RestTransferValue.fromXML(queryPatches);
+            Patch[] rPatches = localClassifier.startTraining(query.getPatches(), ProgressMonitor.NULL);
             localClassifier.saveClassifier();
 
-            return resultXML;
+            RestTransferValue response = new RestTransferValue();
+            response.setPatches(rPatches);
+            response.setNumIterations(localClassifier.getNumIterations());
+            return response.toXML();
         } catch (IOException e) {
             e.printStackTrace();
             return "";
@@ -138,20 +170,20 @@ public class RestClassifierService {
             @FormParam("labeledPatches") String labeledPatches,
             @FormParam("prePopulate") String prePopulateString
     ) {
-        System.out.println("WebClassifierManagerServer.trainAndClassify " + this);
-        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-//        System.out.println("labeledPatches = " + labeledPatches);
-        System.out.println("prePopulate = " + prePopulateString);
+        System.out.println("trainAndClassify appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
 
-            Patch[] lPatches = PatchList.fromXML(labeledPatches);
+            RestTransferValue query = RestTransferValue.fromXML(labeledPatches);
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
-            Patch[] rPatches = localClassifier.trainAndClassify(prePopulate, lPatches, ProgressMonitor.NULL);
+            Patch[] rPatches = localClassifier.trainAndClassify(prePopulate, query.getPatches(), ProgressMonitor.NULL);
             localClassifier.saveClassifier();
 
-            return PatchList.toXML(rPatches);
+            RestTransferValue response = new RestTransferValue();
+            response.setPatches(rPatches);
+            response.setNumIterations(localClassifier.getNumIterations());
+            return response.toXML();
         } catch (IOException e) {
             e.printStackTrace();
             return "";
@@ -166,9 +198,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("prePopulate") String prePopulateString
     ) {
-        System.out.println("WebClassifierManagerServer.getMostAmbigous " + this);
-        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-        System.out.println("prePopulate = " + prePopulateString);
+        System.out.println("getMostAmbigous appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
@@ -177,7 +207,10 @@ public class RestClassifierService {
             Patch[] rPatches = localClassifier.getMostAmbigous(prePopulate, ProgressMonitor.NULL);
             localClassifier.saveClassifier();
 
-            return PatchList.toXML(rPatches);
+            RestTransferValue response = new RestTransferValue();
+            response.setPatches(rPatches);
+            response.setNumIterations(localClassifier.getNumIterations());
+            return response.toXML();
         } catch (Throwable e) {
             e.printStackTrace();
             return "";
@@ -188,72 +221,28 @@ public class RestClassifierService {
     @GET
     @Path("/{appId}/quicklook")
     @Produces("image/png")
-    public Response getPatchQuicklookURL(
+    public Response getPatchQuicklook(
             @PathParam(value = "appId") String appId,
             @QueryParam("parentProductName") String parentProductName,
             @QueryParam("patchX") int patchX,
             @QueryParam("patchY") int patchY,
             @QueryParam ("quicklookBandName") String quicklookBandName
     ) {
-        System.out.println("WebClassifierManagerServer.quicklook " + this);
-        System.out.println("appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
+        System.out.println("quicklook appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
         try {
            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
             java.nio.file.Path patchImagePath = patchAccess.getPatchImagePath(parentProductName, patchX, patchY, quicklookBandName);
-
-            InputStream inputStream =Files.newInputStream(patchImagePath);
-            return Response.ok().header("name", quicklookBandName).entity(inputStream).build();
+            if (Files.exists(patchImagePath)) {
+                InputStream inputStream = Files.newInputStream(patchImagePath);
+                return Response.ok().header("name", quicklookBandName).entity(inputStream).build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
-
-//    @POST
-//    @Path("/{appId}/classifiers/{classifierName}/getPatchQuicklook")
-//    @Produces("image/png")
-//    public javax.ws.rs.core.Response getPatchQuicklook(@PathParam(value = "appId") final String appId,
-//                                      @PathParam(value = "classifierName") final String classifierName,
-//                                      @FormParam("patches") final String patchesString,
-//                                      @FormParam("quicklookBandName") final String quicklookBandName
-//    ) {
-//        System.out.println("WebClassifierManagerServer.getPatchQuicklook " + this);
-//        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-//        System.out.println("patches = " + patchesString);
-//        System.out.println("quicklookBandName = " + quicklookBandName);
-//
-//        try {
-//            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
-//            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
-//            if (!Files.exists(classifierPath)) {
-//                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
-//            }
-//            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-//            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
-//
-//            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
-//                                                                  localClassifierManager.getPatchPath(),
-//                                                                  localClassifierManager.getDbPath());
-//            Patch[] patches = PatchList.fromXML(patchesString);
-//            File file = new File(localClassifier.getPatchProductFile(patches[0]), quicklookBandName);
-//
-//            System.out.println("quicklookURL = " + file.toString());
-//
-//            java.nio.file.Path path = file.toPath();
-//            return javax.ws.rs.core.Response.ok().header("name", quicklookBandName).entity(new StreamingOutput() {
-//                @Override
-//                public void write(OutputStream output)
-//                        throws IOException, WebApplicationException {
-//                    output.write(Files.readAllBytes(path));
-//                    output.flush();
-//                }
-//            }).build();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return javax.ws.rs.core.Response.serverError().build();
-//        }
-//
-//    }
 
     // TODO
 //    @DELETE

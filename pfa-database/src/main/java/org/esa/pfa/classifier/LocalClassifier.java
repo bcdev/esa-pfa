@@ -29,6 +29,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.snap.util.SystemUtils;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -195,12 +196,21 @@ public class LocalClassifier implements Classifier {
     @Override
     public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
         Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
-        return patchImagePath.toUri();
+        if (patchImagePath != null) {
+            return patchImagePath.toUri();
+        } else {
+            return null;
+        }
     }
 
     @Override
-    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) {
-        return null;
+    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
+        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
+        if (patchImagePath != null) {
+            return ImageIO.read(patchImagePath.toFile());
+        } else {
+            return null;
+        }
     }
 
     @Override
