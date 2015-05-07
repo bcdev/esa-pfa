@@ -30,11 +30,9 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.snap.util.SystemUtils;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -113,7 +111,7 @@ public class LocalClassifier implements Classifier {
     }
 
 
-    static Classifier loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
+    public static LocalClassifier loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }

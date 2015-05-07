@@ -115,6 +115,8 @@ public class CBIRSession {
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
                 classifierManager = new RestClassifierManagerClient(uri, appId);
                 applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
+                quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
+                quicklookBandName2 = quicklookBandName1;
             }
         } else {
             // if file URL
@@ -128,6 +130,8 @@ public class CBIRSession {
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
                 classifierManager = new LocalClassifierManager(uri, appId);
                 applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
+                quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
+                quicklookBandName2 = quicklookBandName1;
             }
         }
         return classifierManager;
@@ -135,8 +139,7 @@ public class CBIRSession {
 
     public void createClassifier(String classifierName) throws IOException {
         try {
-            quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
-            quicklookBandName2 = quicklookBandName1;
+
             classifier = classifierManager.create(classifierName);
             clearPatchLists();
             fireNotification(Notification.NewClassifier, classifier);

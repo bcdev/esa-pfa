@@ -17,12 +17,9 @@
 package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.classifier.PatchList;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
 
@@ -114,22 +111,13 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("queryPatches") String queryPatches
     ) {
-        System.out.println("WebClassifierManagerServer.populateArchivePatches " + this);
+        System.out.println("WebClassifierManagerServer.startTraining " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-        System.out.println("queryPatches = " + queryPatches);
+//        System.out.println("queryPatches = " + queryPatches);
 
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
-            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
-            if (!Files.exists(classifierPath)) {
-                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
-            }
-            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+            LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
-                                                                  localClassifierManager.getPatchPath(),
-                                                                  localClassifierManager.getDbPath());
             Patch[] qPatches = PatchList.fromXML(queryPatches);
             Patch[] rPatches = localClassifier.startTraining(qPatches, ProgressMonitor.NULL);
             String resultXML = PatchList.toXML(rPatches);
@@ -152,28 +140,18 @@ public class RestClassifierService {
     ) {
         System.out.println("WebClassifierManagerServer.trainAndClassify " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
-        System.out.println("labeledPatches = " + labeledPatches);
+//        System.out.println("labeledPatches = " + labeledPatches);
         System.out.println("prePopulate = " + prePopulateString);
 
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
-            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
-            if (!Files.exists(classifierPath)) {
-                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
-            }
-            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+            LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
-                                                                  localClassifierManager.getPatchPath(),
-                                                                  localClassifierManager.getDbPath());
             Patch[] lPatches = PatchList.fromXML(labeledPatches);
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
             Patch[] rPatches = localClassifier.trainAndClassify(prePopulate, lPatches, ProgressMonitor.NULL);
-            String resultXML = PatchList.toXML(rPatches);
             localClassifier.saveClassifier();
 
-            return resultXML;
+            return PatchList.toXML(rPatches);
         } catch (IOException e) {
             e.printStackTrace();
             return "";
@@ -193,28 +171,19 @@ public class RestClassifierService {
         System.out.println("prePopulate = " + prePopulateString);
 
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
-            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
-            if (!Files.exists(classifierPath)) {
-                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
-            }
-            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+            LocalClassifier localClassifier = getLocalClassifier(appId, classifierName);
 
-            LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor,
-                                                                  localClassifierManager.getPatchPath(),
-                                                                  localClassifierManager.getDbPath());
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
             Patch[] rPatches = localClassifier.getMostAmbigous(prePopulate, ProgressMonitor.NULL);
-            String resultXML = PatchList.toXML(rPatches);
             localClassifier.saveClassifier();
 
-            return resultXML;
-        } catch (IOException e) {
+            return PatchList.toXML(rPatches);
+        } catch (Throwable e) {
             e.printStackTrace();
             return "";
         }
     }
+
 
     @GET
     @Path("/{appId}/quicklook")
@@ -229,13 +198,7 @@ public class RestClassifierService {
         System.out.println("WebClassifierManagerServer.quicklook " + this);
         System.out.println("appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
         try {
-//            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
-//            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
-//            if (!Files.exists(classifierPath)) {
-//                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
-//            }
-
-            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+           PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
             java.nio.file.Path patchImagePath = patchAccess.getPatchImagePath(parentProductName, patchX, patchY, quicklookBandName);
 
             InputStream inputStream =Files.newInputStream(patchImagePath);
@@ -297,5 +260,17 @@ public class RestClassifierService {
 //    public void delete() {
 //
 //    }
+
+
+    private LocalClassifier getLocalClassifier(String appId, String classifierName) throws IOException {
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+        java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
+        if (!Files.exists(classifierPath)) {
+            throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
+        }
+        return LocalClassifier.loadClassifier(classifierName, classifierPath,
+                                                  localClassifierManager.getPatchPath(),
+                                                  localClassifierManager.getDbPath());
+    }
 
 }

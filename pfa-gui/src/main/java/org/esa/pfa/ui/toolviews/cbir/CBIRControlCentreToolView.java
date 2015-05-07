@@ -123,7 +123,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 try {
                     Preferences preferences = SnapApp.getDefault().getPreferences();
                     String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
-                    String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "");
+                    String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
                     final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue);
                     dlg.show();
 
