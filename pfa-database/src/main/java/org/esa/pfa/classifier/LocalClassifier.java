@@ -29,11 +29,8 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.snap.util.SystemUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -189,32 +186,19 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public void getPatchQuicklook(Patch patch, String quicklookBandName) {
-        if (patch.getImage(quicklookBandName) == null) {
-            try {
-                URL imageURL = patchAccess.retrievePatchImage(patch, quicklookBandName);
-                //TODO download image
-                File imageFile = new File(imageURL.getPath());
-                BufferedImage img = loadImageFile(imageFile);
-                patch.setImage(quicklookBandName, img);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public URL getPatchQuicklookURL(Patch patch, String quicklookBandName) {
+        try {
+            return patchAccess.retrievePatchImage(patch, quicklookBandName);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
-    private static BufferedImage loadImageFile(final File file) {
-        BufferedImage bufferedImage = null;
-        if (file.canRead()) {
-            try {
-                try (BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))) {
-                    bufferedImage = ImageIO.read(fis);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return bufferedImage;
+    @Override
+    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) {
+
+        return null;
     }
 
     @Override

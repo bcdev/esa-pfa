@@ -28,10 +28,12 @@ import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.ws.RestClassifierManagerClient;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +67,6 @@ public class CBIRSession {
     private ClassifierDelegate classifier;
     private PFAApplicationDescriptor applicationDescriptor;
     private ClassifierManager classifierManager;
-
 
     private String quicklookBandName1;
     private String quicklookBandName2;
@@ -311,15 +312,19 @@ public class CBIRSession {
     }
 
     /**
-     * Not all patches need quicklooks. This function adds quicklooks to the patches requested
+     * Not all patches need quicklooks. This function returns a URL to retrive a patch quicklook
      *
      * @param patch             the patches to get quicklooks for
      * @param quicklookBandName the quicklook to retrieve
+     * @return patch quicklook URL
      */
-    public void getPatchQuicklook(final Patch patch, final String quicklookBandName) {
-        classifier.getPatchQuicklook(patch, quicklookBandName);
+    public URL getPatchQuicklookURL(final Patch patch, final String quicklookBandName) throws IOException {
+        return classifier.getPatchQuicklookURL(patch, quicklookBandName);
     }
 
+    public BufferedImage getPatchQuicklook(final Patch patch, final String quicklookBandName) throws IOException {
+        return classifier.getPatchQuicklook(patch, quicklookBandName);
+    }
 
     public Patch[] getRetrievedImages() {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);

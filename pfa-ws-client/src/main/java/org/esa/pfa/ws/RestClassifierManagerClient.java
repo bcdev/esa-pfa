@@ -24,6 +24,7 @@ import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.op.Patch;
 
+import javax.imageio.ImageIO;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -32,9 +33,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 
 
@@ -148,6 +153,44 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
         String resultPatchesXML = response.readEntity(String.class);
         return PatchList.fromXML(resultPatchesXML);
+    }
+
+    @Override
+    public URL getPatchQuicklookURL(String classifierName, Patch patch, String quicklookBandName) throws IOException {
+        String xml = PatchList.toXML(new Patch[] {patch});
+        Form form = new Form();
+        form.param("patches", xml);
+        form.param("quicklookBandName", quicklookBandName);
+
+        Response response = target.path("classifiers").path(classifierName).path("getPatchQuicklookURL").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        String result = response.readEntity(String.class);
+
+        return new URL(result);
+    }
+
+    @Override
+    public BufferedImage getPatchQuicklook(String classifierName, Patch patch, String quicklookBandName) throws IOException {
+        String xml = PatchList.toXML(new Patch[] {patch});
+        Form form = new Form();
+        form.param("patches", xml);
+        form.param("quicklookBandName", quicklookBandName);
+
+        Response response = target.path("classifiers").path(classifierName).path("getPatchQuicklook").
+                request().post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+
+        InputStream inputStream = response.readEntity(InputStream.class);
+        //OutputStream outputStream = new FileOutputStream(new File("e:\\out\\test.png"));
+        //byte[] buffer = new byte[1024];
+        //int bytesRead;
+        //while ((bytesRead = inputStream.read(buffer)) != -1) {
+        //    outputStream.write(buffer, 0, bytesRead);
+        //}
+
+        BufferedImage image = ImageIO.read(new BufferedInputStream(inputStream));
+
+        return image;
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {

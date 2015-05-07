@@ -17,15 +17,14 @@
 package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.activelearning.ActiveLearning;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierModel;
-import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.net.URL;
 
 /**
  * Created by marcoz on 24.04.15.
@@ -84,8 +83,13 @@ public class RestClassifier implements Classifier {
     }
 
     @Override
-    public void getPatchQuicklook(Patch patch, String quicklookBandName) {
+    public URL getPatchQuicklookURL(Patch patch, String quicklookBandName) throws IOException {
+        return restClient.getPatchQuicklookURL(classifierName, patch, quicklookBandName);
+    }
 
+    @Override
+    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
+        return restClient.getPatchQuicklook(classifierName, patch, quicklookBandName);
     }
 
     @Override

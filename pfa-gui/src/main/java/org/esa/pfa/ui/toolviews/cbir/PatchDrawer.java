@@ -57,7 +57,7 @@ public class PatchDrawer extends JPanel {
     private Patch[] patches;
     private final CBIRSession session;
 
-    private static enum SelectionMode {CHECK, RECT}
+    private enum SelectionMode {CHECK, RECT}
     private SelectionMode selectionMode = SelectionMode.CHECK;
 
     private PatchDrawing selection = null;
@@ -106,24 +106,38 @@ public class PatchDrawer extends JPanel {
         updateUI();
     }
 
-    private class PatchDrawing extends JLabel implements MouseListener {
+    public class PatchDrawing extends JLabel implements MouseListener {
         private final Patch patch;
-        private final ImageIcon icon1, icon2;
+        private ImageIcon icon1, icon2;
         private final boolean isDual;
+        private final String ql_1, ql_2;
 
         public PatchDrawing(final CBIRSession session, final Patch patch) {
             this.patch = patch;
             this.isDual = session.getImageMode().equals(CBIRSession.ImageMode.DUAL);
-            final String ql_1 = session.getQuicklookBandName1();
-            final String ql_2 = session.getQuicklookBandName2();
+            this.ql_1 = session.getQuicklookBandName1();
+            this.ql_2 = session.getQuicklookBandName2();
 
             if (patch.getImage(ql_1) == null) {
-                session.getPatchQuicklook(patch, ql_1);
+                PatchQuicklookDownloader downloader = new PatchQuicklookDownloader(session, patch, ql_1, this);
+                downloader.execute();
             }
             if (patch.getImage(ql_2) == null) {
-                session.getPatchQuicklook(patch, ql_2);
+                PatchQuicklookDownloader downloader = new PatchQuicklookDownloader(session, patch, ql_2, this);
+                downloader.execute();
             }
 
+            update();
+
+            if(isDual) {
+                setPreferredSize(new Dimension(imgWidth * 2, imgHeight));
+            } else {
+                setPreferredSize(new Dimension(imgWidth, imgHeight));
+            }
+            addMouseListener(this);
+        }
+
+        public void update() {
             if (patch.getImage(ql_1) != null) {
                 icon1 = new ImageIcon(patch.getImage(ql_1).getScaledInstance(imgWidth, imgHeight, BufferedImage.SCALE_FAST));
             } else {
@@ -134,13 +148,6 @@ public class PatchDrawer extends JPanel {
             } else {
                 icon2 = null;
             }
-
-            if(isDual) {
-                setPreferredSize(new Dimension(imgWidth * 2, imgHeight));
-            } else {
-                setPreferredSize(new Dimension(imgWidth, imgHeight));
-            }
-            addMouseListener(this);
         }
 
         @Override

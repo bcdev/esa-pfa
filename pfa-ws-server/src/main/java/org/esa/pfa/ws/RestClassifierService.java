@@ -31,11 +31,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 
 
@@ -69,7 +73,7 @@ public class RestClassifierService {
             @PathParam(value = "appId") final String appId,
             @PathParam(value = "classifierName") final String classifierName
     ) {
-        System.out.println("WebClassifierManagerServer.getClassifier" + this);
+        System.out.println("WebClassifierManagerServer.getClassifier " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
@@ -91,7 +95,7 @@ public class RestClassifierService {
             @PathParam(value = "appId") final String appId,
             @PathParam(value = "classifierName") final String classifierName
     ) {
-        System.out.println("WebClassifierManagerServer.createClassifier" + this);
+        System.out.println("WebClassifierManagerServer.createClassifier " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
@@ -109,7 +113,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") final String classifierName,
             @FormParam("queryPatches") final String queryPatches
     ) {
-        System.out.println("WebClassifierManagerServer.populateArchivePatches" + this);
+        System.out.println("WebClassifierManagerServer.populateArchivePatches " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
         System.out.println("queryPatches = " + queryPatches);
 
@@ -145,7 +149,7 @@ public class RestClassifierService {
             @FormParam("labeledPatches") final String labeledPatches,
             @FormParam("prePopulate") final String prePopulateString
     ) {
-        System.out.println("WebClassifierManagerServer.populateArchivePatches" + this);
+        System.out.println("WebClassifierManagerServer.trainAndClassify " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
         System.out.println("labeledPatches = " + labeledPatches);
         System.out.println("prePopulate = " + prePopulateString);
@@ -183,7 +187,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") final String classifierName,
             @FormParam("prePopulate") final String prePopulateString
     ) {
-        System.out.println("WebClassifierManagerServer.populateArchivePatches" + this);
+        System.out.println("WebClassifierManagerServer.getMostAmbigous " + this);
         System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
         System.out.println("prePopulate = " + prePopulateString);
 
@@ -211,6 +215,89 @@ public class RestClassifierService {
         }
     }
 
+    @POST
+    @Path("/{appId}/classifiers/{classifierName}/getPatchQuicklookURL")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getPatchQuicklookURL(
+            @PathParam(value = "appId") final String appId,
+            @PathParam(value = "classifierName") final String classifierName,
+            @FormParam("patches") final String patchesString,
+            @FormParam("quicklookBandName") final String quicklookBandName
+    ) {
+        System.out.println("WebClassifierManagerServer.getPatchQuicklookURL " + this);
+        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
+        System.out.println("patches = " + patchesString);
+        System.out.println("quicklookBandName = " + quicklookBandName);
+
+        try {
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
+            if (!Files.exists(classifierPath)) {
+                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
+            }
+            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
+            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+
+            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+                                                                  localClassifierManager.getPatchPath(),
+                                                                  localClassifierManager.getDbPath());
+            Patch[] patches = PatchList.fromXML(patchesString);
+            URL url = localClassifier.getPatchQuicklookURL(patches[0], quicklookBandName);
+
+            System.out.println("quicklookURL = " + url.toString());
+
+            return url.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    @POST
+    @Path("/{appId}/classifiers/{classifierName}/getPatchQuicklook")
+    @Produces("image/png")
+    public javax.ws.rs.core.Response getPatchQuicklook(@PathParam(value = "appId") final String appId,
+                                      @PathParam(value = "classifierName") final String classifierName,
+                                      @FormParam("patches") final String patchesString,
+                                      @FormParam("quicklookBandName") final String quicklookBandName
+    ) {
+        System.out.println("WebClassifierManagerServer.getPatchQuicklook " + this);
+        System.out.println("appId = [" + appId + "], classifierName = [" + classifierName + "]");
+        System.out.println("patches = " + patchesString);
+        System.out.println("quicklookBandName = " + quicklookBandName);
+
+        try {
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
+            if (!Files.exists(classifierPath)) {
+                throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
+            }
+            ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
+            PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
+
+            LocalClassifier localClassifier = new LocalClassifier(classifierModel, classifierPath, applicationDescriptor,
+                                                                  localClassifierManager.getPatchPath(),
+                                                                  localClassifierManager.getDbPath());
+            Patch[] patches = PatchList.fromXML(patchesString);
+            File file = new File(localClassifier.getPatchProductFile(patches[0]), quicklookBandName);
+
+            System.out.println("quicklookURL = " + file.toString());
+
+            java.nio.file.Path path = file.toPath();
+            return javax.ws.rs.core.Response.ok().header("name", quicklookBandName).entity(new StreamingOutput() {
+                @Override
+                public void write(OutputStream output)
+                        throws IOException, WebApplicationException {
+                    output.write(Files.readAllBytes(path));
+                    output.flush();
+                }
+            }).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return javax.ws.rs.core.Response.serverError().build();
+        }
+
+    }
 
     // TODO
 //    @DELETE
