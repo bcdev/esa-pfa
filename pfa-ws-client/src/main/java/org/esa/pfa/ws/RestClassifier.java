@@ -149,7 +149,7 @@ public class RestClassifier implements Classifier {
     @Override
     public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
         Response response = getPatchQuicklookTarget(patch, quicklookBandName).request().get();
-        if (response.getStatusInfo() == Response.Status.OK) {
+        if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
             return response.readEntity(BufferedImage.class);
         } else {
             return null;
