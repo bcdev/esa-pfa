@@ -21,6 +21,9 @@ import org.esa.snap.util.SystemUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
@@ -29,6 +32,8 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
     private final Patch patch;
     private final String quickLookName;
     private final PatchDrawer.PatchDrawing drawing;
+
+    private static final ConcurrentMap<QlKey, BufferedImage> qlCache = new ConcurrentHashMap<>();
 
     public PatchQuicklookDownloader(final CBIRSession session, final Patch patch, final String quickLookName,
                                     final PatchDrawer.PatchDrawing drawing) {
@@ -40,20 +45,64 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
 
     @Override
     protected BufferedImage doInBackground() throws Exception {
-        return session.getPatchQuicklook(patch, quickLookName);
+        final QlKey qlKey = new QlKey(patch, quickLookName);
+        return qlCache.computeIfAbsent(qlKey, qlKey1 -> {
+            try {
+                return session.getPatchQuicklook(patch, quickLookName);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
     }
 
     protected void done() {
         try {
-            BufferedImage img = get();
-            System.out.println("img = " + img);
-            patch.setImage(quickLookName, img);
+            patch.setImage(quickLookName, get());
             drawing.update();
             drawing.invalidate();
             drawing.repaint();
         } catch (InterruptedException | ExecutionException e) {
             String location = patch.getPatchName() + " " + quickLookName;
             SystemUtils.LOG.severe("Failed to download or load quicklook " + location + ":" + e.toString());
+        }
+    }
+
+    private static class QlKey {
+
+        private final String quickLookName;
+        private final String parentProductName;
+        private final int patchX;
+        private final int patchY;
+
+        public QlKey(Patch patch, String quickLookName) {
+            parentProductName = patch.getParentProductName();
+            patchX = patch.getPatchX();
+            patchY = patch.getPatchY();
+            this.quickLookName = quickLookName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            QlKey qlKey = (QlKey) o;
+
+            if (patchX != qlKey.patchX) return false;
+            if (patchY != qlKey.patchY) return false;
+            if (!quickLookName.equals(qlKey.quickLookName)) return false;
+            return parentProductName.equals(qlKey.parentProductName);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = quickLookName.hashCode();
+            result = 31 * result + parentProductName.hashCode();
+            result = 31 * result + patchX;
+            result = 31 * result + patchY;
+            return result;
         }
     }
 }
