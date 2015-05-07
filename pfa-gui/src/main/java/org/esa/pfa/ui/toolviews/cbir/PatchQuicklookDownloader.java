@@ -22,6 +22,8 @@ import org.esa.snap.util.SystemUtils;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.RenderableImage;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,9 +47,7 @@ class PatchQuicklookDownloader extends SwingWorker {
     /**
      * Computes a result, or throws an exception if unable to do so.
      * <p>
-     * <p>
      * Note that this method is executed only once.
-     * <p>
      * <p>
      * Note: this method is executed in a background thread.
      *
@@ -56,23 +56,12 @@ class PatchQuicklookDownloader extends SwingWorker {
      */
     @Override
     protected Object doInBackground() throws Exception {
-        URL url = null;
         try {
-            //url = session.getPatchQuicklookURL(patch, quickLookName);
-            //if(url != null && url.getProtocol().equalsIgnoreCase("file")) {
-            //    BufferedImage img = loadImageFile(new File(url.getPath()));
-            //    patch.setImage(quickLookName, img);
-            //} else {
-
-                BufferedImage img = session.getPatchQuicklook(patch, quickLookName);;
-                patch.setImage(quickLookName, img);
-            //}
+            BufferedImage img = session.getPatchQuicklook(patch, quickLookName);
+            patch.setImage(quickLookName, img);
         } catch (Exception e) {
-            String location = patch.getPatchName()+" "+quickLookName;
-            if(url != null) {
-                location = url.toString();
-            }
-            SystemUtils.LOG.severe("Failed to download or load quicklook " + location +":"+ e.toString());
+            String location = patch.getPatchName() + " " + quickLookName;
+            SystemUtils.LOG.severe("Failed to download or load quicklook " + location + ":" + e.toString());
         }
         return null;
     }
@@ -80,19 +69,5 @@ class PatchQuicklookDownloader extends SwingWorker {
     protected void done() {
         drawing.update();
         drawing.invalidate();
-    }
-
-    private static BufferedImage loadImageFile(final File file) {
-        BufferedImage bufferedImage = null;
-        if (file.canRead()) {
-            try {
-                try (BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))) {
-                    bufferedImage = ImageIO.read(fis);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return bufferedImage;
     }
 }

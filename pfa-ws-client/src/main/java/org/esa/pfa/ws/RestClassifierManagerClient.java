@@ -34,6 +34,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -154,18 +155,16 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
     }
 
     @Override
-    public URL getPatchQuicklookURL(String classifierName, Patch patch, String quicklookBandName) throws IOException {
-        String xml = PatchList.toXML(new Patch[] {patch});
-        Form form = new Form();
-        form.param("patches", xml);
-        form.param("quicklookBandName", quicklookBandName);
-
-        Response response = target.path("classifiers").path(classifierName).path("getPatchQuicklookURL").
-                request().
-                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-        String result = response.readEntity(String.class);
-
-        return new URL(result);
+    public URI getPatchQuicklookUri(String classifierName, Patch patch, String quicklookBandName) throws IOException {
+        String parentProductName = patch.getParentProductName();
+        int patchX = patch.getPatchX();
+        int patchY = patch.getPatchY();
+        WebTarget webTarget = target.path("quicklook")
+                .queryParam("parentProductName", parentProductName)
+                .queryParam("patchX", patchX)
+                .queryParam("patchY", patchY)
+                .queryParam("quicklookBandName", quicklookBandName);
+        return webTarget.getUri();
     }
 
     @Override
@@ -175,10 +174,10 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         form.param("patches", xml);
         form.param("quicklookBandName", quicklookBandName);
 
-        Response response = target.path("classifiers").path(classifierName).path("getPatchQuicklook").
+        Response response = target.path("quicklook").
                 request().post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
-        InputStream inputStream = response.readEntity(InputStream.class);
+        return response.readEntity(BufferedImage.class);
         //OutputStream outputStream = new FileOutputStream(new File("e:\\out\\test.png"));
         //byte[] buffer = new byte[1024];
         //int bytesRead;
@@ -186,9 +185,9 @@ public class RestClassifierManagerClient implements ClassifierManager, RestClien
         //    outputStream.write(buffer, 0, bytesRead);
         //}
 
-        BufferedImage image = ImageIO.read(new BufferedInputStream(inputStream));
-
-        return image;
+//        BufferedImage image = ImageIO.read(new BufferedInputStream(inputStream));
+//
+//        return image;
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {

@@ -22,9 +22,10 @@ import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.fe.op.Patch;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * Created by marcoz on 24.04.15.
@@ -88,8 +89,8 @@ public class RestClassifier implements Classifier {
     }
 
     @Override
-    public URL getPatchQuicklookURL(Patch patch, String quicklookBandName) throws IOException {
-        return restClient.getPatchQuicklookURL(classifierName, patch, quicklookBandName);
+    public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
+        return restClient.getPatchQuicklookUri(classifierName, patch, quicklookBandName);
     }
 
     @Override

@@ -20,9 +20,8 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * Service for accessing patches.
@@ -38,14 +37,11 @@ public class PatchAccess {
     }
 
     public Patch loadPatch(String parentProductName, int patchX, int patchY, Patch.Label label) throws IOException {
-        File patchFile = findPatch(parentProductName, patchX, patchY);
-        if (patchFile != null) {
-            final Patch patch = new Patch(parentProductName, patchX, patchY, null, null);
-            patch.setLabel(label);
-            readPatchFeatures(patch, patchFile);
-            return patch;
-        }
-        throw new IOException("Could not load patch for: "+ parentProductName);
+        Path patchPath = findPatchPath(parentProductName, patchX, patchY);
+        final Patch patch = new Patch(parentProductName, patchX, patchY, null, null);
+        patch.setLabel(label);
+        readPatchFeatures(patch, patchPath.toFile());
+        return patch;
     }
 
     public void readPatchFeatures(Patch patch, File patchFile) throws IOException {
@@ -53,80 +49,33 @@ public class PatchAccess {
         patch.readFeatureFile(featureFile, effectiveFeatureTypes);
     }
 
-    @Deprecated
-    public String[] getAvailableQuickLooks(final Patch patch) throws IOException {
-        File patchFile = findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
-        final File[] imageFiles = patchFile.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isFile() && file.getName().toLowerCase().endsWith(".png");
-            }
-        });
-        if (imageFiles == null) {
-            throw new IOException("No patch image found in " + patchFile);
-        }
-        final String[] quicklookFilenames = new String[imageFiles.length];
-        int i = 0;
-        for (File imageFile : imageFiles) {
-            quicklookFilenames[i++] = imageFile.getName();
-        }
-        return quicklookFilenames;
-    }
-
-    public URL retrievePatchImage(final Patch patch, final String patchImageFileName) throws IOException {
-        File patchFile = findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
-
-        File imageFile;
-        if (patchImageFileName != null && !patchImageFileName.isEmpty()) {
-            imageFile = new File(patchFile, patchImageFileName);
-        } else {
-            final String[] quicklookFilenames = getAvailableQuickLooks(patch);
-            imageFile = new File(patchFile, quicklookFilenames[0]);
-        }
-
-        return new URL("file:" + imageFile.getAbsolutePath());
+    public Path getPatchImagePath(String parentProductName, int patchX, int patchY, String patchImageFileName) throws IOException {
+        Path patchPath = findPatchPath(parentProductName, patchX, patchY);
+        return patchPath.resolve(patchImageFileName);
     }
 
     public File getPatchProductFile(Patch patch) throws IOException {
-        File patchFile = findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
-        if (patchFile == null) {
-            return null;
-        }
-
-        final File patchProductFile = new File(patchFile, "patch.dim");
+        Path patchPath = findPatchPath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
+        final File patchProductFile = patchPath.resolve("patch.dim").toFile();
         if (!patchProductFile.exists()) {
             return null;
         }
         return patchProductFile;
     }
 
-    public File findPatch(String productName, int patchX, int patchY) throws IOException {
+    private Path findPatchPath(String productName, int patchX, int patchY) throws IOException {
         // check for directory
         File fexDir = new File(patchRootDir, productName + ".fex");
         File fezFile = new File(patchRootDir, productName + ".fex.zip");
         if (fexDir.isDirectory()) {
             File[] patchFiles = fexDir.listFiles((dir, name) -> name.matches("x0*" + patchX + "y0*" + patchY));
             if (patchFiles != null && patchFiles.length == 1) {
-                return patchFiles[0];
+                return patchFiles[0].toPath();
             }
         } else if (fezFile.isFile()) {
             // TODO read from zip
             throw new UnsupportedOperationException("Reading patch from zip not implemented!!");
         }
         throw new IOException("Could not load patch for: " + productName + "  x: " + patchX + "  y:" + patchY);
-    }
-
-    private String getPatchName(final int patchX, final int patchY) {
-        return "x"+ padZeros(patchX) + "y" + padZeros(patchY);
-    }
-
-    private String padZeros(final int val) {
-        String str = "";
-        if(val < 10) {
-            str = "00";
-        } else if(val < 100) {
-            str = "0";
-        }
-        return str + String.valueOf(val);
     }
 }

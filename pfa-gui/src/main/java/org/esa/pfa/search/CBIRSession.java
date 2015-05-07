@@ -29,6 +29,7 @@ import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.ws.RestClassifierManagerClient;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -312,14 +313,14 @@ public class CBIRSession {
     }
 
     /**
-     * Not all patches need quicklooks. This function returns a URL to retrive a patch quicklook
+     * Not all patches need quicklooks. This function returns a URI to retrive a patch quicklook
      *
      * @param patch             the patches to get quicklooks for
      * @param quicklookBandName the quicklook to retrieve
-     * @return patch quicklook URL
+     * @return patch quicklook URI
      */
-    public URL getPatchQuicklookURL(final Patch patch, final String quicklookBandName) throws IOException {
-        return classifier.getPatchQuicklookURL(patch, quicklookBandName);
+    public URI getPatchQuicklookUri(final Patch patch, final String quicklookBandName) throws IOException {
+        return classifier.getPatchQuicklookUri(patch, quicklookBandName);
     }
 
     public BufferedImage getPatchQuicklook(final Patch patch, final String quicklookBandName) throws IOException {

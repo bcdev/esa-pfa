@@ -19,8 +19,9 @@ package org.esa.pfa.ws;
 import org.esa.pfa.fe.op.Patch;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * Created by marcoz on 05.05.15.
@@ -33,7 +34,7 @@ public interface RestClient {
 
     Patch[] getMostAmbigous(String classifierName, boolean prePopulate) throws IOException;
 
-    URL getPatchQuicklookURL(String classifierName, Patch patch, String quicklookBandName) throws IOException;
+    URI getPatchQuicklookUri(String classifierName, Patch patch, String quicklookBandName) throws IOException;
 
     BufferedImage getPatchQuicklook(String classifierName, Patch patch, String quicklookBandName) throws IOException;
 }

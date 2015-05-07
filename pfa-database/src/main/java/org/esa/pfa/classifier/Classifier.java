@@ -20,9 +20,10 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * The part of the classifier that does the "real" work.
@@ -47,7 +48,7 @@ public interface Classifier {
 
     Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
 
-    URL getPatchQuicklookURL(Patch patch, String quicklookBandName) throws IOException;
+    URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException;
 
     BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException;
 

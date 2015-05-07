@@ -30,8 +30,10 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.snap.util.SystemUtils;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -193,18 +195,13 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public URL getPatchQuicklookURL(Patch patch, String quicklookBandName) {
-        try {
-            return patchAccess.retrievePatchImage(patch, quicklookBandName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+    public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
+        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
+        return patchImagePath.toUri();
     }
 
     @Override
     public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) {
-
         return null;
     }
 
