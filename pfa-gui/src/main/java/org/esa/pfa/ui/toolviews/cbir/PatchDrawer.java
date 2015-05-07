@@ -122,7 +122,7 @@ public class PatchDrawer extends JPanel {
                 PatchQuicklookDownloader downloader = new PatchQuicklookDownloader(session, patch, ql_1, this);
                 downloader.execute();
             }
-            if (patch.getImage(ql_2) == null) {
+            if (patch.getImage(ql_2) == null && isDual) {
                 PatchQuicklookDownloader downloader = new PatchQuicklookDownloader(session, patch, ql_2, this);
                 downloader.execute();
             }
