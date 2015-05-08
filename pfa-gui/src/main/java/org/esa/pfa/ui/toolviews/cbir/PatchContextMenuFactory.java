@@ -181,7 +181,7 @@ public class PatchContextMenuFactory {
             }
         }
 
-        if (patchProductFile != null && !patchProductFile.exists()) {
+        if (patchProductFile == null || !patchProductFile.exists()) {
             return null;
         }
 
@@ -200,7 +200,7 @@ public class PatchContextMenuFactory {
     }
 
     public Action createShowPatchInfoAction(final Patch patch) {
-        if (patch.getFeatureValues().length == 0) {
+        if (patch.getFeatures().length == 0) {
             return null;
         }
 

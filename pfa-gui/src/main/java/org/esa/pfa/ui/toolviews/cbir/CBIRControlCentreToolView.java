@@ -75,6 +75,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private final static Dimension preferredDimension = new Dimension(550, 300);
     private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
     private final static String PROPERTY_KEY_DB_REMOTE = "app.file.cbir.remoteAddress";
+    private final static String PROPERTY_KEY_DB_ISREMOTE = "app.file.cbir.isRemote";
+    private final static String PROPERTY_KEY_DB_APP = "app.file.cbir.appId";
 
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
@@ -124,7 +126,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     Preferences preferences = SnapApp.getDefault().getPreferences();
                     String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
                     String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
-                    final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue);
+                    String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.FALSE.toString());
+                    String appIdValue = preferences.get(PROPERTY_KEY_DB_APP, "AlgalBloom");
+                    final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue, isRemoteValue, appIdValue);
                     dlg.show();
 
                     String localFolder = dlg.getLocalFolder();
@@ -493,7 +497,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         private final JRadioButton isLocal;
         private final JRadioButton isRemote;
 
-        public SelectDbDialog(String folderValue, String remoteValue) {
+        public SelectDbDialog(String folderValue, String remoteValue, String isRemoteValue, String appIdValue) {
             super(SnapApp.getDefault().getMainFrame(), "Select Database", ModalDialog.ID_OK, null);
 
             applicationCombo = new JComboBox<>();
@@ -501,10 +505,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 applicationCombo.addItem(app.getName());
             }
             applicationCombo.setEditable(false);
+            applicationCombo.setSelectedItem(appIdValue);
 
+            boolean isRemoteb = Boolean.parseBoolean(isRemoteValue);
             ButtonGroup group = new ButtonGroup();
-            isLocal = new JRadioButton("Local", true);
-            isRemote = new JRadioButton("Remote", false);
+            isLocal = new JRadioButton("Local", !isRemoteb);
+            isRemote = new JRadioButton("Remote", isRemoteb);
             group.add(isLocal);
             group.add(isRemote);
 
@@ -539,6 +545,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             gbc.anchor = GridBagConstraints.NORTHWEST;
             gbc.gridx = 0;
             gbc.gridy = 0;
+            gbc.insets = new Insets(3,3,3,3);
 
             contentPane.add(new Label("Application:"), gbc);
 
@@ -591,6 +598,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             Preferences preferences = SnapApp.getDefault().getPreferences();
             preferences.put(PROPERTY_KEY_DB_PATH, getLocalFolder());
             preferences.put(PROPERTY_KEY_DB_REMOTE, getRemoteAddress());
+            preferences.put(PROPERTY_KEY_DB_ISREMOTE, Boolean.toString(!isLocal()));
+            preferences.put(PROPERTY_KEY_DB_APP, getApplicationName());
             hide();
         }
     }

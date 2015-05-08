@@ -3,6 +3,7 @@ package org.esa.pfa.ui.toolviews.cbir;
 import org.esa.pfa.search.CBIRSession;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -69,11 +70,11 @@ public class OptionsControlPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String currentName = (String) quickLookCombo1.getSelectedItem();
-                for(int i=0; i < bandNames.length; ++i) {
-                    if(currentName.equals(bandNames[i])) {
+                for (int i = 0; i < bandNames.length; ++i) {
+                    if (currentName.equals(bandNames[i])) {
                         String newName;
-                        if(i+1 < bandNames.length) {
-                            newName = bandNames[i+1];
+                        if (i + 1 < bandNames.length) {
+                            newName = bandNames[i + 1];
                         } else {
                             newName = bandNames[0];
                         }
@@ -87,6 +88,8 @@ public class OptionsControlPanel extends JPanel {
 
         final JPanel ql1Panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         quickLookCombo1 = new JComboBox<>();
+        ListCellRenderer<String> qlRenderer = new QlRenderer();
+        quickLookCombo1.setRenderer(qlRenderer);
         quickLookCombo1.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -102,6 +105,7 @@ public class OptionsControlPanel extends JPanel {
 
         final JPanel ql2Panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         quickLookCombo2 = new JComboBox<>();
+        quickLookCombo2.setRenderer(qlRenderer);
         quickLookCombo2.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -197,5 +201,17 @@ public class OptionsControlPanel extends JPanel {
 
     public interface Listener {
         void notifyOptionsMsg(final Notification msg);
+    }
+
+    private class QlRenderer extends BasicComboBoxRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            String text = value.toString();
+            if (text.endsWith("_ql.png"))  {
+                text = text.substring(0, text.length() - 7);
+            }
+            setText(text);
+            return this;
+        }
     }
 }
