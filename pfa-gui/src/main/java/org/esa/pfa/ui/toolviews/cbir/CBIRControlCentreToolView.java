@@ -127,7 +127,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
                     String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
                     String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.FALSE.toString());
-                    String appIdValue = preferences.get(PROPERTY_KEY_DB_APP, "");
+                    String appIdValue = preferences.get(PROPERTY_KEY_DB_APP, "AlgalBloom");
                     final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue, isRemoteValue, appIdValue);
                     dlg.show();
 
@@ -545,6 +545,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             gbc.anchor = GridBagConstraints.NORTHWEST;
             gbc.gridx = 0;
             gbc.gridy = 0;
+            gbc.insets = new Insets(3,3,3,3);
 
             contentPane.add(new Label("Application:"), gbc);
 
