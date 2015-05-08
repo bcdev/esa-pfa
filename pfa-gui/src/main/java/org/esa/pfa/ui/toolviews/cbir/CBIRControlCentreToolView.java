@@ -143,7 +143,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     dbLabel.setText(applicationName + ":" + uri);
                     initClassifierList();
                 } catch (Throwable t) {
-                    SnapApp.getDefault().handleError("Error creating new classifier", t);
+                    SnapApp.getDefault().handleError("Error connecting to database: "+t.getMessage(), t);
                 }
             }
         });
