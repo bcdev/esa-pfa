@@ -36,6 +36,7 @@ import org.esa.snap.util.Guardian;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
+import org.esa.snap.util.SystemUtils;
 
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
@@ -89,7 +90,7 @@ public abstract class FeatureWriter extends Operator {
     @Parameter(description = "Extra patch writer configuration properties. Uses Java Properties File format.")
     protected String patchWriterConfigExtra;
 
-    @Parameter
+
     protected HashMap<String, Object> patchWriterConfig;
 
     @Parameter(defaultValue = "org.esa.pfa.fe.op.out.DefaultPatchWriterFactory")
@@ -278,7 +279,14 @@ public abstract class FeatureWriter extends Operator {
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws
                                                                                                              OperatorException {
         try {
-            final Product patchProduct = createSubset(sourceProduct, targetRectangle);
+            Product patchProduct;
+            try {
+                patchProduct = createSubset(sourceProduct, targetRectangle);
+            } catch (Exception e) {
+                SystemUtils.LOG.severe("Unable to create patch subset "+ e.getMessage());
+                return;
+            }
+
             patchProduct.setName("patch");
 
             final int patchX = (int) (targetRectangle.getMinX() / targetRectangle.getWidth());
