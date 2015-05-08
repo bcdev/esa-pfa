@@ -20,6 +20,10 @@
       <outputImageScaleInDb>false</outputImageScaleInDb>
       <createGammaBand>false</createGammaBand>
       <createBetaBand>false</createBetaBand>
+      <outputSigmaBand>true</outputSigmaBand>
+      <outputGammaBand>false</outputGammaBand>
+      <outputBetaBand>false</outputBetaBand>
+      <outputDNBand>false</outputDNBand>
     </parameters>
   </node>
   <node id="Land-Sea-Mask">
