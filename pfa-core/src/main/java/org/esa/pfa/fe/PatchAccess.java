@@ -68,6 +68,19 @@ public class PatchAccess {
         return patchProductFile;
     }
 
+    public Path findFexPath(String productName) throws IOException {
+        // check for directory
+        File fexDir = new File(patchRootDir, productName + ".fex");
+        File fezFile = new File(patchRootDir, productName + ".fex.zip");
+        if (fexDir.isDirectory()) {
+            return fexDir.toPath();
+        } else if (fezFile.isFile()) {
+            // TODO read from zip
+            throw new UnsupportedOperationException("Reading patch from zip not implemented!!");
+        }
+        throw new IOException("Could not load patch for: " + productName);
+    }
+
     private Path findPatchPath(String productName, int patchX, int patchY) throws IOException {
         // check for directory
         File fexDir = new File(patchRootDir, productName + ".fex");

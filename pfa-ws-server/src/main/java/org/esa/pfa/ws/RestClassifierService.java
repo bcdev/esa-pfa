@@ -30,8 +30,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -259,6 +261,41 @@ public class RestClassifierService {
             e.printStackTrace();
             return "";
         }
+    }
+
+    @GET
+    @Path("/{appId}/fex/{parentProductName}")
+    public Response fex(
+            @Context final UriInfo uriInfo,
+            @PathParam(value = "appId") String appId,
+            @PathParam("parentProductName") String parentProductName
+    ) {
+        System.out.println("fex appId = [" + appId + "], parentProductName = [" + parentProductName + "]");
+
+        final URI fexUri = uriInfo.getBaseUri().resolve("v1/apps/" + appId + "/fex/" + parentProductName + "/fex-overview.html");
+        return Response.temporaryRedirect(fexUri).build();
+    }
+
+    @GET
+    @Path("/{appId}/fex/{parentProductName}/{localPart : .+}")
+    public Response fexLocalPart(
+            @PathParam(value = "appId") String appId,
+            @PathParam("parentProductName") String parentProductName,
+            @PathParam("localPart") String localPart
+    ) {
+        System.out.println("fexLocalPart appId = [" + appId + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
+        try {
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+            final java.nio.file.Path fexPath = patchAccess.findFexPath(parentProductName);
+            if (fexPath != null) {
+                final java.nio.file.Path fexResource = fexPath.resolve(localPart);
+                InputStream inputStream = Files.newInputStream(fexResource);
+                return Response.ok().entity(inputStream).build();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @DELETE
