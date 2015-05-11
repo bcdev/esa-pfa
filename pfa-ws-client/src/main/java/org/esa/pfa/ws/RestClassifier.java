@@ -158,13 +158,13 @@ public class RestClassifier implements Classifier {
 
     private WebTarget getPatchQuicklookTarget(Patch patch, String quicklookBandName) {
         String parentProductName = patch.getParentProductName();
-        int patchX = patch.getPatchX();
-        int patchY = patch.getPatchY();
+        String patchX = Integer.toString(patch.getPatchX());
+        String patchY = Integer.toString(patch.getPatchY());
         return target.path("quicklook")
-                .queryParam("parentProductName", parentProductName)
-                .queryParam("patchX", patchX)
-                .queryParam("patchY", patchY)
-                .queryParam("quicklookBandName", quicklookBandName);
+                .path(parentProductName)
+                .path(patchX)
+                .path(patchY)
+                .path(quicklookBandName);
     }
 
     @Override
@@ -182,6 +182,7 @@ public class RestClassifier implements Classifier {
                 .path(patchX)
                 .path(patchY)
                 .request().get();
-        return response.readEntity(String.class);    }
+        return response.readEntity(String.class);
+    }
 
 }

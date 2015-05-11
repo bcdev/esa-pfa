@@ -191,7 +191,6 @@ public class RestClassifierService {
         }
     }
 
-
     @POST
     @Path("/{appId}/classifiers/{classifierName}/getMostAmbigous")
     public String getMostAmbigous(
@@ -218,16 +217,15 @@ public class RestClassifierService {
         }
     }
 
-
     @GET
-    @Path("/{appId}/quicklook")
     @Produces("image/png")
+    @Path("/{appId}/quicklook/{parentProductName}/{patchX}/{patchY}/{quicklookBandName}")
     public Response getPatchQuicklook(
             @PathParam(value = "appId") String appId,
-            @QueryParam("parentProductName") String parentProductName,
-            @QueryParam("patchX") int patchX,
-            @QueryParam("patchY") int patchY,
-            @QueryParam ("quicklookBandName") String quicklookBandName
+            @PathParam("parentProductName") String parentProductName,
+            @PathParam("patchX") int patchX,
+            @PathParam("patchY") int patchY,
+            @PathParam ("quicklookBandName") String quicklookBandName
     ) {
         System.out.println("quicklook appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
         try {
