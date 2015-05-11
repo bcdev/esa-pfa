@@ -217,4 +217,9 @@ public class LocalClassifier implements Classifier {
     public File getPatchProductFile(Patch patch) throws IOException {
         return patchAccess.getPatchProductFile(patch);
     }
+
+    @Override
+    public String getFeaturesAsText(Patch patch) throws IOException {
+        return patchAccess.getFeaturesAsText(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
+    }
 }

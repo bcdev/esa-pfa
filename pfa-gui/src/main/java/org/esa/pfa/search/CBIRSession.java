@@ -29,12 +29,12 @@ import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.ws.RestClassifierManagerClient;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -328,6 +328,15 @@ public class CBIRSession {
 
     public BufferedImage getPatchQuicklook(final Patch patch, final String quicklookBandName) throws IOException {
         return classifier.getPatchQuicklook(patch, quicklookBandName);
+    }
+
+    public void loadFeatures(Patch patch) throws IOException {
+        if (patch.getFeatures().length == 0) {
+            final String featuresAsText = classifier.getFeaturesAsText(patch);
+            try (Reader reader = new StringReader(featuresAsText)) {
+                patch.readFeatures(reader, getEffectiveFeatureTypes());
+            }
+        }
     }
 
     public Patch[] getRetrievedImages() {

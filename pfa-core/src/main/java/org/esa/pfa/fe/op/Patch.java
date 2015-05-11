@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.*;
 import java.util.List;
 
@@ -176,19 +177,22 @@ public final class Patch {
         public void notifyStateChanged(final Patch patch);
     }
 
-    public void readFeatureFile(final File featureFile, final FeatureType[] effectiveFeatureTypes) throws IOException {
+    public void readFeatureFile(File featureFile, FeatureType[] effectiveFeatureTypes) throws IOException {
         if (featureFile.exists()) {
-            final Properties featureValues = new Properties();
             try (FileReader reader = new FileReader(featureFile)) {
-                featureValues.load(reader);
+                readFeatures(reader, effectiveFeatureTypes);
             }
+        }
+    }
 
-            clearFeatures();
-            for (FeatureType featureType : effectiveFeatureTypes) {
-                final String featureValue = featureValues.getProperty(featureType.getName());
-                if (featureValue != null) {
-                    addFeature(createFeature(featureType, featureValue));
-                }
+    public void readFeatures(Reader reader, FeatureType[] effectiveFeatureTypes) throws IOException {
+        final Properties featureValues = new Properties();
+        featureValues.load(reader);
+        clearFeatures();
+        for (FeatureType featureType : effectiveFeatureTypes) {
+            final String featureValue = featureValues.getProperty(featureType.getName());
+            if (featureValue != null) {
+                addFeature(createFeature(featureType, featureValue));
             }
         }
     }

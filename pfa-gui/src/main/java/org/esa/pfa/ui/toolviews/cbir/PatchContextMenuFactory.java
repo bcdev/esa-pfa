@@ -27,6 +27,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ public class PatchContextMenuFactory {
         }
         JPopupMenu popupMenu = new JPopupMenu();
         for (Action action : actionList) {
+            System.out.println("action = " + action);
             popupMenu.add(action);
         }
         return popupMenu;
@@ -71,7 +73,7 @@ public class PatchContextMenuFactory {
         }
 
         Action openPatchProductAction = createOpenPatchProductAction(patch);
-        if (showPatchInfoAction != null) {
+        if (openPatchProductAction != null) {
             actionList.add(openPatchProductAction);
         }
 
@@ -107,8 +109,8 @@ public class PatchContextMenuFactory {
                 if (productOrder != null) {
                     if (productOrder.getState() == ProductOrder.State.COMPLETED) {
                         SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
-                                                               String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
-                                                                             parentProductName), true, null);
+                                                                              String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
+                                                                                            parentProductName), true, null);
                         if (resp == SnapDialogs.Answer.YES) {
                             createShowPatchInParentProductAction(patch);
                         }
@@ -200,7 +202,7 @@ public class PatchContextMenuFactory {
     }
 
     public Action createShowPatchInfoAction(final Patch patch) {
-        if (patch.getFeatures().length == 0) {
+        if (patch.getFeatureValues().length == 0) {
             return null;
         }
 
@@ -211,8 +213,14 @@ public class PatchContextMenuFactory {
             }
 
             private void showPatchInfo(Patch patch) {
-                PatchInfoDialog patchInfoDialog = new PatchInfoDialog(null, patch, createOtherButtons(patch));
-                patchInfoDialog.show();
+                try {
+                    session.loadFeatures(patch);
+                    PatchInfoDialog patchInfoDialog = new PatchInfoDialog(null, patch, createOtherButtons(patch));
+                    patchInfoDialog.show();
+                } catch (IOException e) {
+                    Debug.trace(e);
+                    SnapDialogs.showError("Failed to load features for patch.", e.getMessage());
+                }
             }
 
             private JButton[] createOtherButtons(Patch patch) {
@@ -302,7 +310,7 @@ public class PatchContextMenuFactory {
     public static Product openProduct(final File productFile) throws Exception {
 
         Product product = getOpenProduct(productFile);
-            if (product != null) {
+        if (product != null) {
             return product;
         }
         ProgressMonitorSwingWorker<Product, Void> worker = new ProgressMonitorSwingWorker<Product, Void>(SnapApp.getDefault().getMainFrame(), "Navigate to patch") {
@@ -330,15 +338,16 @@ public class PatchContextMenuFactory {
 
         public PatchInfoDialog(Window parent, Patch patch, JButton[] buttons) {
             super(parent, "Patch Info - " + patch.getPatchName(), ID_CLOSE, buttons, null);
-
+            CBIRSession session = CBIRSession.getInstance();
             Object[][] array = getFeatureTableData(patch);
             JTable table = new JTable(new DefaultTableModel(array, new Object[]{"Name", "Value"}));
 
             JPanel contentPanel = new JPanel(new BorderLayout(2, 2));
-            final String ql = CBIRSession.getInstance().getQuicklookBandName1();
-            if (patch.getImage(ql) != null) {
+            final String ql = session.getQuicklookBandName1();
+            BufferedImage QlImage = patch.getImage(ql);
+            if (QlImage != null) {
 
-                JLabel imageCanvas = new JLabel(new ImageIcon(patch.getImage(ql)));
+                JLabel imageCanvas = new JLabel(new ImageIcon(QlImage));
                 imageCanvas.setBorder(new LineBorder(Color.DARK_GRAY));
 
                 JPanel compRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -369,7 +378,7 @@ public class PatchContextMenuFactory {
         ProductSceneViewTopComponent anyView = null;
         List<ProductSceneViewTopComponent> viewTopComponentList = WindowUtilities.getOpened(ProductSceneViewTopComponent.class).collect(Collectors.toList());
 
-        for(ProductSceneViewTopComponent productSceneViewTopComponent : viewTopComponentList) {
+        for (ProductSceneViewTopComponent productSceneViewTopComponent : viewTopComponentList) {
             final ProductSceneView view = productSceneViewTopComponent.getView();
 
             if (view.getProduct() == product) {

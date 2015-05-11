@@ -156,12 +156,6 @@ public class RestClassifier implements Classifier {
         }
     }
 
-    @Override
-    public File getPatchProductFile(Patch patch) throws IOException {
-        return null; // TODO
-    }
-
-
     private WebTarget getPatchQuicklookTarget(Patch patch, String quicklookBandName) {
         String parentProductName = patch.getParentProductName();
         int patchX = patch.getPatchX();
@@ -172,5 +166,22 @@ public class RestClassifier implements Classifier {
                 .queryParam("patchY", patchY)
                 .queryParam("quicklookBandName", quicklookBandName);
     }
+
+    @Override
+    public File getPatchProductFile(Patch patch) throws IOException {
+        return null; // TODO
+    }
+
+    @Override
+    public String getFeaturesAsText(Patch patch) throws IOException {
+        String parentProductName = patch.getParentProductName();
+        String patchX = Integer.toString(patch.getPatchX());
+        String patchY = Integer.toString(patch.getPatchY());
+        final Response response = target.path("features")
+                .path(parentProductName)
+                .path(patchX)
+                .path(patchY)
+                .request().get();
+        return response.readEntity(String.class);    }
 
 }

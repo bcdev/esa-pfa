@@ -18,9 +18,12 @@ package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
+import sun.nio.ch.IOUtil;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,17 +41,13 @@ public class PatchAccess {
         this.effectiveFeatureTypes = effectiveFeatureTypes;
     }
 
-    public Patch loadPatch(String parentProductName, int patchX, int patchY, Patch.Label label) throws IOException {
+    public String getFeaturesAsText(String parentProductName, int patchX, int patchY) throws IOException {
         Path patchPath = findPatchPath(parentProductName, patchX, patchY);
-        final Patch patch = new Patch(parentProductName, patchX, patchY, null, null);
-        patch.setLabel(label);
-        readPatchFeatures(patch, patchPath.toFile());
-        return patch;
-    }
-
-    public void readPatchFeatures(Patch patch, File patchFile) throws IOException {
-        final File featureFile = new File(patchFile, "features.txt");
-        patch.readFeatureFile(featureFile, effectiveFeatureTypes);
+        final Path featuresTxt = patchPath.resolve("features.txt");
+        if (Files.exists(featuresTxt)) {
+            return new String(Files.readAllBytes(featuresTxt));
+        }
+        return "";
     }
 
     public Path getPatchImagePath(String parentProductName, int patchX, int patchY, String patchImageFileName) throws IOException {

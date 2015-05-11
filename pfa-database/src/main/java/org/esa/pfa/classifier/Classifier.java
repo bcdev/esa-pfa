@@ -54,4 +54,5 @@ public interface Classifier {
 
     File getPatchProductFile(Patch patch) throws IOException;
 
+    String getFeaturesAsText(Patch patch) throws IOException;
 }

@@ -241,7 +241,25 @@ public class RestClassifierService {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    @GET
+    @Path("/{appId}/features/{parentProductName}/{patchX}/{patchY}")
+    public String getFeaturesAsText(
+            @PathParam(value = "appId") String appId,
+            @PathParam("parentProductName") String parentProductName,
+            @PathParam("patchX") int patchX,
+            @PathParam("patchY") int patchY
+    ) {
+        System.out.println("features appId = [" + appId + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
+        try {
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+            return patchAccess.getFeaturesAsText(parentProductName, patchX, patchY);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
         }
     }
 
