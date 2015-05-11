@@ -58,7 +58,6 @@ public class PatchContextMenuFactory {
         }
         JPopupMenu popupMenu = new JPopupMenu();
         for (Action action : actionList) {
-            System.out.println("action = " + action);
             popupMenu.add(action);
         }
         return popupMenu;
