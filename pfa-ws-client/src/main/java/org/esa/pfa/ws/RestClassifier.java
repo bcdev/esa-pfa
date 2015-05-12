@@ -185,4 +185,8 @@ public class RestClassifier implements Classifier {
         return response.readEntity(String.class);
     }
 
+    @Override
+    public URI getFexOverviewUri(Patch patch) {
+        return target.path("fex").path(patch.getParentProductName()).getUri();
+    }
 }

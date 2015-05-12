@@ -222,4 +222,9 @@ public class LocalClassifier implements Classifier {
     public String getFeaturesAsText(Patch patch) throws IOException {
         return patchAccess.getFeaturesAsText(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
     }
+
+    @Override
+    public URI getFexOverviewUri(Patch patch) {
+        return null; // not supported in local mode
+    }
 }

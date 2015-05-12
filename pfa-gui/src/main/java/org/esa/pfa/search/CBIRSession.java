@@ -339,6 +339,10 @@ public class CBIRSession {
         }
     }
 
+    public URI getFexOverviewUri(Patch patch) {
+        return classifier.getFexOverviewUri(patch);
+    }
+
     public Patch[] getRetrievedImages() {
         return retrievedImageList.toArray(new Patch[retrievedImageList.size()]);
     }

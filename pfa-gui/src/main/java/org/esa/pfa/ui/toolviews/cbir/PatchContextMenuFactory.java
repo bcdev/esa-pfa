@@ -30,6 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,7 +87,41 @@ public class PatchContextMenuFactory {
             actionList.add(orderParentProductAction);
         }
 
+        Action showFexOverviewAction = createShowFexOverviewAction(patch);
+        if (showFexOverviewAction != null) {
+            actionList.add(showFexOverviewAction);
+        }
+
         return actionList;
+    }
+
+    private Action createShowFexOverviewAction(Patch patch) {
+
+        final String parentProductName = patch.getParentProductName();
+        final boolean desktopSupported = Desktop.isDesktopSupported();
+        final boolean browseSupported = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
+
+        if (parentProductName == null || !desktopSupported || !browseSupported) {
+            return null;
+        }
+
+        final URI fexOverviewUri = CBIRSession.getInstance().getFexOverviewUri(patch);
+        if (fexOverviewUri == null) {
+            return null;
+        }
+
+        return new AbstractAction("Show Fex Overview") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Desktop.getDesktop().browse(fexOverviewUri);
+                } catch (Throwable t) {
+                    SnapDialogs.showError("Failed to open URL:\n" + fexOverviewUri + ":\n" + t.getMessage());
+                }
+            }
+
+        };
     }
 
     public Action createOrderParentProductAction(final Patch patch) {
@@ -368,6 +403,7 @@ public class PatchContextMenuFactory {
             }
             return data.toArray(new Object[0][]);
         }
+
     }
 
 

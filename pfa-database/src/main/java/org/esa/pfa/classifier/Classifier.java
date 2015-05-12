@@ -20,7 +20,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -55,4 +54,6 @@ public interface Classifier {
     File getPatchProductFile(Patch patch) throws IOException;
 
     String getFeaturesAsText(Patch patch) throws IOException;
+
+    URI getFexOverviewUri(Patch patch);
 }
