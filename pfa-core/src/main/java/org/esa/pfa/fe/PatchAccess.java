@@ -16,29 +16,24 @@
 
 package org.esa.pfa.fe;
 
-import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
-import sun.nio.ch.IOUtil;
+import org.esa.snap.util.io.FileUtils;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Service for accessing patches.
  */
 public class PatchAccess {
 
-    private final FeatureType[] effectiveFeatureTypes;
     private final File patchRootDir;
 
-    public PatchAccess(File patchRootDir, FeatureType[] effectiveFeatureTypes) {
+    public PatchAccess(File patchRootDir) {
         this.patchRootDir = patchRootDir;
-        this.effectiveFeatureTypes = effectiveFeatureTypes;
     }
 
     public String getFeaturesAsText(String parentProductName, int patchX, int patchY) throws IOException {
@@ -75,8 +70,9 @@ public class PatchAccess {
         if (fexDir.isDirectory()) {
             return fexDir.toPath();
         } else if (fezFile.isFile()) {
-            // TODO read from zip
-            throw new UnsupportedOperationException("Reading patch from zip not implemented!!");
+            URI zipUri = URI.create("jar:file:" + fezFile.toURI().getPath() + "!/");
+            Path entryZip = FileUtils.getPathFromURI(zipUri);
+            return entryZip.resolve(productName + ".fex");
         }
         throw new IOException("Could not load patch for: " + productName);
     }
@@ -85,15 +81,26 @@ public class PatchAccess {
         // check for directory
         File fexDir = new File(patchRootDir, productName + ".fex");
         File fezFile = new File(patchRootDir, productName + ".fex.zip");
+
+        Path fexPath = null;
         if (fexDir.isDirectory()) {
-            File[] patchFiles = fexDir.listFiles((dir, name) -> name.matches("x0*" + patchX + "y0*" + patchY));
-            if (patchFiles != null && patchFiles.length == 1) {
-                return patchFiles[0].toPath();
-            }
+            fexPath = fexDir.toPath();
         } else if (fezFile.isFile()) {
-            // TODO read from zip
-            throw new UnsupportedOperationException("Reading patch from zip not implemented!!");
+            URI zipUri = URI.create("jar:file:" + fezFile.toURI().getPath() + "!/");
+            Path entryZip = FileUtils.getPathFromURI(zipUri);
+            fexPath = entryZip.resolve(productName + ".fex");
         }
+        if (fexPath != null) {
+            Path patchPath = fexPath.resolve(String.format("x%03dy%03d", patchX, patchY));
+            if (Files.exists(patchPath)) {
+                return patchPath;
+            }
+            patchPath = fexPath.resolve(String.format("x%02dy%02d", patchX, patchY));
+            if (Files.exists(patchPath)) {
+                return patchPath;
+            }
+        }
+
         throw new IOException("Could not load patch for: " + productName + "  x: " + patchX + "  y:" + patchY);
     }
 }

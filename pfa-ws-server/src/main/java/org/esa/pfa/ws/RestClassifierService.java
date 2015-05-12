@@ -231,7 +231,7 @@ public class RestClassifierService {
     ) {
         System.out.println("quicklook appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
         try {
-           PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+           PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
             java.nio.file.Path patchImagePath = patchAccess.getPatchImagePath(parentProductName, patchX, patchY, quicklookBandName);
             if (Files.exists(patchImagePath)) {
                 InputStream inputStream = Files.newInputStream(patchImagePath);
@@ -255,7 +255,7 @@ public class RestClassifierService {
     ) {
         System.out.println("features appId = [" + appId + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
         try {
-            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
             return patchAccess.getFeaturesAsText(parentProductName, patchX, patchY);
         } catch (IOException e) {
             e.printStackTrace();
@@ -285,7 +285,7 @@ public class RestClassifierService {
     ) {
         System.out.println("fexLocalPart appId = [" + appId + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
         try {
-            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile(), null);
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
             final java.nio.file.Path fexPath = patchAccess.findFexPath(parentProductName);
             if (fexPath != null) {
                 final java.nio.file.Path fexResource = fexPath.resolve(localPart);

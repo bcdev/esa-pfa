@@ -68,7 +68,7 @@ public class LocalClassifier implements Classifier {
             FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
             FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
             db = new PatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
-            patchAccess = new PatchAccess(patchPath.toFile(), effectiveFeatureTypes);
+            patchAccess = new PatchAccess(patchPath.toFile());
         } else {
             SystemUtils.LOG.severe("LocalClassifier database not found");
             // currently for test only
@@ -207,7 +207,7 @@ public class LocalClassifier implements Classifier {
     public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
         Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
         if (patchImagePath != null) {
-            return ImageIO.read(patchImagePath.toFile());
+            return ImageIO.read(patchImagePath.toUri().toURL());
         } else {
             return null;
         }
