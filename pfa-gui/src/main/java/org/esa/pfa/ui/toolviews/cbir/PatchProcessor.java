@@ -86,7 +86,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
                         com.bc.ceres.core.ProgressMonitor.NULL);
             }
 
-            final Patch patch = new Patch(product.getName(), patchX, patchY, null, subset);
+            final Patch patch = new Patch(product.getName(), patchX, patchY, subset);
             patch.setImage(session.getQuicklookBandName1(), patchImage);
             patch.setLabel(Patch.Label.RELEVANT);
 

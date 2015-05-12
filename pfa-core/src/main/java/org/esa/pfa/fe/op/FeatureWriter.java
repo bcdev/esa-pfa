@@ -292,7 +292,7 @@ public abstract class FeatureWriter extends Operator {
             final int patchX = (int) (targetRectangle.getMinX() / targetRectangle.getWidth());
             final int patchY = (int) (targetRectangle.getMinY() / targetRectangle.getHeight());
 
-            final Patch patch = new Patch(sourceProduct.getName(), patchX, patchY, targetRectangle, patchProduct);
+            final Patch patch = new Patch(sourceProduct.getName(), patchX, patchY, patchProduct);
 
             final boolean valid = processPatch(patch, patchWriter);
 /*

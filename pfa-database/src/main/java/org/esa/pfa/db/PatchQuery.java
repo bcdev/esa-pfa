@@ -74,7 +74,7 @@ public class PatchQuery implements QueryInterface {
                     int patchX = Integer.parseInt(doc.getValues("px")[0]);
                     int patchY = Integer.parseInt(doc.getValues("py")[0]);
 
-                    Patch patch = new Patch(productName, patchX, patchY, null, null);
+                    Patch patch = new Patch(productName, patchX, patchY);
                     getFeatures(doc, patch);
                     patchList.add(patch);
                 }

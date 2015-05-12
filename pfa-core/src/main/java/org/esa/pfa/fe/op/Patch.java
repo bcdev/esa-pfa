@@ -43,7 +43,6 @@ public final class Patch {
     private final String parentProductName;
     private final int patchX;
     private final int patchY;
-    private final Rectangle patchRegion;
     private final Product patchProduct;
 
     private List<Feature> featureList = new ArrayList<>(10);
@@ -55,14 +54,13 @@ public final class Patch {
     private double[] featureValues;
 
     public Patch(String parentProductName, int patchX, int patchY) {
-        this(parentProductName, patchX, patchY, null, null);
+        this(parentProductName, patchX, patchY, null);
     }
 
-    public Patch(String parentProductName, int patchX, int patchY, Rectangle patchRegion, Product patchProduct) {
+    public Patch(String parentProductName, int patchX, int patchY, Product patchProduct) {
         this.parentProductName = parentProductName;
         this.patchX = patchX;
         this.patchY = patchY;
-        this.patchRegion = patchRegion;
         this.patchProduct = patchProduct;
         this.uid = createUniqueID();
         this.label = Label.NONE;
@@ -90,10 +88,6 @@ public final class Patch {
 
     public String getParentProductName() {
         return parentProductName;
-    }
-
-    public Rectangle getPatchRegion() {
-        return patchRegion;
     }
 
     public Product getPatchProduct() {
