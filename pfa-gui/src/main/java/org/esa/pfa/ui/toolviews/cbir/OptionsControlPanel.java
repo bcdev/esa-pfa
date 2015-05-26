@@ -206,11 +206,13 @@ public class OptionsControlPanel extends JPanel {
     private class QlRenderer extends BasicComboBoxRenderer {
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            String text = value.toString();
-            if (text.endsWith("_ql.png"))  {
-                text = text.substring(0, text.length() - 7);
+            if(value != null) {
+                String text = value.toString();
+                if (text.endsWith("_ql.png")) {
+                    text = text.substring(0, text.length() - 7);
+                }
+                setText(text);
             }
-            setText(text);
             return this;
         }
     }
