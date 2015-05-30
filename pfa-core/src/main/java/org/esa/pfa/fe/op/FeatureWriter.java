@@ -348,6 +348,12 @@ public abstract class FeatureWriter extends Operator {
                 new ColorPaletteDef(minSample, maxSample)), 0);
     }
 
+    protected static void disposeProducts(Product... products) {
+        for (Product product : products) {
+            product.dispose();
+        }
+    }
+
     protected static Feature createStxFeature(FeatureType featureType, Band band) {
         Guardian.assertSame("invalid feature type", featureType.getAttributeTypes(), STX_ATTRIBUTE_TYPES);
         final Stx stx = band.getStx(true, ProgressMonitor.NULL);

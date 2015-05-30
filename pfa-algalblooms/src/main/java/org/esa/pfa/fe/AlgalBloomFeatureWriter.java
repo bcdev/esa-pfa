@@ -374,12 +374,6 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         featureProduct.addMask("flh_high_gradient", "abs(flh_gradient) > " + flhGradientThreshold, "", Color.RED, 0.5);
     }
 
-    private void disposeProducts(Product... products) {
-        for (Product product : products) {
-            product.dispose();
-        }
-    }
-
     private void installAuxiliaryData(Path targetPath) {
         try {
             Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
