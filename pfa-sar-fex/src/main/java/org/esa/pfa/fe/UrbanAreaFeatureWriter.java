@@ -15,6 +15,11 @@
  */
 package org.esa.pfa.fe;
 
+import org.esa.pfa.fe.op.Feature;
+import org.esa.pfa.fe.op.FeatureType;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.Stx;
@@ -22,14 +27,11 @@ import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.framework.gpf.OperatorSpi;
 import org.esa.snap.framework.gpf.Tile;
 import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
-import org.esa.pfa.fe.op.Feature;
-import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
-import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.fe.op.out.PatchSink;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Output features into patches
@@ -104,16 +106,23 @@ public class UrbanAreaFeatureWriter extends FeatureWriter {
         if(pctOverPnt4 < minValidPixels)
             return false;
 
-        final Feature[] features = {
-                new Feature(featureTypes[0], featureProduct),
-                new Feature(featureTypes[1], createColoredBandImage(featureProduct.getBandAt(0), 0, 1)),
-                new Feature(featureTypes[2], createColoredBandImage(featureProduct.getBandAt(1), 0, 1)),
-                createStxFeature(featureTypes[3], targetBand),
-                new Feature(featureTypes[4], pctOverPnt4),
-                new Feature(featureTypes[5], maxClusterSize/patchSize),
-        };
+        final List<Feature> features = new ArrayList<>();
+        if(!skipProductOutput) {
+            features.add(new Feature(featureTypes[0], featureProduct));
+        }
+        if(!skipQuicklookOutput) {
+            features.add(new Feature(featureTypes[1], createColoredBandImage(featureProduct.getBandAt(0), 0, 1)));
+            features.add(new Feature(featureTypes[2], createColoredBandImage(featureProduct.getBandAt(1), 0, 1)));
+        }
+        if(!skipFeaturesOutput) {
+            features.add(createStxFeature(featureTypes[3], targetBand));
+            features.add(new Feature(featureTypes[4], pctOverPnt4));
+            features.add(new Feature(featureTypes[5], maxClusterSize / patchSize));
+        }
 
-        sink.writePatch(patch, features);
+        sink.writePatch(patch, features.toArray(new Feature[features.size()]));
+
+        disposeProducts(patchProduct, featureProduct);
 
         return true;
     }
