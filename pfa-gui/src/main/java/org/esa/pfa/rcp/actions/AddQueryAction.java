@@ -33,6 +33,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.ContextAwareAction;
 import org.openide.util.HelpCtx;
+import org.openide.util.ImageUtilities;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -83,6 +84,7 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
         lkpContext.addLookupListener(WeakListeners.create(LookupListener.class, this, lkpContext));
         setEnableState();
         putValue(Action.SHORT_DESCRIPTION, Bundle.CTL_AddQueryAction_ShortDescription());
+        putValue(SMALL_ICON, ImageUtilities.loadImageIcon("images/icons/pfa-add-query-24.png", false));
     }
 
     @Override
