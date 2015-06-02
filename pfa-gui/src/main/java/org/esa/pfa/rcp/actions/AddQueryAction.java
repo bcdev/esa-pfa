@@ -59,10 +59,7 @@ import java.util.concurrent.ExecutionException;
         popupText = "#CTL_AddQueryAction_MenuText"
 )
 @ActionReferences({
-        @ActionReference(
-                path = "Toolbars/PFA",
-                position = 500
-        )
+        @ActionReference(path = "Toolbars/PFA", position = 6)
 })
 @NbBundle.Messages({
         "CTL_AddQueryAction_MenuText=Add Query",

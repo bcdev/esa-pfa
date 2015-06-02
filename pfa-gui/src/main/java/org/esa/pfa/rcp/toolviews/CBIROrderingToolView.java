@@ -47,13 +47,12 @@ import java.io.File;
 )
 @TopComponent.Registration(
         mode = "editor",
-        openAtStartup = false,
-        position = 5
+        openAtStartup = false
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIROrderingToolView")
 @ActionReferences({
         @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
-        @ActionReference(path = "Toolbars/PFA")
+        @ActionReference(path = "Toolbars/PFA", position = 5)
 })
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_CBIROrderingToolView_Name",

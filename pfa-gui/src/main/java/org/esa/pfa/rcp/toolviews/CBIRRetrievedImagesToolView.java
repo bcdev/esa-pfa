@@ -48,13 +48,12 @@ import java.util.Set;
 )
 @TopComponent.Registration(
         mode = "editor",
-        openAtStartup = false,
-        position = 4
+        openAtStartup = false
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRRetrievedImagesToolView")
 @ActionReferences({
         @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
-        @ActionReference(path = "Toolbars/PFA")
+        @ActionReference(path = "Toolbars/PFA", position = 4)
 })
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_CBIRRetrievedImagesToolView_Name",

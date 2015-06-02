@@ -52,13 +52,12 @@ import java.util.prefs.Preferences;
 )
 @TopComponent.Registration(
         mode = "editor",
-        openAtStartup = false,
-        position = 1
+        openAtStartup = false
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRControlCentreToolView")
 @ActionReferences({
         @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
-        @ActionReference(path = "Toolbars/PFA")
+        @ActionReference(path = "Toolbars/PFA", position = 1)
 })
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_CBIRControlCentreToolView_Name",
