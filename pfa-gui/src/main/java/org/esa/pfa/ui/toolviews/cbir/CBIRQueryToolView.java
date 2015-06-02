@@ -16,17 +16,11 @@
 package org.esa.pfa.ui.toolviews.cbir;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.figure.AbstractInteractorListener;
-import com.bc.ceres.swing.figure.Interactor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -39,13 +33,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.RenderedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @TopComponent.Description(
         preferredID = "CBIRQueryToolView",
@@ -75,12 +64,9 @@ import java.util.concurrent.ExecutionException;
 public class CBIRQueryToolView extends ToolTopComponent implements ActionListener, CBIRSession.Listener,
         OptionsControlPanel.Listener {
 
-    private final static Dimension preferredDimension = new Dimension(550, 300);
-
     private final CBIRSession session;
     private PatchDrawer drawer;
-    private PatchSelectionInteractor interactor;
-    private JButton addPatchBtn, editBtn, startTrainingBtn;
+    private JButton editBtn, startTrainingBtn;
     private OptionsControlPanel topOptionsPanel;
 
     public CBIRQueryToolView() {
@@ -125,15 +111,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
         mainPane.add(listsPanel, BorderLayout.CENTER);
 
-        final JPanel btnPanel = new JPanel();
-        addPatchBtn = new JButton("Add");
-        addPatchBtn.setActionCommand("addPatchBtn");
-        addPatchBtn.addActionListener(this);
-        addPatchBtn.setEnabled(false);
-        btnPanel.add(addPatchBtn);
-
-        mainPane.add(btnPanel, BorderLayout.EAST);
-
         final JPanel bottomPanel = new JPanel();
         editBtn = new JButton("Edit Constraints");
         editBtn.setActionCommand("editBtn");
@@ -169,7 +146,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 }
             }
             topOptionsPanel.setEnabled(hasClassifier);
-            addPatchBtn.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
             editBtn.setEnabled(false); //todo //hasQueryImages);
         } catch (Exception e) {
@@ -185,19 +161,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
     public void actionPerformed(final ActionEvent event) {
         try {
             final String command = event.getActionCommand();
-            if (command.equals("addPatchBtn")) {
-                if (SnapApp.getDefault().getSelectedProductSceneView() == null) {
-                    throw new Exception("First open a product and an image view to be able to add new query images.");
-                }
-
-                final Dimension dim = session.getApplicationDescriptor().getPatchDimension();
-                interactor = new PatchSelectionInteractor(dim.width, dim.height);
-                interactor.addListener(new PatchInteractorListener());
-                interactor.addListener(new InsertFigureInteractorInterceptor());
-                interactor.activate();
-
-                SnapApp.getDefault().getSelectedProductSceneView().getFigureEditor().setInteractor(interactor);
-            } else if (command.equals("startTrainingBtn")) {
+            if (command.equals("startTrainingBtn")) {
                 final Patch[] processedPatches = session.getQueryPatches();
 
                 //only add patches with features
@@ -238,81 +202,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
         }
     }
 
-    private class PatchInteractorListener extends AbstractInteractorListener {
-
-        @Override
-        public void interactionStarted(Interactor interactor, InputEvent inputEvent) {
-        }
-
-        @Override
-        public void interactionStopped(Interactor interactor, InputEvent inputEvent) {
-            if (!session.hasClassifier()) {
-                return;
-            }
-            final PatchSelectionInteractor patchInteractor = (PatchSelectionInteractor) interactor;
-            if (patchInteractor != null) {
-                try {
-                    Rectangle2D rect = patchInteractor.getPatchShape();
-
-                    ProductSceneView productSceneView = getProductSceneView(inputEvent);
-                    RenderedImage parentImage = productSceneView != null ? productSceneView.getBaseImageLayer().getImage() : null;
-
-                    final Product product = SnapApp.getDefault().getSelectedProduct();
-                    addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
-                                  (int) rect.getHeight(), parentImage, productSceneView);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        private void addQueryImage(final Product product, final int x, final int y, final int w, final int h,
-                                   final RenderedImage parentImage, final ProductSceneView productSceneView) throws IOException {
-            final Window parentWindow = SwingUtilities.getWindowAncestor(productSceneView);
-            final Rectangle region = new Rectangle(x, y, w, h);
-            final PatchProcessor patchProcessor = new PatchProcessor(parentWindow, product, parentImage, region, session);
-            patchProcessor.executeWithBlocking();
-            Patch patch = null;
-            try {
-                patch = patchProcessor.get();
-            } catch (InterruptedException | ExecutionException e) {
-                SnapApp.getDefault().handleError("Failed to extract patch", e);
-            }
-            if (patch != null && patch.getFeatureValues().length > 0) {
-                session.addQueryPatch(patch);
-                drawer.update(session.getQueryPatches());
-                updateControls();
-            } else {
-                SnapDialogs.showWarning("Failed to extract features for this patch");
-            }
-        }
-
-        private ProductSceneView getProductSceneView(InputEvent event) {
-            ProductSceneView productSceneView = null;
-            Component component = event.getComponent();
-            while (component != null) {
-                if (component instanceof ProductSceneView) {
-                    productSceneView = (ProductSceneView) component;
-                    break;
-                }
-                component = component.getParent();
-            }
-            return productSceneView;
-        }
-    }
-
-    //todo @Override
-    public void componentShown() {
-
-        final Window win = SwingUtilities.getWindowAncestor(this);
-        if (win != null) {
-            win.setPreferredSize(preferredDimension);
-            win.setMaximumSize(preferredDimension);
-            win.setSize(preferredDimension);
-        }
-    }
-
     @Override
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
@@ -335,6 +224,10 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
             case NewTrainingImages:
                 break;
             case ModelTrained:
+                updateControls();
+                break;
+            case NewQueryPatch:
+                drawer.update(CBIRSession.getInstance().getQueryPatches());
                 updateControls();
                 break;
         }

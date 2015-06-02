@@ -49,7 +49,8 @@ public class CBIRSession {
         NewClassifier,
         DeleteClassifier,
         NewTrainingImages,
-        ModelTrained
+        ModelTrained,
+        NewQueryPatch
     }
 
     private static CBIRSession instance = null;
@@ -247,6 +248,7 @@ public class CBIRSession {
 
     public void addQueryPatch(final Patch patch) {
         queryPatches.add(patch);
+        fireNotification(Notification.NewQueryPatch, classifier);
     }
 
     public Patch[] getQueryPatches() {
