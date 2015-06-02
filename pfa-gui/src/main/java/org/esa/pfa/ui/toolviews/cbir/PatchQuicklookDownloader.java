@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
 class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
 
@@ -50,7 +51,7 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
             try {
                 return session.getPatchQuicklook(patch, quickLookName);
             } catch (IOException e) {
-                e.printStackTrace();
+                SystemUtils.LOG.log(Level.WARNING, "Failed to download " + qlKey, e);
                 return null;
             }
         });
@@ -63,8 +64,8 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
             drawing.invalidate();
             drawing.repaint();
         } catch (InterruptedException | ExecutionException e) {
-            String location = patch.getPatchName() + " " + quickLookName;
-            SystemUtils.LOG.severe("Failed to download or load quicklook " + location + ":" + e.toString());
+            SystemUtils.LOG.severe(String.format("Failed to download or load quicklook '%s' at patch %s: %s",
+                                                 quickLookName, patch.getPatchName(), e.toString()));
         }
     }
 
@@ -80,6 +81,11 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
             patchX = patch.getPatchX();
             patchY = patch.getPatchY();
             this.quickLookName = quickLookName;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Quicklook '%s' for patch x%03dy%03d in %s", quickLookName, patchX, patchY, parentProductName);
         }
 
         @Override
