@@ -1,4 +1,4 @@
-package org.esa.pfa.ui.toolviews.cbir;
+package org.esa.pfa.rcp.toolviews;
 
 import javax.swing.*;
 import java.awt.*;

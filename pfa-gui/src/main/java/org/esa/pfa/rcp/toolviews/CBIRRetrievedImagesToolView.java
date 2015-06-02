@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.ui.toolviews.cbir;
+package org.esa.pfa.rcp.toolviews;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
@@ -51,7 +51,7 @@ import java.util.Set;
         openAtStartup = false,
         position = 4
 )
-@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRRetrievedImagesToolView")
+@ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRRetrievedImagesToolView")
 @ActionReferences({
         @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA")

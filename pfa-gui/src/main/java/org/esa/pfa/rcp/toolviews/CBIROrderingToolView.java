@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.ui.toolviews.cbir;
+package org.esa.pfa.rcp.toolviews;
 
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
@@ -50,7 +50,7 @@ import java.io.File;
         openAtStartup = false,
         position = 5
 )
-@ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIROrderingToolView")
+@ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIROrderingToolView")
 @ActionReferences({
         @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA")
