@@ -165,16 +165,16 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 final Patch[] processedPatches = session.getQueryPatches();
 
                 //only add patches with features
-                final List<Patch> queryPatches = new ArrayList<>(processedPatches.length);
+                final List<Patch> queryPatchList = new ArrayList<>(processedPatches.length);
                 for (Patch patch : processedPatches) {
                     if (patch.getFeatureValues().length > 0 && patch.getLabel() == Patch.Label.RELEVANT) {
-                        queryPatches.add(patch);
+                        queryPatchList.add(patch);
                     }
                 }
-                if (queryPatches.isEmpty()) {
+                if (queryPatchList.isEmpty()) {
                     throw new Exception("No features found in the relevant query images");
                 }
-                final Patch[] queryImages = queryPatches.toArray(new Patch[queryPatches.size()]);
+                final Patch[] queryPatches = queryPatchList.toArray(new Patch[queryPatchList.size()]);
 
                 // create window if needed first and add to session listeners
                 CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
@@ -185,7 +185,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
                         pm.beginTask("Getting images...", 100);
                         try {
-                            session.startTraining(queryImages, pm);
+                            session.startTraining(queryPatches, pm);
                             if (!pm.isCanceled()) {
                                 return Boolean.TRUE;
                             }

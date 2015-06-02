@@ -180,15 +180,16 @@ public class PatchDrawer extends JPanel {
             }
         }
 
-        private void drawIcon(Graphics2D g, ImageIcon icon1, int xOff) {
-            if (icon1 != null) {
-                g.drawImage(icon1.getImage(), xOff, 0, imgWidth, imgHeight, null);
+        private void drawIcon(Graphics2D g, ImageIcon icon, int xOff) {
+            if (icon != null && icon.getImage() != null) {
+                g.drawImage(icon.getImage(), xOff, 0, imgWidth, imgHeight, null);
             } else {
+                // Draw cross to indicate missing image
                 g.setColor(Color.DARK_GRAY);
                 g.setStroke(new BasicStroke(1));
                 g.drawLine(xOff, 0, xOff + imgWidth, imgHeight);
                 g.drawLine(xOff + imgWidth, 0, xOff, imgHeight);
-                g.drawRect(xOff, 0, imgWidth, imgHeight);
+                g.drawRect(xOff, 0, imgWidth-1, imgHeight-1);
             }
         }
 
