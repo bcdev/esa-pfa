@@ -82,7 +82,7 @@ import java.util.zip.ZipOutputStream;
 public class ExtractFexApp {
 
     static {
-        SystemUtils.init3rdPartyLibs(ExtractFexApp.class.getClassLoader());
+        SystemUtils.init3rdPartyLibs(ExtractFexApp.class);
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024);
         JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
