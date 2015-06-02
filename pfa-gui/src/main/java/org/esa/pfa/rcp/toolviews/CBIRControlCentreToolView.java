@@ -51,8 +51,9 @@ import java.util.prefs.Preferences;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
-        mode = "editor",
-        openAtStartup = false
+        mode = "navigator",
+        openAtStartup = false,
+        position = 10
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRControlCentreToolView")
 @ActionReferences({
