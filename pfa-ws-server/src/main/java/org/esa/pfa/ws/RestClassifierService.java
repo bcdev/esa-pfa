@@ -49,7 +49,7 @@ public class RestClassifierService {
     private final URI dbUri;
 
     public RestClassifierService() throws IOException, URISyntaxException {
-        String dbUriProperty = System.getProperty("dbUri", null);
+        String dbUriProperty = System.getProperty("pfa.dbPath", null);
         dbUri = new File(dbUriProperty).toURI();
     }
 

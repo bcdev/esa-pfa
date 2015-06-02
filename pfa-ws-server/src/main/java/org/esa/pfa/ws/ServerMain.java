@@ -22,8 +22,9 @@ public class ServerMain {
     /**
      * Starts Grizzly HTTP server exposing JAX-RS resources defined in this application.
      * @return Grizzly HTTP server.
+     * @param serverUri
      */
-    public static HttpServer startServer() throws IOException {
+    public static HttpServer startServer(String serverUri) throws IOException {
         // create a resource config that scans for JAX-RS resources and providers
         // in org.esa.pfa.ws package
         final ResourceConfig rc = new ResourceConfig().packages("org.esa.pfa.ws");
@@ -33,7 +34,7 @@ public class ServerMain {
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
-        HttpServer httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc, false);
+        HttpServer httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(serverUri), rc, false);
 
 
         ServerConfiguration serverConfiguration = httpServer.getServerConfiguration();
@@ -51,15 +52,16 @@ public class ServerMain {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
-            throw new IllegalArgumentException("DB URI required");
+        if (!(args.length == 1 || args.length == 2)) {
+            throw new IllegalArgumentException("Usage: " + ServerMain.class.getSimpleName() + "  <db-path> [<server-uri>]");
         }
-        String dbUri = args[0];
-        System.setProperty("dbUri", dbUri);
+        String dbPath = args[0];
+        String serverUri = args.length == 2 ? args[1] : BASE_URI;
+        System.setProperty("pfa.dbPath", dbPath);
 
-        final HttpServer server = startServer();
-        System.out.println(String.format("Jersey app started with WADL available at "
-                + "%sapplication.wadl\nHit enter to stop it...", BASE_URI));
+        final HttpServer server = startServer(serverUri);
+        System.out.println(String.format("Jersey app started with WADL available at " +
+                                                 "%sapplication.wadl\nHit enter to stop it...", serverUri));
         System.in.read();
         server.shutdownNow();
     }
