@@ -15,13 +15,13 @@
  */
 package org.esa.pfa.rcp.toolviews;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -179,7 +179,22 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 // create window if needed first and add to session listeners
                 CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
 
-                final Window parentWindow = SwingUtilities.getWindowAncestor(this);
+                ProgressHandleMonitor pm = ProgressHandleMonitor.create("Extracting Features", null);
+                Runnable operation = () -> {
+                    pm.beginTask("Getting images...", 100);
+                    try {
+                        session.startTraining(queryPatches, pm);
+                    } catch (Exception e) {
+                        SnapApp.getDefault().handleError("Failed to train classifier", e);
+                    } finally {
+                        pm.done();
+                    }
+                };
+
+                ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Extracting Features", pm.getProgressHandle(), true, 50, 1000);
+/*
+             final Window parentWindow = SwingUtilities.getWindowAncestor(this);
+
                 ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
                     @Override
                     protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
@@ -196,6 +211,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     }
                 };
                 worker.executeWithBlocking();
+*/
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);
