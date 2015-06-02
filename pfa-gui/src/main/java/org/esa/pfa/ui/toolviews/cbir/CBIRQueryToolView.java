@@ -59,7 +59,7 @@ import java.util.concurrent.ExecutionException;
 )
 @ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRQueryToolView")
 @ActionReferences({
-        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA")
 })
 @TopComponent.OpenActionRegistration(

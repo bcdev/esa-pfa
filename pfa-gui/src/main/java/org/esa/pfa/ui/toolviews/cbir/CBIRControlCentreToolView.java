@@ -57,7 +57,7 @@ import java.util.prefs.Preferences;
 )
 @ActionID(category = "Window", id = "org.esa.pfa.ui.toolviews.cbir.CBIRControlCentreToolView")
 @ActionReferences({
-        @ActionReference(path = "Menu/Window/Tool Windows"),
+        @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA")
 })
 @TopComponent.OpenActionRegistration(
