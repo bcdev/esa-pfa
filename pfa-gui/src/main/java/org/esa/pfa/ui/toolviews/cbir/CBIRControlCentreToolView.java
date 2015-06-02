@@ -85,7 +85,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JTextField numRetrievedImages;
     private JButton updateBtn;
     private JLabel iterationsLabel = new JLabel();
-    private JLabel dbLabel;
+    private JTextField dbLabel;
 
     private final CBIRSession session;
 
@@ -100,7 +100,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     public JComponent createControl() {
-        dbLabel = new JLabel("");
 
         final JPanel contentPane = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
@@ -110,17 +109,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridy = 0;
 
         gbc.gridwidth = 1;
-        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         contentPane.add(new JLabel("DB:"), gbc);
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        dbLabel = new JTextField("");
+        dbLabel.setEnabled(false);
         contentPane.add(dbLabel, gbc);
         gbc.gridwidth = 1;
-        gbc.gridx = 2;
+        gbc.gridx = 3;
         gbc.fill = GridBagConstraints.NONE;
 
-        JButton dbSelectButton = new JButton(new AbstractAction("Select DB") {
+        JButton dbSelectButton = new JButton(new AbstractAction("...") {
             public void actionPerformed(ActionEvent e) {
                 try {
                     Preferences preferences = SnapApp.getDefault().getPreferences();
