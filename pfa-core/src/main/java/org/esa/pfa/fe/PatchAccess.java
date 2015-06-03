@@ -77,7 +77,7 @@ public class PatchAccess {
         throw new IOException("Could not load patch for: " + productName);
     }
 
-    private Path findPatchPath(String productName, int patchX, int patchY) throws IOException {
+    public Path findPatchPath(String productName, int patchX, int patchY) throws IOException {
         // check for directory
         File fexDir = new File(patchRootDir, productName + ".fex");
         File fezFile = new File(patchRootDir, productName + ".fex.zip");
@@ -100,7 +100,6 @@ public class PatchAccess {
                 return patchPath;
             }
         }
-
         throw new IOException("Could not load patch for: " + productName + "  x: " + patchX + "  y:" + patchY);
     }
 }

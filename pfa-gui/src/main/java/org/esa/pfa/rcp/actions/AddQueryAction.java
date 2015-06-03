@@ -17,16 +17,18 @@ package org.esa.pfa.rcp.actions;
 
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
+import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.search.CBIRSession;
 import org.esa.pfa.rcp.toolviews.PatchProcessor;
 import org.esa.pfa.rcp.toolviews.PatchSelectionInteractor;
+import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.ProductNode;
 import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
+import org.esa.snap.util.SystemUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -41,13 +43,17 @@ import org.openide.util.NbBundle;
 import org.openide.util.Utilities;
 import org.openide.util.WeakListeners;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 @ActionID(
@@ -159,10 +165,27 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
                 SnapApp.getDefault().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatureValues().length > 0) {
+                getPatchQuicklooks(patch);
                 CBIRSession.getInstance().addQueryPatch(patch);
                 // session notifies listeners that a new query is added
             } else {
                 SnapDialogs.showWarning("Failed to extract features for this patch");
+            }
+        }
+
+        public void getPatchQuicklooks(Patch patch) throws IOException {
+            final String[] bandNames = CBIRSession.getInstance().getApplicationDescriptor().getQuicklookFileNames();
+
+            final Path tmpOutFolder = SystemUtils.getApplicationDataDir().toPath().resolve("tmp" + File.separator + "out");
+            final Path fexProductPath = tmpOutFolder.resolve(patch.getParentProductName()+".fex");
+            final PatchAccess patchAccess = new PatchAccess(fexProductPath.toFile());
+
+            for(String quicklookBandName : bandNames) {
+                final Path patchImagePath = patchAccess.getPatchImagePath(patch.getPatchName(), 0, 0, quicklookBandName);
+                if (patchImagePath != null) {
+                    BufferedImage img = ImageIO.read(patchImagePath.toUri().toURL());
+                    patch.setImage(quicklookBandName, img);
+                }
             }
         }
 
