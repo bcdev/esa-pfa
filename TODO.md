@@ -1,10 +1,13 @@
 High Priority:
 
 * Multi-app webservice
-* Query-patch selection tool (enabled when classifier is active)
-* Create mapping from path product ID to  some public server from which users cabn doenload the actual product
+* Query-patch selection tool (enabled when classifier is active) **done**
+* Create mapping from path product ID to some public server from which users can download the actual product
+    - Download product needs to get the base URL from descriptor file
 * Make sure local and remote FEX versions are same
+* User selection of application doesn't make sense
 
 Medium Priority:
 
 * Store QL and feature information on server (use: metadata, tracability, documentation)
+* Create classifier and save at the time the user creates it
