@@ -179,9 +179,9 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 // create window if needed first and add to session listeners
                 CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
 
-                ProgressHandleMonitor pm = ProgressHandleMonitor.create("Extracting Features", null);
+                ProgressHandleMonitor pm = ProgressHandleMonitor.create("Training");
                 Runnable operation = () -> {
-                    pm.beginTask("Getting images...", 100);
+                    pm.beginTask("Training...", 100);
                     try {
                         session.startTraining(queryPatches, pm);
                     } catch (Exception e) {
@@ -191,7 +191,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     }
                 };
 
-                ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Extracting Features", pm.getProgressHandle(), true, 50, 1000);
+                ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Training Classifier", pm.getProgressHandle(), true, 50, 1000);
 /*
              final Window parentWindow = SwingUtilities.getWindowAncestor(this);
 
