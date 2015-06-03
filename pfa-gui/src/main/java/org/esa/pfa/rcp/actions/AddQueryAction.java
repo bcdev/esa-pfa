@@ -17,12 +17,12 @@ package org.esa.pfa.rcp.actions;
 
 import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.rcp.toolviews.PatchProcessor;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductNode;
 import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
@@ -81,9 +81,13 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
 
     public AddQueryAction(Lookup lkp) {
         super(Bundle.CTL_AddQueryAction_MenuText());
+
         this.lkp = lkp;
-        Lookup.Result<ProductNode> lkpContext = lkp.lookupResult(ProductNode.class);
-        lkpContext.addLookupListener(WeakListeners.create(LookupListener.class, this, lkpContext));
+        Lookup.Result<ProductSceneView> lkpContextProduct = lkp.lookupResult(ProductSceneView.class);
+        lkpContextProduct.addLookupListener(WeakListeners.create(LookupListener.class, this, lkpContextProduct));
+        Lookup.Result<Classifier> lkpContextClassifier = lkp.lookupResult(Classifier.class);
+        lkpContextClassifier.addLookupListener(WeakListeners.create(LookupListener.class, this, lkpContextClassifier));
+
         setEnableState();
         putValue(Action.SHORT_DESCRIPTION, Bundle.CTL_AddQueryAction_ShortDescription());
         putValue(SMALL_ICON, ImageUtilities.loadImageIcon("images/icons/pfa-add-query-24.png", false));

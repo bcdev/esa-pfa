@@ -27,6 +27,8 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.ws.RestClassifierManagerClient;
+import org.esa.snap.rcp.util.ContextGlobalExtender;
+import org.openide.util.Utilities;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -143,6 +145,12 @@ public class CBIRSession {
 
             classifier = classifierManager.create(classifierName);
             clearPatchLists();
+
+            ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
+            if (contextGlobalExtender != null) {
+                contextGlobalExtender.put("pfa.classifier", classifier);
+            }
+
             fireNotification(Notification.NewClassifier, classifier);
         } catch (IOException e) {
             e.printStackTrace();
@@ -155,6 +163,12 @@ public class CBIRSession {
             if (classifierManager != null) {
                 classifier = classifierManager.get(classifierName);
                 clearPatchLists();
+
+                ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
+                if (contextGlobalExtender != null) {
+                    contextGlobalExtender.put("pfa.classifier", classifier);
+                }
+
                 fireNotification(Notification.NewClassifier, this.classifier);
             }
         } catch (IOException e) {
@@ -177,6 +191,12 @@ public class CBIRSession {
                 classifierManager.delete(classifier.getName());
             }
             classifier = null;
+
+            ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
+            if (contextGlobalExtender != null) {
+                contextGlobalExtender.remove("pfa.classifier");
+            }
+
             fireNotification(Notification.DeleteClassifier, deletedClassifier);
         } catch (Exception e) {
             e.printStackTrace();
