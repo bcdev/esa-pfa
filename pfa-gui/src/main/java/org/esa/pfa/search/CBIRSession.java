@@ -55,7 +55,7 @@ public class CBIRSession {
         NewQueryPatch
     }
 
-    private static CBIRSession instance = null;
+    private static final CBIRSession instance = new CBIRSession();
 
     private final ProductOrderBasket productOrderBasket;
 
@@ -85,9 +85,6 @@ public class CBIRSession {
     }
 
     public static CBIRSession getInstance() {
-        if (instance == null) {
-            instance = new CBIRSession();
-        }
         return instance;
     }
 

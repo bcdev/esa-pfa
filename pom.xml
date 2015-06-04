@@ -142,6 +142,11 @@
             </dependency>
             <dependency>
                 <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-options-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
                 <artifactId>org-netbeans-modules-javahelp</artifactId>
                 <version>${netbeans.version}</version>
             </dependency>
@@ -150,7 +155,12 @@
                 <artifactId>org-openide-windows</artifactId>
                 <version>${netbeans.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>org.netbeans.external</groupId>
+                <artifactId>beansbinding-1.2.1</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+
             <!--  JUnit -->
 
             <dependency>
