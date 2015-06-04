@@ -20,6 +20,7 @@ import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
+import org.esa.pfa.rcp.toolviews.support.PatchContextMenuFactory;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;

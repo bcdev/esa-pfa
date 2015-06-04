@@ -1,4 +1,4 @@
-package org.esa.pfa.rcp.toolviews;
+package org.esa.pfa.rcp.toolviews.support;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;

@@ -1,4 +1,4 @@
-package org.esa.pfa.rcp.toolviews;
+package org.esa.pfa.rcp.toolviews.support;
 
 import org.esa.pfa.search.CBIRSession;
 

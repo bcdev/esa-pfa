@@ -17,6 +17,9 @@ package org.esa.pfa.rcp.toolviews;
 
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.rcp.toolviews.support.DragScrollListener;
+import org.esa.pfa.rcp.toolviews.support.OptionsControlPanel;
+import org.esa.pfa.rcp.toolviews.support.PatchDrawer;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.util.ProgressHandleMonitor;

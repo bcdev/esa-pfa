@@ -20,7 +20,7 @@ import com.bc.ceres.swing.figure.Interactor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.rcp.toolviews.PatchProcessor;
+import org.esa.pfa.rcp.toolviews.support.PatchProcessor;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.ui.product.ProductSceneView;
