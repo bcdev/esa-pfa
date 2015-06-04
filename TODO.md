@@ -7,7 +7,17 @@ High Priority:
 * Make sure local and remote FEX versions are same
 * User selection of application doesn't make sense
 
+* PFA Preferences tab
+    - Download Source URL - default from descriptor
+    - Custom cmd - eg wget
+    - Local search paths
+    
 Medium Priority:
 
 * Store QL and feature information on server (use: metadata, tracability, documentation)
 * Create classifier and save at the time the user creates it
+
+
+
+    
+    
