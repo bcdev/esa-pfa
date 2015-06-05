@@ -5,14 +5,23 @@
  */
 package org.esa.pfa.rcp.prefs;
 
+import org.esa.pfa.ordering.ProductAccessOptions;
+
 import javax.swing.*;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.openide.util.NbBundle.*;
 
 /**
  * @author Norman
  */
-public class AddLocalPathDialog extends javax.swing.JDialog {
+public class EditLocalPathsDialog extends JDialog {
 
     /**
      * A return status code - returned if Cancel button has been pressed
@@ -23,14 +32,18 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
      */
     public static final int RET_OK = 1;
 
+    private Preferences preferences;
+
     /**
      * Creates new form AddLocalPathDialog
      */
-    public AddLocalPathDialog(java.awt.Window parent) {
+    public EditLocalPathsDialog(Window parent, Preferences preferences) {
         super(parent, ModalityType.APPLICATION_MODAL);
+        this.preferences = preferences;
         initComponents();
 
         setTitle("Directory Path");
+        setSelectedPath("");
 
         // Close the dialog when Esc is pressed
         String cancelName = "cancel";
@@ -42,6 +55,9 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
                 doClose(RET_CANCEL);
             }
         });
+
+        pack();
+        setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));
     }
 
     public String getSelectedPath() {
@@ -68,20 +84,11 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
-        jButton1 = new javax.swing.JButton();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
         pathLabel = new javax.swing.JLabel();
         pathTextField = new javax.swing.JTextField();
         selectPathButton = new javax.swing.JButton();
-
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
-
-        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.jButton1.text")); // NOI18N
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -89,25 +96,25 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(okButton, org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.okButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(okButton, getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.okButton.text")); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(cancelButton, org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.cancelButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(cancelButton, getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.cancelButton.text")); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(pathLabel, org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.pathLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(pathLabel, getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.pathLabel.text")); // NOI18N
 
-        pathTextField.setText(org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.pathTextField.text")); // NOI18N
+        pathTextField.setText(getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.pathTextField.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(selectPathButton, org.openide.util.NbBundle.getMessage(AddLocalPathDialog.class, "AddLocalPathDialog.selectPathButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(selectPathButton, getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.selectPathButton.text")); // NOI18N
         selectPathButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 selectPathButtonActionPerformed(evt);
@@ -176,12 +183,16 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_closeDialog
 
     private void selectPathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectPathButtonActionPerformed
-        final JFileChooser dirChooser = new JFileChooser();
+        final JFileChooser dirChooser = new JFileChooser(preferences.get("lastDir", System.getProperty("user.home", ".")));
+        dirChooser.setDialogTitle(getMessage(EditLocalPathsDialog.class, "EditLocalPathsDialog.dirChooser.dialogTitle"));
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        dirChooser.setDialogTitle("Select directory");
+        dirChooser.setMultiSelectionEnabled(true);
         int ret = dirChooser.showOpenDialog(this);
-        if (ret == JFileChooser.APPROVE_OPTION && dirChooser.getSelectedFile() != null) {
-            pathTextField.setText(dirChooser.getSelectedFile().getPath());
+        if (ret == JFileChooser.APPROVE_OPTION) {
+            preferences.put("lastDir", dirChooser.getCurrentDirectory() != null ? dirChooser.getCurrentDirectory().getPath() : ".");
+            setSelectedPath(Stream.of(dirChooser.getSelectedFiles())
+                                    .map(File::getPath)
+                                    .collect(Collectors.joining(File.pathSeparator)));
         }
     }//GEN-LAST:event_selectPathButtonActionPerformed
 
@@ -208,20 +219,20 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AddLocalPathDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(EditLocalPathsDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AddLocalPathDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(EditLocalPathsDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AddLocalPathDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(EditLocalPathsDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AddLocalPathDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(EditLocalPathsDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                AddLocalPathDialog dialog = new AddLocalPathDialog(new javax.swing.JFrame());
+                EditLocalPathsDialog dialog = new EditLocalPathsDialog(new javax.swing.JFrame(), ProductAccessOptions.getPreferences());
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
@@ -237,9 +248,6 @@ public class AddLocalPathDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton okButton;
     private javax.swing.JLabel pathLabel;
     private javax.swing.JTextField pathTextField;

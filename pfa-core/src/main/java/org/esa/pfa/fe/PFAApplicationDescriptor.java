@@ -107,12 +107,4 @@ public interface PFAApplicationDescriptor {
      * @return The features types provided
      */
     FeatureType[] getFeatureTypes();
-
-    // todo - remove it once we are done with this demo hacking...
-    /**
-     * @return The file path of the local (cache) products directory. May be {@code null}, if unknown.
-     */
-    File getLocalProductDir();
-
-
 }

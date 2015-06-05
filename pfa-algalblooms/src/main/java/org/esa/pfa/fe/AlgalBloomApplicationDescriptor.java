@@ -141,17 +141,6 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     }
 
 
-    @Override
-    public File getLocalProductDir() {
-        if (localProductDir == null) {
-            String property = properties.getProperty("pfa.algalblooms.localProductDir");
-            if (property != null) {
-                localProductDir = new File(property.trim());
-            }
-        }
-        return localProductDir;
-    }
-
     private static Set<String> getStringSet(String csv) {
         String[] values = csv.split(",");
         for (int i = 0; i < values.length; i++) {

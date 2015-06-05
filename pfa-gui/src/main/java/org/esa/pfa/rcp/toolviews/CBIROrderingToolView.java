@@ -20,7 +20,7 @@ import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
-import org.esa.pfa.rcp.toolviews.support.PatchContextMenuFactory;
+import org.esa.pfa.rcp.toolviews.support.OpenProductAction;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.windows.ToolTopComponent;
@@ -146,7 +146,7 @@ public class CBIROrderingToolView extends ToolTopComponent implements Patch.Patc
             }
 
             try {
-                PatchContextMenuFactory.openProduct(parentProductFile);
+                OpenProductAction.openProduct(parentProductFile);
             } catch (Exception e1) {
                 SnapApp.getDefault().handleError("Error opening product", e1);
             }
@@ -161,8 +161,6 @@ public class CBIROrderingToolView extends ToolTopComponent implements Patch.Patc
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                final PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
-                setLocalProductDir(applicationDescriptor.getLocalProductDir());
                 break;
             case DeleteClassifier:
                 break;
