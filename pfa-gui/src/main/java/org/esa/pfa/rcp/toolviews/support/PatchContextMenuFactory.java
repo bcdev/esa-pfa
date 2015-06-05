@@ -249,7 +249,8 @@ public class PatchContextMenuFactory {
             private void showPatchInfo(Patch patch) {
                 try {
                     session.loadFeatures(patch);
-                    PatchInfoDialog patchInfoDialog = new PatchInfoDialog(null, patch, createOtherButtons(patch));
+                    PatchInfoDialog patchInfoDialog = new PatchInfoDialog(SnapApp.getDefault().getMainFrame(), patch, createOtherButtons(patch));
+                    patchInfoDialog.getJDialog().setAlwaysOnTop(true);
                     patchInfoDialog.show();
                 } catch (IOException e) {
                     Debug.trace(e);
