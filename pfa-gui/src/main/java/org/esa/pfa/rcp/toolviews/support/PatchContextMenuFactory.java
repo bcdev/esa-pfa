@@ -1,7 +1,5 @@
 package org.esa.pfa.rcp.toolviews.support;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
@@ -34,7 +32,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -347,24 +347,30 @@ public class PatchContextMenuFactory {
         if (product != null) {
             return product;
         }
-        ProgressMonitorSwingWorker<Product, Void> worker = new ProgressMonitorSwingWorker<Product, Void>(SnapApp.getDefault().getMainFrame(), "Navigate to patch") {
-            @Override
-            protected Product doInBackground(ProgressMonitor progressMonitor) throws Exception {
-                return ProductIO.readProduct(productFile);
-            }
 
-            @Override
-            protected void done() {
-                try {
-                    SnapApp.getDefault().getProductManager().addProduct(get());
-                } catch (InterruptedException | ExecutionException e) {
-                    Debug.trace(e);
-                    SnapDialogs.showError("Failed to open product.", e.getMessage());
-                }
+        Callable<Product> callable = () -> {
+            try {
+                final Product readProduct = ProductIO.readProduct(productFile);
+                SnapApp.getDefault().getProductManager().addProduct(readProduct);
+                return readProduct;
+            } catch (Exception e) {
+                SnapApp.getDefault().handleError("Failed to open product.", e);
             }
+            return null;
         };
-        worker.executeWithBlocking();
-        return worker.get();
+
+        Future<Product> future = Executors.newSingleThreadExecutor().submit(callable);
+        return future.get();
+
+        /*while (true) {
+            if (future.isDone()) {
+                product = future.get();
+                break;
+            }
+            if(future.isCancelled())
+                break;
+        }
+        return product;*/
     }
 
 
