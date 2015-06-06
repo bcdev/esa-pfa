@@ -146,7 +146,13 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                     final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
                     topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
+
+                    topOptionsPanel.setInstructionTest("");
+                } else {
+                    topOptionsPanel.setInstructionTest("Open a raster image and use the Add Query Image tool.");
                 }
+            } else {
+                topOptionsPanel.setInstructionTest("Use the CBIR Control Centre to connect to a database.");
             }
             topOptionsPanel.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
@@ -195,26 +201,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 };
 
                 ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Training Classifier", pm.getProgressHandle(), true, 50, 1000);
-/*
-             final Window parentWindow = SwingUtilities.getWindowAncestor(this);
-
-                ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
-                    @Override
-                    protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                        pm.beginTask("Getting images...", 100);
-                        try {
-                            session.startTraining(queryPatches, pm);
-                            if (!pm.isCanceled()) {
-                                return Boolean.TRUE;
-                            }
-                        } finally {
-                            pm.done();
-                        }
-                        return Boolean.FALSE;
-                    }
-                };
-                worker.executeWithBlocking();
-*/
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);
@@ -225,20 +211,16 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                if (isControlCreated()) {
-                    topOptionsPanel.clearData();
-                    updateControls();
+                topOptionsPanel.clearData();
+                updateControls();
 
-                    drawer.update(session.getQueryPatches());
-                }
+                drawer.update(session.getQueryPatches());
                 break;
             case DeleteClassifier:
-                if (isControlCreated()) {
-                    topOptionsPanel.clearData();
-                    updateControls();
+                topOptionsPanel.clearData();
+                updateControls();
 
-                    drawer.update(new Patch[0]);
-                }
+                drawer.update(new Patch[0]);
                 break;
             case NewTrainingImages:
                 break;
@@ -250,11 +232,6 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 updateControls();
                 break;
         }
-    }
-
-    //todo
-    private boolean isControlCreated() {
-        return true;
     }
 
     @Override

@@ -9,17 +9,21 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
+
 import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
 @OptionsPanelController.SubRegistration(
         location = "ESA_PFA",
-        displayName = "#AdvancedOption_DisplayName_ProductAccess",
-        keywords = "#AdvancedOption_Keywords_ProductAccess",
+        displayName = "#LBL_ProductDataAccessOption_DisplayName",
+        keywords = "#LBL_ProductDataAccessOption_Keywords",
         keywordsCategory = "ESA PFA/ProductAccess"
 )
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_ProductAccess=Product Data Access", "AdvancedOption_Keywords_ProductAccess=pfa"})
+@org.openide.util.NbBundle.Messages({
+        "LBL_ProductDataAccessOption_DisplayName=Product Data Access",
+        "LBL_ProductDataAccessOption_Keywords=pfa"
+})
 public final class ProductAccessOptionsPanelController extends OptionsPanelController {
 
     private ProductAccessPanel panel;

@@ -87,9 +87,4 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     public FeatureType[] getFeatureTypes() {
         return new FeatureType[0];
     }
-
-    @Override
-    public File getLocalProductDir() {
-        return null;
-    }
 }

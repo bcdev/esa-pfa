@@ -5,15 +5,15 @@
  */
 @OptionsPanelController.ContainerRegistration(
         id = "ESA_PFA", 
-        categoryName = "#OptionsCategory_Name_PFA", 
+        categoryName = "#LBL_PfaOptionsCategory_Name",
         iconBase = "org/esa/pfa/rcp/prefs/pfa-logo-32.png",
-        keywords = "#OptionsCategory_Keywords_PFA", 
+        keywords = "#LBL_PfaOptionsCategory_Keywords",
         keywordsCategory = "ESA_PFA",
         position = 1000
 )
 @NbBundle.Messages(value = {
-    "OptionsCategory_Name_PFA=ESA PFA", 
-    "OptionsCategory_Keywords_PFA=index,feature,pfa"
+    "LBL_PfaOptionsCategory_Name=ESA PFA",
+    "LBL_PfaOptionsCategory_Keywords=index,feature,pfa"
 })
 package org.esa.pfa.rcp.prefs;
 

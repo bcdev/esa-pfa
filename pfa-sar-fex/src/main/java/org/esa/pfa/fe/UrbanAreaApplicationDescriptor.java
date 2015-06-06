@@ -145,11 +145,6 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
         return new HashSet<>(Arrays.asList(values));
     }
 
-    @Override
-    public File getLocalProductDir() {
-        return null;
-    }
-
     private static FeatureType[] createFeatureTypes() {
         return new FeatureType[]{
                             /*00*/ new FeatureType("patch", "Patch product", Product.class),

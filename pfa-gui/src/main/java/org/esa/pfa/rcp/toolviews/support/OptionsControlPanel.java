@@ -17,6 +17,7 @@ import java.util.List;
  */
 public class OptionsControlPanel extends JPanel {
 
+    private JLabel instructionLabel;
     private JButton allRelevantBtn, allIrrelevantBtn;
     private JButton cycleButton;
     private JComboBox<String> quickLookCombo1;
@@ -34,7 +35,7 @@ public class OptionsControlPanel extends JPanel {
     private String[] bandNames;
 
     public OptionsControlPanel(final CBIRSession session) {
-        super(new FlowLayout(FlowLayout.TRAILING, 0, 0));
+        super(new BorderLayout());
         this.session = session;
 
         createControl();
@@ -42,6 +43,14 @@ public class OptionsControlPanel extends JPanel {
     }
 
     private void createControl() {
+
+        final JPanel instructionPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 15, 10));
+        instructionLabel = new JLabel();
+        instructionPanel.add(instructionLabel);
+        this.add(instructionPanel, BorderLayout.WEST);
+
+        final JPanel patchControlPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0));
+        this.add(patchControlPanel, BorderLayout.EAST);
 
         allRelevantBtn = new JButton("Set all relevant ");
         allRelevantBtn.addActionListener(new ActionListener() {
@@ -63,7 +72,7 @@ public class OptionsControlPanel extends JPanel {
         setAllPanel.setLayout(setAlllayout);
         setAllPanel.add(allRelevantBtn);
         setAllPanel.add(allIrrelevantBtn);
-        this.add(setAllPanel);
+        patchControlPanel.add(setAllPanel);
 
         cycleButton = new JButton(cycle);
         cycleButton.addActionListener(new ActionListener() {
@@ -84,11 +93,11 @@ public class OptionsControlPanel extends JPanel {
                 }
             }
         });
-        this.add(cycleButton);
+        patchControlPanel.add(cycleButton);
 
         final JPanel ql1Panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         quickLookCombo1 = new JComboBox<>();
-        ListCellRenderer<String> qlRenderer = new QlRenderer();
+        final ListCellRenderer<String> qlRenderer = new QlRenderer();
         quickLookCombo1.setRenderer(qlRenderer);
         quickLookCombo1.addItemListener(new ItemListener() {
             @Override
@@ -124,7 +133,7 @@ public class OptionsControlPanel extends JPanel {
         qlListPanel.setLayout(qlListlayout);
         qlListPanel.add(ql1Panel);
         qlListPanel.add(ql2Panel);
-        this.add(qlListPanel);
+        patchControlPanel.add(qlListPanel);
 
         final ImageIcon[] items = { iconSingle, iconDual };
         imageModeCombo = new JComboBox<>(items);
@@ -142,7 +151,7 @@ public class OptionsControlPanel extends JPanel {
                 }
             }
         });
-        this.add(imageModeCombo);
+        patchControlPanel.add(imageModeCombo);
     }
 
     /**
@@ -163,6 +172,10 @@ public class OptionsControlPanel extends JPanel {
     public void showSetAllButtons(final boolean flag) {
         allRelevantBtn.setVisible(flag);
         allIrrelevantBtn.setVisible(flag);
+    }
+
+    public void setInstructionTest(final String text) {
+         instructionLabel.setText(text);
     }
 
     /**
