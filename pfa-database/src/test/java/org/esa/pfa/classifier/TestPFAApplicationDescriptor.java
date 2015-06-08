@@ -19,8 +19,7 @@ package org.esa.pfa.classifier;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 
-import java.awt.*;
-import java.io.File;
+import java.awt.Dimension;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Set;
@@ -76,7 +75,9 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     }
 
     @Override
-    public String[] getQuicklookFileNames() {return new String[0];}
+    public String[] getQuicklookFileNames() {
+        return new String[0];
+    }
 
     @Override
     public Set<String> getDefaultFeatureSet() {
@@ -86,5 +87,15 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
     @Override
     public FeatureType[] getFeatureTypes() {
         return new FeatureType[0];
+    }
+
+    @Override
+    public ProductNameResolver getProductNameResolver() {
+        return null;
+    }
+
+    @Override
+    public String getDefaultDataAccessPattern() {
+        return null;
     }
 }

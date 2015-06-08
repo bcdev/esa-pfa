@@ -137,6 +137,27 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
         return featureTypes;
     }
 
+    /**
+     * @return The product name resolver, or {@code null}.
+     * @see ProductNameResolver
+     * @see #getDefaultDataAccessPattern
+     */
+    @Override
+    public ProductNameResolver getProductNameResolver() {
+        // TODO
+        return null;
+    }
+
+    /**
+     * @return The default data access pattern used to download a data product, or {@code null}.
+     * Must be resolvable by the {@link ProductNameResolver product name resolver}.
+     */
+    @Override
+    public String getDefaultDataAccessPattern() {
+        // TODO
+        return null;
+    }
+
     private static Set<String> getStringSet(String csv) {
         String[] values = csv.split(",");
         for (int i = 0; i < values.length; i++) {

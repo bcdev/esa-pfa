@@ -127,6 +127,28 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
     }
 
     @Override
+    public ProductNameResolver getProductNameResolver() {
+        return (pattern, productName) -> {
+            // MER_RR__1PRACR20080713_034425_000026382070_00176_33296_0000.N1
+            // 0123456789012345678901
+            String yyyy = productName.substring(14, 14 + 4);
+            String MM = productName.substring(14 + 4, 14 + 6);
+            String dd = productName.substring(14 + 6, 14 + 8);
+            String name = productName;
+            return pattern
+                    .replace("${yyyy}", yyyy)
+                    .replace("${MM}", MM)
+                    .replace("${dd}", dd)
+                    .replace("${name}", name);
+        };
+    }
+
+    @Override
+    public String getDefaultDataAccessPattern() {
+        return "http://pfa:wWaNP58o@www.brockmann-consult.de/glass/pfa/MER_RR__1P/r03/${year}/${month}/${day}/${name}";
+    }
+
+    @Override
     public Set<String> getDefaultFeatureSet() {
         if (defaultFeatureSet == null) {
             String property = properties.getProperty("pfa.algalblooms.featureSet", DEFAULT_FEATURE_SET);

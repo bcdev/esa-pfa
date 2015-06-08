@@ -24,7 +24,7 @@ import java.net.URI;
 import java.util.Set;
 
 /**
- * Describe the feature extraction application .
+ * Describe the feature extraction application.
  *
  * @author Luis Veci
  * @author Norman Fomferra
@@ -107,4 +107,36 @@ public interface PFAApplicationDescriptor {
      * @return The features types provided
      */
     FeatureType[] getFeatureTypes();
+
+    /**
+     * @return The product name resolver, or {@code null}.
+     * @see ProductNameResolver
+     * @see #getDefaultDataAccessPattern
+     */
+    ProductNameResolver getProductNameResolver();
+
+    /**
+     * @return The default data access pattern used to download a data product, or {@code null}.
+     * Must be resolvable by the {@link ProductNameResolver product name resolver}.
+     */
+    String getDefaultDataAccessPattern();
+
+    /**
+     * Resolves product pattern strings given a product name (ID).
+     */
+    interface ProductNameResolver {
+        /**
+         * Must be capable of resolving the following:
+         * <ol>
+         *     <li>${name}</li> - Product name
+         *     <li>${yyyy}</li> - Sensing year, 4 digits
+         *     <li>${MM}</li> - Sensing month of year, 2 digits
+         *     <li>${dd}</li> - Sensing day of month, 2 digits
+         * </ol>
+         * @param pattern A pattern, e.g. "http://www.brockmann-consult.de/pfa/data-access/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/${name}"
+         * @param productName A product name, e.g. "MER_RR__1PPEPA20080505_035110_000000592068_00190_32308_7749.N1"
+         * @return The resolved pattern
+         */
+        String resolve(String pattern, String productName);
+    }
 }

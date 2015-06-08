@@ -16,6 +16,7 @@
 package org.esa.pfa.fe.op;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
 import org.esa.snap.framework.dataio.ProductSubsetBuilder;
 import org.esa.snap.framework.dataio.ProductSubsetDef;
 import org.esa.snap.framework.datamodel.Band;
@@ -30,6 +31,7 @@ import org.esa.snap.framework.gpf.Tile;
 import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
 import org.esa.snap.framework.gpf.annotations.Parameter;
 import org.esa.snap.framework.gpf.annotations.SourceProduct;
+import org.esa.snap.framework.gpf.annotations.TargetProperty;
 import org.esa.snap.jai.ImageManager;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.Guardian;
@@ -44,6 +46,8 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -110,10 +114,8 @@ public abstract class FeatureWriter extends Operator {
                defaultValue = "0.1")
     protected float minValidPixels;
 
-    /*
     @TargetProperty
     protected FeatureWriterResult result;
-    */
 
     private transient PatchWriterFactory patchWriterFactory;
     private transient PatchWriter patchWriter;
@@ -215,16 +217,16 @@ public abstract class FeatureWriter extends Operator {
         patchWriterFactory.configure(patchWriterConfig);
 
         if (overwriteMode) {
-            getLogger().warning("FexOperator: Overwrite mode is on.");
+            getLogger().warning("Overwrite mode is on.");
         }
         if (skipFeaturesOutput) {
-            getLogger().warning("FexOperator: Feature output skipped.");
+            getLogger().warning("Feature output skipped.");
         }
         if (skipProductOutput) {
-            getLogger().warning("FexOperator: Product output skipped.");
+            getLogger().warning("Product output skipped.");
         }
         if (skipQuicklookOutput) {
-            getLogger().warning("FexOperator: RGB image output skipped.");
+            getLogger().warning("RGB image output skipped.");
         }
 
         setTargetProduct(sourceProduct);
@@ -233,7 +235,7 @@ public abstract class FeatureWriter extends Operator {
 
         getTargetProduct().setPreferredTileSize(patchWidth, patchHeight);
 
-        // result = new FeatureWriterResult(sourceProduct.getName());
+        result = new FeatureWriterResult(sourceProduct.getName());
 
         try {
             patchWriter = patchWriterFactory.createPatchWriter(sourceProduct);
@@ -295,16 +297,9 @@ public abstract class FeatureWriter extends Operator {
             final Patch patch = new Patch(sourceProduct.getName(), patchX, patchY, patchProduct);
 
             final boolean valid = processPatch(patch, patchWriter);
-/*
             if (valid) {
-                try (final Writer writer = new StringWriter()) {
-                    for (final Feature feature : patch.getFeatures()) {
-                        PropertiesPatchWriter.writeFeatureProperties(feature, writer);
-                    }
-                    result.addPatchResult(patchX, patchY, writer.toString());
-                }
+                populateResult(patchX, patchY, patch);
             }
-*/
             patchProduct.dispose();
 
             if (disposeGlobalCaches) {
@@ -374,5 +369,15 @@ public abstract class FeatureWriter extends Operator {
                            p90,
                            skewness,
                            stx.getSampleCount());
+    }
+
+
+    private void populateResult(int patchX, int patchY, Patch patch) throws IOException {
+        try (final Writer writer = new StringWriter()) {
+            for (final Feature feature : patch.getFeatures()) {
+                PropertiesPatchWriter.writeFeatureProperties(feature, writer);
+            }
+            result.addPatchResult(patchX, patchY, writer.toString());
+        }
     }
 }

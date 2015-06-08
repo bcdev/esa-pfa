@@ -1,13 +1,13 @@
 High Priority:
 
 * Multi-app webservice
+    - User selection of application doesn't make sense
 * Query-patch selection tool (enabled when classifier is active) **done**
-* Create mapping from path product ID to some public server from which users can download the actual product
+* Create mapping from path product ID to some public server from which users can download the actual product **ongoing**
     - Download product needs to get the base URL from descriptor file
 * Make sure local and remote FEX versions are same
-* User selection of application doesn't make sense
 
-* PFA Preferences tab
+* PFA Preferences tab **done**
     - Download Source URL - default from descriptor
     - Custom cmd - eg wget
     - Local search paths

@@ -94,6 +94,27 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
         return null;
     }
 
+    /**
+     * @return The product name resolver, or {@code null}.
+     * @see ProductNameResolver
+     * @see #getDefaultDataAccessPattern
+     */
+    @Override
+    public ProductNameResolver getProductNameResolver() {
+        // TODO
+        return null;
+    }
+
+    /**
+     * @return The default data access pattern used to download a data product, or {@code null}.
+     * Must be resolvable by the {@link ProductNameResolver product name resolver}.
+     */
+    @Override
+    public String getDefaultDataAccessPattern() {
+        // TODO
+        return null;
+    }
+
     @Override
     public URI getDatasetDescriptorURI() {
         try {
