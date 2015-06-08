@@ -1,5 +1,7 @@
 package org.esa.pfa.ordering;
 
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.search.CBIRSession;
 import org.openide.util.NbPreferences;
 
 import java.io.File;
@@ -22,27 +24,40 @@ public class ProductAccessOptions {
     }
 
     public String getDefaultUrl() {
-        return preferences.get("productAccess.defaultUrl", "");
+        return preferences.get("productAccess.defaultUrl", getDefaultDefaultUrl());
     }
 
     public void setDefaultUrl(String url) {
-        preferences.put("productAccess.defaultUrl", url);
+        if (url.equals(getDefaultDefaultUrl())) {
+            // Allow changing default by app descriptor
+            preferences.remove("productAccess.defaultUrl");
+        } else {
+            preferences.put("productAccess.defaultUrl", url);
+        }
     }
 
-    public boolean getCustomCliEnabled() {
-        return preferences.getBoolean("productAccess.customCli.enabled", false);
+    public boolean getCustomCommandLineEnabled() {
+        return preferences.getBoolean("productAccess.customCommandLine.enabled", false);
     }
 
-    public void setCustomCliEnabled(boolean enabled) {
-        preferences.putBoolean("productAccess.customCli.enabled", enabled);
+    public void setCustomCommandLineEnabled(boolean enabled) {
+        preferences.putBoolean("productAccess.customCommandLine.enabled", enabled);
     }
 
-    public String getCustomCli() {
-        return preferences.get("productAccess.customCli", "");
+    public String getCustomCommandLineCode() {
+        return preferences.get("productAccess.customCommandLine.code", "");
     }
 
-    public void setCustomCli(String url) {
-        preferences.put("productAccess.customCli", url);
+    public void setCustomCommandLineCode(String commandLine) {
+        preferences.put("productAccess.customCommand.code", commandLine);
+    }
+
+    public String getCustomCommandLineWorkingDir() {
+        return preferences.get("productAccess.customCommandLine.workingDir", "");
+    }
+
+    public void setCustomCommandLineWorkingDir(String dir) {
+        preferences.put("productAccess.customCommandLine.workingDir", dir);
     }
 
     public boolean getLocalPathsEnabled() {
@@ -61,4 +76,13 @@ public class ProductAccessOptions {
         preferences.put("productAccess.localPaths", String.join(File.pathSeparator));
     }
 
+    private String getDefaultDefaultUrl() {
+        CBIRSession instance = CBIRSession.getInstance();
+        PFAApplicationDescriptor applicationDescriptor = instance.getApplicationDescriptor();
+        String defaultValue = "";
+        if (applicationDescriptor != null ) {
+            defaultValue = applicationDescriptor.getDefaultDataAccessPattern();
+        }
+        return defaultValue;
+    }
 }
