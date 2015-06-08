@@ -47,7 +47,7 @@ import java.util.prefs.Preferences;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
-        iconBase = "images/icons/pfa-manage-24.png",
+        iconBase = "images/icons/pfa-control-24.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS //todo define
 )
 @TopComponent.Registration(
@@ -80,7 +80,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
-    private JButton queryBtn, trainBtn, applyBtn;
+    private JButton queryBtn, labelBtn, applyBtn;
     private JTextField numTrainingImages;
     private JTextField numRetrievedImages;
     private JButton updateBtn;
@@ -356,7 +356,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        trainBtn = new JButton(new AbstractAction("Label") {
+        labelBtn = new JButton(new AbstractAction("Label") {
             public void actionPerformed(ActionEvent e) {
                 if (!session.hasClassifier()) {
                     return;
@@ -422,7 +422,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         });
 
         panel.add(queryBtn);
-        panel.add(trainBtn);
+        panel.add(labelBtn);
         panel.add(applyBtn);
 
 
@@ -443,7 +443,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         updateBtn.setEnabled(hasActiveClassifier);
 
         queryBtn.setEnabled(hasActiveClassifier);
-        trainBtn.setEnabled(hasActiveClassifier);
+        labelBtn.setEnabled(hasActiveClassifier);
         applyBtn.setEnabled(hasActiveClassifier);
 
         if (hasActiveClassifier) {
@@ -452,7 +452,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             numRetrievedImages.setText(String.valueOf(session.getNumRetrievedImages()));
             iterationsLabel.setText(String.valueOf(numIterations));
 
-            trainBtn.setEnabled(numIterations > 0);
+            labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);
         }
     }
