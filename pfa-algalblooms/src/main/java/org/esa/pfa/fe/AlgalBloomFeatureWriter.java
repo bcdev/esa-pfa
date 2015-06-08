@@ -19,6 +19,14 @@ package org.esa.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
+import org.esa.pfa.fe.op.Feature;
+import org.esa.pfa.fe.op.FeatureType;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.FeatureWriterResult;
+import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.fe.op.out.PatchSink;
+import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
+import org.esa.s3tbx.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.snap.framework.dataio.ProductIO;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.ConvolutionFilterBand;
@@ -46,18 +54,9 @@ import org.esa.snap.framework.gpf.graph.GraphIO;
 import org.esa.snap.framework.gpf.graph.GraphProcessor;
 import org.esa.snap.jai.ImageManager;
 import org.esa.snap.jai.ResolutionLevel;
-import org.esa.s3tbx.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.snap.util.ProductUtils;
 import org.esa.snap.util.ResourceInstaller;
 import org.esa.snap.util.SystemUtils;
-import org.esa.pfa.fe.op.Feature;
-import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
-import org.esa.pfa.fe.op.FeatureWriterResult;
-import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.fe.op.out.PatchSink;
-import org.esa.pfa.fe.op.out.PropertiesPatchWriter;
-import org.esa.snap.util.io.FileUtils;
 
 import java.awt.Color;
 import java.awt.image.DataBufferFloat;
@@ -69,8 +68,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,7 +86,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
-    public static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "pfa-algalblooms/auxdata");
+    public static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "auxdata/pfa-algalblooms");
 
     String OC4_R = "log10(max(max(reflec_2, reflec_3), reflec_4) / reflec_5)";
     String OC4_CHL = "exp10(0.366 - 3.067*R + 1.930*pow(R,2) + 0.649 *pow(R,3)  - 1.532 *pow(R,4))";
@@ -191,11 +188,8 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     @Parameter(defaultValue = "8", description = "Number of successful cloudiness tests for Fronts cloud mask")
     private int frontsCloudMaskThreshold;
     @Parameter(defaultValue = "0.00005",
-               description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
+            description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
     private double flhGradientThreshold;
-
-    @TargetProperty
-    protected FeatureWriterResult result;
 
 
     private transient float[] coastDistData;
@@ -215,7 +209,6 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     @Override
     public void initialize() throws OperatorException {
-//        removeAllSourceMetadata();
 
         installAuxiliaryData(AUXDATA_DIR.toPath());
 
@@ -262,12 +255,14 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     @Override
     protected boolean processPatch(Patch patch, PatchSink sink) throws IOException {
-        int patchX = patch.getPatchX();
-        int patchY = patch.getPatchY();
-        Product patchProduct = patch.getPatchProduct();
+
         if (skipFeaturesOutput && skipQuicklookOutput && skipProductOutput) {
             return false;
         }
+
+        int patchX = patch.getPatchX();
+        int patchY = patch.getPatchY();
+        Product patchProduct = patch.getPatchProduct();
 
         int numPixelsRequired = patchWidth * patchHeight;
         int numPixelsTotal = patchProduct.getSceneRasterWidth() * patchProduct.getSceneRasterHeight();
@@ -307,43 +302,42 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         addTriStimulusBands(featureProduct);
         addFlhGradientBands(featureProduct);
 
-        Feature[] features = {
-                new Feature(featureTypes[0], featureProduct),
-                new Feature(featureTypes[1], createFixedRangeUnmaskedRgbImage(featureProduct)),
-                new Feature(featureTypes[2], createDynamicRangeMaskedRgbImage(featureProduct)),
-                new Feature(featureTypes[3],
-                            createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)),
-                new Feature(featureTypes[4],
-                            createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)),
-                new Feature(featureTypes[5],
-                            createColoredBandImage(featureProduct.getBand("chl"), minSampleChl, maxSampleChl)),
-                createStxFeature(featureTypes[6], featureProduct),
-                createStxFeature(featureTypes[7], featureProduct),
-                createStxFeature(featureTypes[8], featureProduct),
-                createStxFeature(featureTypes[9], featureProduct),
-                createStxFeature(featureTypes[10], featureProduct),
-                createStxFeature(featureTypes[11], featureProduct),
-                createStxFeature(featureTypes[12], featureProduct),
-                new Feature(featureTypes[13], computeFlhHighGradientPixelRatio(featureProduct)),
-                new Feature(featureTypes[14], validPixelRatio),
-                new Feature(featureTypes[15], connectivityMetrics.fractalIndex),
-                new Feature(featureTypes[16], clumpiness),
-        };
+        List<Feature> features = new ArrayList<>();
 
-        patch.setFeatures(features);
+        if (!skipProductOutput) {
+            features.add(new Feature(featureTypes[0], featureProduct));
+        }
 
-        sink.writePatch(patch, features);
+        if (!skipQuicklookOutput) {
+            features.add(new Feature(featureTypes[1],
+                                     createFixedRangeUnmaskedRgbImage(featureProduct)));
+            features.add(new Feature(featureTypes[2],
+                                     createDynamicRangeMaskedRgbImage(featureProduct)));
+            features.add(new Feature(featureTypes[3],
+                                     createColoredBandImage(featureProduct.getBand("flh"), minSampleFlh, maxSampleFlh)));
+            features.add(new Feature(featureTypes[4],
+                                     createColoredBandImage(featureProduct.getBand("mci"), minSampleMci, maxSampleMci)));
+            features.add(new Feature(featureTypes[5],
+                                     createColoredBandImage(featureProduct.getBand("chl"), minSampleChl, maxSampleChl)));
+        }
+
+        features.add(createStxFeature(featureTypes[6], featureProduct));
+        features.add(createStxFeature(featureTypes[7], featureProduct));
+        features.add(createStxFeature(featureTypes[8], featureProduct));
+        features.add(createStxFeature(featureTypes[9], featureProduct));
+        features.add(createStxFeature(featureTypes[10], featureProduct));
+        features.add(createStxFeature(featureTypes[11], featureProduct));
+        features.add(createStxFeature(featureTypes[12], featureProduct));
+        features.add(new Feature(featureTypes[13], computeFlhHighGradientPixelRatio(featureProduct)));
+        features.add(new Feature(featureTypes[14], validPixelRatio));
+        features.add(new Feature(featureTypes[15], connectivityMetrics.fractalIndex));
+        features.add(new Feature(featureTypes[16], clumpiness));
+
+        Feature[] featuresArray = features.toArray(new Feature[features.size()]);
+        patch.setFeatures(featuresArray);
+        sink.writePatch(patch, featuresArray);
 
         disposeProducts(featureProduct, wasteProduct);
-
-        if (true) {
-            try (final Writer writer = new StringWriter()) {
-                for (final Feature feature : patch.getFeatures()) {
-                    PropertiesPatchWriter.writeFeatureProperties(feature, writer);
-                }
-                result.addPatchResult(patchX, patchY, writer.toString());
-            }
-        }
 
         return true;
     }
@@ -377,15 +371,11 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     private void installAuxiliaryData(Path targetPath) {
         try {
             Path basePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
-            String baseUri = basePath.toUri().toString();
-            if (baseUri.startsWith("file:") && baseUri.endsWith("jar") && basePath.toFile().isFile()) {
-                basePath = FileUtils.getPathFromURI(new URI("jar:" + baseUri + "!/"));
-            }
             Path auxdata = basePath.resolve("auxdata");
 
             final ResourceInstaller installer = new ResourceInstaller(auxdata, targetPath);
             installer.install(".*", ProgressMonitor.NULL);
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new OperatorException(e);
         }
     }
