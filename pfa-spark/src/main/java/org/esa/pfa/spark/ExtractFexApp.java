@@ -137,18 +137,20 @@ public class ExtractFexApp {
                 boolean headerWritten = false;
                 while (patchIterator.hasNext()) {
                     FeatureWriterResult featureWriterResult = patchIterator.next();
-                    String productName = featureWriterResult.getProductName();
-                    for (PatchResult patchResult : featureWriterResult.getPatchResults()) {
-                        Properties featureProperties = new Properties();
-                        try (Reader reader = new StringReader(patchResult.getFeaturesText())) {
-                            featureProperties.load(reader);
+                    if (featureWriterResult != null) {
+                        String productName = featureWriterResult.getProductName();
+                        for (PatchResult patchResult : featureWriterResult.getPatchResults()) {
+                            Properties featureProperties = new Properties();
+                            try (Reader reader = new StringReader(patchResult.getFeaturesText())) {
+                                featureProperties.load(reader);
+                            }
+                            if (!headerWritten) {
+                                csvWriter.write(getHeader(featureProperties));
+                                headerWritten = true;
+                            }
+                            dsIndexer.addPatchToIndex(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties);
+                            csvWriter.write(getRecord(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties));
                         }
-                        if (!headerWritten) {
-                            csvWriter.write(getHeader(featureProperties));
-                            headerWritten = true;
-                        }
-                        dsIndexer.addPatchToIndex(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties);
-                        csvWriter.write(getRecord(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties));
                     }
                 }
             }
@@ -296,9 +298,14 @@ public class ExtractFexApp {
             Operator fexOp = fexOpNodeCtx.getOperator();
 
             Object targetProperty = fexOp.getTargetProperty(applicationDescriptore.getFeatureWriterPropertyName());
+            System.out.println("targetProperty = " + targetProperty);
             if (targetProperty instanceof FeatureWriterResult) {
                 FeatureWriterResult featureWriterResult = (FeatureWriterResult) targetProperty;
 //                List<PatchResult> patchResults = featureWriterResult.getPatchResults();
+                final String productName = featureWriterResult.getProductName();
+                System.out.println("productName = " + productName);
+                final int size = featureWriterResult.getPatchResults().size();
+                System.out.println("size = " + size);
                 return featureWriterResult;
             }
         } finally {
