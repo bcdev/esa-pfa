@@ -2,10 +2,10 @@ package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.core.ExtensionFactory;
 import com.bc.ceres.core.ExtensionManager;
+import org.esa.pfa.fe.op.Feature;
 import org.esa.snap.framework.dataio.ProductIO;
 import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.util.logging.BeamLogManager;
-import org.esa.pfa.fe.op.Feature;
+import org.esa.snap.util.SystemUtils;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.operator.FileStoreDescriptor;
@@ -100,11 +100,11 @@ public class DefaultPatchWriterFactory extends PatchWriterFactory {
         }
 
         private static void logInfo(String msg) {
-            BeamLogManager.getSystemLogger().info(msg);
+            SystemUtils.LOG.info(msg);
         }
 
         private static void logWarning(String msg) {
-            BeamLogManager.getSystemLogger().warning(msg);
+            SystemUtils.LOG.warning(msg);
         }
 
     }
