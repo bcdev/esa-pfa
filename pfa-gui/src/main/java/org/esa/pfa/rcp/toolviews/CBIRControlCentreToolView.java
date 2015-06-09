@@ -16,9 +16,7 @@
 package org.esa.pfa.rcp.toolviews;
 
 
-import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
@@ -27,7 +25,9 @@ import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.ui.GridBagUtils;
 import org.esa.snap.framework.ui.ModalDialog;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -362,26 +362,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     return;
                 }
                 try {
-                    ProgressMonitorSwingWorker<Boolean, Void> worker =
-                            new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
-                                @Override
-                                protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                                    pm.beginTask("Getting images...", 100);
-                                    try {
-                                        session.getMostAmbigousPatches(true, pm);
-                                        if (!pm.isCanceled()) {
-                                            return Boolean.TRUE;
-                                        }
-                                    } finally {
-                                        pm.done();
-                                    }
-                                    return Boolean.FALSE;
-                                }
-                            };
-                    worker.executeWithBlocking();
-                    if (worker.get()) {
-                        showWindow("CBIRLabelingToolView");
-                    }
+                    final ProgressHandleMonitor pm = ProgressHandleMonitor.create("Getting images to label");
+                    Runnable operation = () -> {
+                        pm.beginTask("Getting images to label...", 100);
+                        try {
+                            session.getMostAmbigousPatches(true, pm);
+                        } catch (Exception ex) {
+                            SnapApp.getDefault().handleError("Failed to get images", ex);
+                        } finally {
+                            pm.done();
+                        }
+                    };
+                    ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Getting images to label", pm.getProgressHandle(), true, 50, 1000);
+
+                    showWindow("CBIRLabelingToolView");
+
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error getting images", t);
                 }
@@ -393,27 +388,20 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (!session.hasClassifier()) {
                         return;
                     }
-                    ProgressMonitorSwingWorker<Boolean, Void> worker =
-                            new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {
-                                @Override
-                                protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                                    pm.beginTask("Retrieving images...", 100);
-                                    try {
-                                        // not needed to train model but needed for next iteration ??
-                                        session.trainAndClassify(true, SubProgressMonitor.create(pm, 50));
-                                        if (!pm.isCanceled()) {
-                                            return Boolean.TRUE;
-                                        }
-                                    } finally {
-                                        pm.done();
-                                    }
-                                    return Boolean.FALSE;
-                                }
-                            };
-                    worker.executeWithBlocking();
-                    if (worker.get()) {
-                        showWindow("CBIRRetrievedImagesToolView");
-                    }
+                    final ProgressHandleMonitor pm = ProgressHandleMonitor.create("Retrieving");
+                    Runnable operation = () -> {
+                        pm.beginTask("Retrieving images...", 100);
+                        try {
+                            session.trainAndClassify(true, SubProgressMonitor.create(pm, 50));
+                        } catch (Exception ex) {
+                            SnapApp.getDefault().handleError("Failed to retrieve images", ex);
+                        } finally {
+                            pm.done();
+                        }
+                    };
+                    ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Retrieving images", pm.getProgressHandle(), true, 50, 1000);
+
+                    showWindow("CBIRRetrievedImagesToolView");
 
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error retrieving images", t);
@@ -424,7 +412,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(queryBtn);
         panel.add(labelBtn);
         panel.add(applyBtn);
-
 
         final JPanel panel2 = new JPanel(new BorderLayout(2, 2));
         panel2.add(panel, BorderLayout.NORTH);
@@ -608,27 +595,18 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private static void createNewClassifier(final String classifierName, final CBIRSession session) {
-        ProgressMonitorSwingWorker<Boolean, Void> worker = new ProgressMonitorSwingWorker<Boolean, Void>(SnapApp.getDefault().getMainFrame(), "Loading") {
-            @Override
-            protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                pm.beginTask("Creating classifier...", 100);
-                try {
-                    session.createClassifier(classifierName);
-                    if (!pm.isCanceled()) {
-                        return Boolean.TRUE;
-                    }
-                } finally {
-                    pm.done();
-                }
-                return Boolean.FALSE;
+        final ProgressHandleMonitor pm = ProgressHandleMonitor.create("Creating classifier");
+        Runnable operation = () -> {
+            pm.beginTask("Creating classifier...", 100);
+            try {
+                session.createClassifier(classifierName);
+            } catch (Exception e) {
+                SnapApp.getDefault().handleError("Failed to create classifier", e);
+            } finally {
+                pm.done();
             }
         };
-        worker.executeWithBlocking();
-        try {
-            worker.get();
-        } catch (Exception e) {
-            SnapApp.getDefault().handleError("Failed to create new Classifier", e);
-        }
+        ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Creating classifier", pm.getProgressHandle(), true, 50, 1000);
     }
 
     @Override

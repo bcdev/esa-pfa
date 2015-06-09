@@ -15,8 +15,6 @@
  */
 package org.esa.pfa.rcp.toolviews;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.rcp.toolviews.support.DragScrollListener;
@@ -24,7 +22,9 @@ import org.esa.pfa.rcp.toolviews.support.OptionsControlPanel;
 import org.esa.pfa.rcp.toolviews.support.PatchDrawer;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -161,7 +161,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
                     topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
 
-                    topOptionsPanel.setInstructionTest("");
+                    topOptionsPanel.setInstructionTest("Click on an image to move it from the set of irrelevant images to relavant images");
                 } else {
                     if(!session.hasQueryImages() && session.getNumIterations() == 0) {
                         topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_ADD_QUERY_INSTRUCTION);
@@ -200,23 +200,18 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 // create window if needed first and add to session listeners
                 CBIRControlCentreToolView.showWindow("CBIRRetrievedImagesToolView");
 
-                ProgressMonitorSwingWorker<Boolean, Void> worker =
-                        new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Retrieving") {
-                    @Override
-                    protected Boolean doInBackground(final ProgressMonitor pm) throws Exception {
-                        pm.beginTask("Retrieving images...", 100);
-                        try {
-                            session.trainAndClassify(false, pm);
-                            if (!pm.isCanceled()) {
-                                return Boolean.TRUE;
-                            }
-                        } finally {
-                            pm.done();
-                        }
-                        return Boolean.FALSE;
+                final ProgressHandleMonitor pm = ProgressHandleMonitor.create("Retrieving");
+                Runnable operation = () -> {
+                    pm.beginTask("Retrieving images...", 100);
+                    try {
+                        session.trainAndClassify(false, pm);
+                    } catch (Exception e) {
+                        SnapApp.getDefault().handleError("Failed to retrieve images", e);
+                    } finally {
+                        pm.done();
                     }
                 };
-                worker.executeWithBlocking();
+                ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Retrieving images", pm.getProgressHandle(), true, 50, 1000);
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error retrieving images", e);

@@ -15,8 +15,6 @@
  */
 package org.esa.pfa.rcp.toolviews;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
@@ -29,7 +27,9 @@ import org.esa.pfa.rcp.toolviews.support.PatchDrawer;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -167,23 +167,18 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
 
                 CBIRControlCentreToolView.showWindow("CBIRLabelingToolView");
 
-                ProgressMonitorSwingWorker<Boolean, Void> worker =
-                        new ProgressMonitorSwingWorker<Boolean, Void>(parentWindow, "Getting images to label") {
-                    @Override
-                    protected Boolean doInBackground(ProgressMonitor pm) throws Exception {
-                        pm.beginTask("Getting images...", 100);
-                        try {
-                            session.getMostAmbigousPatches(false, pm);
-                            if (!pm.isCanceled()) {
-                                return Boolean.TRUE;
-                            }
-                        } finally {
-                            pm.done();
-                        }
-                        return Boolean.FALSE;
+                final ProgressHandleMonitor pm = ProgressHandleMonitor.create("Getting images to label");
+                Runnable operation = () -> {
+                    pm.beginTask("Getting images to label...", 100);
+                    try {
+                        session.getMostAmbigousPatches(false, pm);
+                    } catch (Exception e) {
+                        SnapApp.getDefault().handleError("Failed to get images", e);
+                    } finally {
+                        pm.done();
                     }
                 };
-                worker.executeWithBlocking();
+                ProgressUtils.runOffEventThreadWithProgressDialog(operation, "Getting images to label", pm.getProgressHandle(), true, 50, 1000);
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error getting images", e);
@@ -259,39 +254,51 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
 
             final List<Patch> patchList = drawer.getPatches();
             if (!patchList.isEmpty()) {
+                contextActions.add(new AbstractAction("Order All Relevant Parent Products") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        orderProducts(patchList, (String)getValue(NAME), true);
+                    }
+                });
                 contextActions.add(new AbstractAction("Order All Parent Products") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        ProductOrderService productOrderService = CBIRSession.getInstance().getProductOrderService();
-                        ProductOrderBasket productOrderBasket = productOrderService.getProductOrderBasket();
-
-                        Set<String> productNameSet = new HashSet<>();
-                        for (Patch patch : patchList) {
-                            String parentProductName = patch.getParentProductName();
-                            if (productOrderBasket.getProductOrder(parentProductName) == null) {
-                                productNameSet.add(parentProductName);
-                            }
-                        }
-
-                        if (productNameSet.isEmpty()) {
-                            SnapDialogs.showInformation((String) getValue(NAME),
-                                        "All parent data products have already been ordered.", null);
-                            return;
-                        }
-
-                        SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
-                                                                              String.format("%d data product(s) will be ordered.\nProceed?",
-                                                                                            productNameSet.size()),
-                                                                              true, null);
-                        if (resp == SnapDialogs.Answer.YES) {
-                            for (String productName : productNameSet) {
-                                productOrderService.submit(new ProductOrder(productName));
-                            }
-                        }
+                        orderProducts(patchList, (String)getValue(NAME), false);
                     }
                 });
             }
             return contextActions;
+        }
+
+        private void orderProducts(final List<Patch> patchList, final String name, final boolean onlyRelevant) {
+            ProductOrderService productOrderService = CBIRSession.getInstance().getProductOrderService();
+            ProductOrderBasket productOrderBasket = productOrderService.getProductOrderBasket();
+
+            Set<String> productNameSet = new HashSet<>();
+            for (Patch patch : patchList) {
+                if(onlyRelevant && !patch.getLabel().equals(Patch.Label.RELEVANT)) {
+                    continue;
+                }
+                String parentProductName = patch.getParentProductName();
+                if (productOrderBasket.getProductOrder(parentProductName) == null) {
+                    productNameSet.add(parentProductName);
+                }
+            }
+
+            if (productNameSet.isEmpty()) {
+                SnapDialogs.showInformation(name, "All parent data products have already been ordered.", null);
+                return;
+            }
+
+            SnapDialogs.Answer resp = SnapDialogs.requestDecision(name,
+                                                                  String.format("%d data product(s) will be ordered.\nProceed?",
+                                                                                productNameSet.size()),
+                                                                  true, null);
+            if (resp == SnapDialogs.Answer.YES) {
+                for (String productName : productNameSet) {
+                    productOrderService.submit(new ProductOrder(productName));
+                }
+            }
         }
     }
 

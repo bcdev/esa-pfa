@@ -1,35 +1,17 @@
 package org.esa.pfa.rcp.toolviews.support;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.ui.product.ProductSceneView;
-import org.esa.snap.netbeans.docwin.WindowUtilities;
-import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.rcp.actions.view.OpenImageViewAction;
-import org.esa.snap.rcp.windows.ProductSceneViewTopComponent;
 import org.esa.snap.util.Debug;
-import org.esa.snap.util.ProductUtils;
 
-import javax.swing.Action;
-import javax.swing.JPopupMenu;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 /**
  * @author Norman Fomferra
