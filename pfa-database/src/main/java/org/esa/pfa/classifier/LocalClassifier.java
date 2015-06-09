@@ -147,7 +147,7 @@ public class LocalClassifier implements Classifier {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
             }
             al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
-            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 10);
+            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 100);
             al.classify(archivePatches);
             final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
             for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
