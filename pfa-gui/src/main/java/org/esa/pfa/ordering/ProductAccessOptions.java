@@ -49,7 +49,7 @@ public class ProductAccessOptions {
     }
 
     public void setCustomCommandLineCode(String commandLine) {
-        preferences.put("productAccess.customCommand.code", commandLine);
+        preferences.put("productAccess.customCommandLine.code", commandLine);
     }
 
     public String getCustomCommandLineWorkingDir() {
@@ -73,7 +73,7 @@ public class ProductAccessOptions {
     }
 
     public void setLocalPaths(String[] url) {
-        preferences.put("productAccess.localPaths", String.join(File.pathSeparator));
+        preferences.put("productAccess.localPaths", String.join(File.pathSeparator, url));
     }
 
     private String getDefaultDefaultUrl() {
