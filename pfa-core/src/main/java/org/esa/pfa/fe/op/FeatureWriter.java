@@ -120,6 +120,9 @@ public abstract class FeatureWriter extends Operator {
     private transient PatchWriterFactory patchWriterFactory;
     private transient PatchWriter patchWriter;
 
+    public File getTargetDir() {
+        return targetDir;
+    }
 
     public void setTargetDir(File targetDir) {
         this.targetDir = targetDir;
