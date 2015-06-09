@@ -19,6 +19,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The PFA Dataset Indexer Tool.
@@ -48,8 +50,13 @@ public class DsIndexerTool {
         Locale.setDefault(Locale.ENGLISH);
         try {
             System.exit(new DsIndexerTool().run(args));
+        } catch (RuntimeException e) {
+            commonOptions.printError(e);
+            e.printStackTrace();
+            System.exit(-1);
         } catch (Exception e) {
             commonOptions.printError(e);
+            e.printStackTrace();
             System.exit(1);
         }
     }
@@ -175,8 +182,17 @@ public class DsIndexerTool {
         }
 
         String name = patchDir.getName();
-        int patchX = Integer.parseInt(name.substring(1, name.indexOf("y")));
-        int patchY = Integer.parseInt(name.substring(name.indexOf("y")+1, name.length()));
+// Doesn't work at all!!!!  (nf)
+/*
+        Pattern patchNamePatter = Pattern.compile("y(?<patchX>[0-9]+)y(?<patchY>[0-9]+)");
+        Matcher matcher = patchNamePatter.matcher(name);
+
+        int patchX = Integer.parseInt(matcher.group("patchX"));
+        int patchY = Integer.parseInt(matcher.group("patchY"));
+*/
+        int patchX = Integer.parseInt(name.substring(1, 4));
+        int patchY = Integer.parseInt(name.substring(5, 8));
+
 
         String fexDirName = patchDir.getParentFile().getName();
         String productName = fexDirName.substring(0, fexDirName.length() - 4);
