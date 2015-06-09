@@ -145,7 +145,7 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
 
     @Override
     public String getDefaultDataAccessPattern() {
-        return "http://pfa:wWaNP58o@www.brockmann-consult.de/glass/pfa/MER_RR__1P/r03/${year}/${month}/${day}/${name}";
+        return "http://pfa:wWaNP58o@www.brockmann-consult.de/glass/pfa/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/${name}";
     }
 
     @Override
