@@ -10,12 +10,10 @@ import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.actions.view.OpenImageViewAction;
 import org.esa.snap.rcp.windows.ProductSceneViewTopComponent;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.ProductUtils;
-import org.netbeans.api.progress.ProgressUtils;
 
 import javax.swing.AbstractAction;
 import java.awt.Dimension;
@@ -23,8 +21,6 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +57,7 @@ public class ShowPatchInProductAction extends AbstractAction {
             }
             product = ProductAccessUtils.findOpenedProduct(productName);
             if (product == null) {
-                productFile = findLocalFile(productName);
+                productFile = ProductAccessUtils.findLocalFile(productName, true, true);
                 if (productFile == null) {
                     return;
                 }
@@ -98,23 +94,6 @@ public class ShowPatchInProductAction extends AbstractAction {
             }
             new OpenImageViewAction(band).openProductSceneView();
         }
-    }
-
-    private static File findLocalFile(String productName) {
-        File productFile;AtomicReference<File> returnValue = new AtomicReference<>();
-        Runnable operation = () -> {
-            returnValue.set(ProductAccessUtils.findLocalFile(productName));
-        };
-        ProgressUtils.runOffEventDispatchThread(operation, "Find Local Product", new AtomicBoolean(), false, 50, 1000);
-
-        productFile = returnValue.get();
-        if (productFile == null) {
-            SnapDialogs.showError(String.format("A product named '%s'\n" +
-                                                        "couldn't be found in any of your local search paths.\n" +
-                                                        "(See tab 'ESA PFA' in the Tools / Options dialog.)", productName));
-            return null;
-        }
-        return productFile;
     }
 
     private static Dimension getPatchDimension() {

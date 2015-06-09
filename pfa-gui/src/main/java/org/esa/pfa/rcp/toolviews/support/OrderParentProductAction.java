@@ -1,14 +1,24 @@
 package org.esa.pfa.rcp.toolviews.support;
 
+import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.ordering.ProductAccessOptions;
+import org.esa.pfa.ordering.ProductAccessUtils;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
 import org.esa.pfa.search.CBIRSession;
+import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.util.SystemUtils;
 
 import javax.swing.AbstractAction;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author Norman Fomferra
@@ -31,14 +41,51 @@ class OrderParentProductAction extends AbstractAction {
 
         final String parentProductName = patch.getParentProductName();
 
+
+        Product openedProduct = ProductAccessUtils.findOpenedProduct(parentProductName);
+        if (openedProduct != null) {
+            SnapDialogs.showInformation(String.format("Product '%s' is already opened.", parentProductName), null);
+            return;
+        }
+
+        File productFile = ProductAccessUtils.findLocalFile(parentProductName, true, false);
+        if (productFile != null) {
+            SnapDialogs.Answer answer = SnapDialogs.requestDecision("Local File Found",
+                                                                    String.format("A product named '%s' was found in your local path.\nDo you wish to open it?", parentProductName), true, null);
+            if (answer == SnapDialogs.Answer.YES) {
+                OpenProductAction.openProduct(productFile);
+                return;
+            } else if (answer == SnapDialogs.Answer.CANCELLED) {
+                return;
+            }
+        }
+
+        PFAApplicationDescriptor.ProductNameResolver productNameResolver = CBIRSession.getInstance().getApplicationDescriptor().getProductNameResolver();
+        String defaultDataAccessPattern = ProductAccessOptions.getDefault().getDefaultUrl();
+        if (productNameResolver != null && defaultDataAccessPattern != null) {
+            String resolvedUrlString = productNameResolver.resolve(defaultDataAccessPattern, parentProductName);
+            SystemUtils.LOG.info("Getting product " + resolvedUrlString);
+            try {
+                URI uri = new URI(resolvedUrlString);
+                Desktop.getDesktop().browse(uri);
+                // Obviously this action succeeded
+                return;
+            } catch (URISyntaxException | IOException e) {
+                SnapDialogs.showError(e.getMessage());
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // The following code places fake orders
+
         ProductOrderBasket productOrderBasket = CBIRSession.getInstance().getProductOrderBasket();
         ProductOrder productOrder = productOrderBasket.getProductOrder(parentProductName);
         if (productOrder != null) {
             if (productOrder.getState() == ProductOrder.State.COMPLETED) {
-                SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
+                SnapDialogs.Answer answer = SnapDialogs.requestDecision((String) getValue(NAME),
                                                                       String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
                                                                                     parentProductName), true, null);
-                if (resp == SnapDialogs.Answer.YES) {
+                if (answer == SnapDialogs.Answer.YES) {
                     PatchContextMenuFactory.createShowPatchInParentProductAction(patch);
                 }
             } else {
