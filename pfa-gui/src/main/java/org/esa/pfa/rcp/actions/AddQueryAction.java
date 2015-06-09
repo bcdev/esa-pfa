@@ -104,8 +104,10 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
     }
 
     private void setEnableState() {
-        boolean state = CBIRSession.getInstance().hasClassifier() && SnapApp.getDefault().getSelectedProductSceneView() != null;
-        setEnabled(state);
+        SwingUtilities.invokeLater(() -> {
+            boolean state = CBIRSession.getInstance().hasClassifier() && SnapApp.getDefault().getSelectedProductSceneView() != null;
+            setEnabled(state);
+        });
     }
 
     @Override
