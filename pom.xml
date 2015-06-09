@@ -156,6 +156,11 @@
                 <version>${netbeans.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-progress</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.netbeans.external</groupId>
                 <artifactId>beansbinding-1.2.1</artifactId>
                 <version>${netbeans.version}</version>
