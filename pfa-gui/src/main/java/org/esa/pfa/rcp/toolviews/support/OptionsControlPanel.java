@@ -28,11 +28,19 @@ public class OptionsControlPanel extends JPanel {
     private static final ImageIcon iconDual = new ImageIcon(OptionsControlPanel.class.getClassLoader().getResource("images/patch_dual.png"));
     private static final ImageIcon cycle = new ImageIcon(OptionsControlPanel.class.getClassLoader().getResource("images/cycle.png"));
 
-    public static enum Notification { SET_ALL_RELEVANT, SET_ALL_IRRELEVANT, QUICKLOOK_CHANGED }
+    public enum Notification { SET_ALL_RELEVANT, SET_ALL_IRRELEVANT, QUICKLOOK_CHANGED }
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private final CBIRSession session;
     private String[] bandNames;
+
+    public final static String USE_CONTROL_CENTRE_INSTRUCTION = "<html>"
+            + "Use the CBIR Control Centre "+
+            "<img src=\""+ OptionsControlPanel.class.getClassLoader().getResource("images/icons/pfa-control-24.png")+ "\">"+
+            " to connect to a database.</html>";
+    public final static String USE_ADD_QUERY_INSTRUCTION = "<html>"
+            + "Open a raster image and use the Add Query Image "+
+            "<img src=\""+ OptionsControlPanel.class.getClassLoader().getResource("images/icons/pfa-add-query-24.png")+ "\"> tool.</html>";
 
     public OptionsControlPanel(final CBIRSession session) {
         super(new BorderLayout());
@@ -44,7 +52,7 @@ public class OptionsControlPanel extends JPanel {
 
     private void createControl() {
 
-        final JPanel instructionPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 15, 10));
+        final JPanel instructionPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 10, 10));
         instructionLabel = new JLabel();
         instructionPanel.add(instructionLabel);
         this.add(instructionPanel, BorderLayout.WEST);

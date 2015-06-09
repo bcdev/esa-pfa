@@ -132,6 +132,12 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
             boolean hasClassifier = session.hasClassifier();
             topOptionsPanel.setEnabled(hasClassifier);
 
+            if (!hasClassifier) {
+                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
+            } else {
+                topOptionsPanel.setInstructionTest("");
+            }
+
             final boolean haveRetrievedImages = hasClassifier && retrievedPatches != null && retrievedPatches.length > 0;
             improveBtn.setEnabled(haveRetrievedImages);
             topOptionsPanel.showSetAllButtons(haveRetrievedImages);
@@ -199,14 +205,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
             }
         }
         accuracy = cnt;
-        if (isControlCreated()) {
-            updateControls();
-        }
-    }
-
-    //todo
-    private boolean isControlCreated() {
-        return true;
+        updateControls();
     }
 
     @Override
@@ -214,19 +213,18 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
         switch (msg) {
             case NewClassifier:
                 retrievedPatches = new Patch[0];
-                if (isControlCreated()) {
-                    drawer.update(retrievedPatches);
-                    updateControls();
-                }
+                drawer.update(retrievedPatches);
+                updateControls();
                 break;
             case DeleteClassifier:
                 retrievedPatches = new Patch[0];
-                if (isControlCreated()) {
-                    drawer.update(retrievedPatches);
-                    updateControls();
-                }
+                drawer.update(retrievedPatches);
+                updateControls();
                 break;
             case NewTrainingImages:
+                break;
+            case NewQueryPatch:
+                updateControls();
                 break;
             case ModelTrained:
                 try {
@@ -239,10 +237,8 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
 
                     accuracy = 0;
 
-                    if (isControlCreated()) {
-                        drawer.update(retrievedPatches);
-                        updateControls();
-                    }
+                    drawer.update(retrievedPatches);
+                    updateControls();
 
                 } catch (Exception e) {
                     SnapApp.getDefault().handleError("Error training model", e);

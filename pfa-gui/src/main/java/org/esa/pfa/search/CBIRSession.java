@@ -100,6 +100,10 @@ public class CBIRSession {
         return classifierManager != null;
     }
 
+    public boolean hasQueryImages() {
+        return !queryPatches.isEmpty();
+    }
+
     public String[] listClassifiers() {
         if (hasClassifierManager()) {
             return classifierManager.list();

@@ -142,16 +142,6 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
         return mainPane;
     }
 
-    public void componentShown() {
-
-        final Window win = SwingUtilities.getWindowAncestor(this);
-        if (win != null) {
-            win.setPreferredSize(preferredDimension);
-            win.setMaximumSize(preferredDimension);
-            win.setSize(preferredDimension);
-        }
-    }
-
     private void updateControls() {
         try {
             boolean hasClassifier = session.hasClassifier();
@@ -170,9 +160,19 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
                     final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
                     topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
+
+                    topOptionsPanel.setInstructionTest("");
+                } else {
+                    if(!session.hasQueryImages() && session.getNumIterations() == 0) {
+                        topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_ADD_QUERY_INSTRUCTION);
+                    } else {
+                        topOptionsPanel.setInstructionTest("");
+                    }
                 }
             } else {
-                Patch[] noPatches = new Patch[0];
+                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
+
+                final Patch[] noPatches = new Patch[0];
                 relavantDrawer.update(noPatches);
                 irrelavantDrawer.update(noPatches);
                 iterationsLabel.setText("");
@@ -246,29 +246,21 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
             case NewClassifier:
-                if (isControlCreated()) {
-                    updateControls();
-                }
+                updateControls();
                 break;
             case DeleteClassifier:
-                if (isControlCreated()) {
-                    updateControls();
-                }
+                updateControls();
                 break;
             case NewTrainingImages:
                 listenToPatches();
-                if (isControlCreated()) {
-                    updateControls();
-                }
+                updateControls();
                 break;
             case ModelTrained:
                 break;
+            case NewQueryPatch:
+                updateControls();
+                break;
         }
-    }
-
-    //todo
-    private boolean isControlCreated() {
-        return true;
     }
 
     @Override

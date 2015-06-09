@@ -149,10 +149,10 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
                     topOptionsPanel.setInstructionTest("");
                 } else {
-                    topOptionsPanel.setInstructionTest("Open a raster image and use the Add Query Image tool.");
+                    topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_ADD_QUERY_INSTRUCTION);
                 }
             } else {
-                topOptionsPanel.setInstructionTest("Use the CBIR Control Centre to connect to a database.");
+                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
             }
             topOptionsPanel.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
