@@ -61,7 +61,7 @@ public class ServerMain {
 
         final HttpServer server = startServer(serverUri);
         System.out.println(String.format("Jersey app started with WADL available at " +
-                                                 "%sapplication.wadl\nHit enter to stop it...", serverUri));
+                                                 "%s/application.wadl\nHit enter to stop it...", serverUri));
         System.in.read();
         server.shutdownNow();
     }
