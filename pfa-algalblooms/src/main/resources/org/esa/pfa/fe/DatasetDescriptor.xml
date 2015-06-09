@@ -1,7 +1,7 @@
 <DatasetDescriptor>
-  <name>test_ds</name>
+  <name>Algal Bloom Detection</name>
   <version>1.0</version>
-  <description>Wraw!</description>
+  <description>Algal Bloom Detection</description>
   <featureTypes>
     <FeatureType>
       <name>patch</name>
@@ -20,12 +20,17 @@
     </FeatureType>
     <FeatureType>
       <name>flh_ql</name>
-      <description>Grey-scale quicklook for &apos;flh&apos; [0.0, 1.0]</description>
+      <description>Grey-scale quicklook for &apos;flh&apos;</description>
       <valueType>java.awt.image.RenderedImage</valueType>
     </FeatureType>
     <FeatureType>
       <name>mci_ql</name>
-      <description>Grey-scale quicklook for &apos;mci&apos; [0.0, 1.0]</description>
+      <description>Grey-scale quicklook for &apos;mci&apos;</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>chl_ql</name>
+      <description>Grey-scale quicklook for &apos;chl&apos;</description>
       <valueType>java.awt.image.RenderedImage</valueType>
     </FeatureType>
     <FeatureType>
@@ -89,31 +94,37 @@
       <name>mci</name>
       <description>Maximum Chlorophyll Index</description>
       <valueType>void</valueType>
-      <attributeTypes reference="../../FeatureType[6]/attributeTypes"/>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
+    </FeatureType>
+    <FeatureType>
+      <name>chl</name>
+      <description>Chlorophyll Concentration</description>
+      <valueType>void</valueType>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
     </FeatureType>
     <FeatureType>
       <name>red</name>
       <description>Red channel (log(0.05 + 0.35 * reflec_2 + 0.60 * reflec_5 + reflec_6 + 0.13 * reflec_7))</description>
       <valueType>void</valueType>
-      <attributeTypes reference="../../FeatureType[6]/attributeTypes"/>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
     </FeatureType>
     <FeatureType>
       <name>green</name>
       <description>Green channel (log(0.05 + 0.21 * reflec_3 + 0.50 * reflec_4 + reflec_5 + 0.38 * reflec_6))</description>
       <valueType>void</valueType>
-      <attributeTypes reference="../../FeatureType[6]/attributeTypes"/>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
     </FeatureType>
     <FeatureType>
       <name>blue</name>
       <description>Blue channel (log(0.05 + 0.21 * reflec_1 + 1.75 * reflec_2 + 0.47 * reflec_3 + 0.16 * reflec_4))</description>
       <valueType>void</valueType>
-      <attributeTypes reference="../../FeatureType[6]/attributeTypes"/>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
     </FeatureType>
     <FeatureType>
       <name>coast_dist</name>
       <description>Distance from next coast pixel (km)</description>
       <valueType>void</valueType>
-      <attributeTypes reference="../../FeatureType[6]/attributeTypes"/>
+      <attributeTypes reference="../../FeatureType[7]/attributeTypes"/>
     </FeatureType>
     <FeatureType>
       <name>flh_hg_pixels</name>

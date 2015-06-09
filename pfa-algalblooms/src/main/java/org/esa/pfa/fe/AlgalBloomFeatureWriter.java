@@ -19,6 +19,7 @@ package org.esa.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
@@ -52,6 +53,7 @@ import org.esa.snap.framework.gpf.graph.GraphIO;
 import org.esa.snap.framework.gpf.graph.GraphProcessor;
 import org.esa.snap.jai.ImageManager;
 import org.esa.snap.jai.ResolutionLevel;
+import org.esa.snap.runtime.Config;
 import org.esa.snap.util.ProductUtils;
 import org.esa.snap.util.ResourceInstaller;
 import org.esa.snap.util.SystemUtils;
@@ -98,18 +100,20 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         String sourcePath = args[0];
         String targetDirPath = args[1];
 
-        System.setProperty("beam.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
-        System.setProperty("beam.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("snap.dataio.reader.tileWidth", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("snap.dataio.reader.tileHeight", String.valueOf(DEFAULT_PATCH_SIZE));
+        System.setProperty("snap.parallelism", "1");
+
+        Config.instance().load();
+
+        SystemUtils.init3rdPartyLibs(AlgalBloomFeatureWriter.class);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         try {
             File sourceFile = new File(sourcePath);
             if (sourceFile.isDirectory()) {
-                File[] sourceFiles = sourceFile.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(".N1");
-                    }
+                File[] sourceFiles = sourceFile.listFiles((dir, name) -> {
+                    return name.endsWith(".N1");
                 });
                 if (sourceFiles != null) {
                     for (final File file : sourceFiles) {
@@ -129,7 +133,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     }
 
     private static void processGraph(String sourcePath, String targetDir) throws GraphException, IOException {
-        final PFAApplicationDescriptor applicationDescriptor = new AlgalBloomApplicationDescriptor();
+        PFAApplicationDescriptor applicationDescriptor = new AlgalBloomApplicationDescriptor();
         HashMap<String, String> variables = new HashMap<>();
         variables.put("sourcePath", sourcePath);
         variables.put("targetDir", targetDir);
@@ -206,6 +210,8 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     @Override
     public void initialize() throws OperatorException {
 
+        writeDatasetDescriptor();
+
         installAuxiliaryData(AUXDATA_DIR.toPath());
 
         minSampleFlh = 0.0;
@@ -247,6 +253,21 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         super.initialize();
 
         result = new FeatureWriterResult(getSourceProduct().getName());
+
+    }
+
+    private void writeDatasetDescriptor() {
+        File parentFile = getTargetDir().getAbsoluteFile().getParentFile();
+        File file = new File(parentFile, "ds-descriptor.xml");
+        if (!file.exists()) {
+            AlgalBloomApplicationDescriptor applicationDescriptor = new AlgalBloomApplicationDescriptor();
+            DatasetDescriptor datasetDescriptor = new DatasetDescriptor(applicationDescriptor.getName(), "1.0", "Algal Bloom Detection", applicationDescriptor.getFeatureTypes());
+            try {
+                datasetDescriptor.write(file);
+            } catch (IOException e) {
+                getLogger().warning(e.getMessage());
+            }
+        }
     }
 
     @Override
