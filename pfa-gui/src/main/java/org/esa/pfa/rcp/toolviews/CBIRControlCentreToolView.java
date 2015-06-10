@@ -277,16 +277,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         return mainPane;
     }
 
-    //todo @Override
-    public void componentShown() {
-        final Window win = SwingUtilities.getWindowAncestor(this);
-        if (win != null) {
-            win.setPreferredSize(preferredDimension);
-            win.setMaximumSize(preferredDimension);
-            win.setSize(preferredDimension);
-        }
-    }
-
     private void initClassifierList() {
         final DefaultListModel<String> modelList = new DefaultListModel<>();
         for (String name : session.listClassifiers()) {
@@ -345,7 +335,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     private JPanel createSideButtonPanel() {
         final JPanel panel = new JPanel(new GridLayout(-1, 1, 2, 2));
-        final Window parentWindow = SwingUtilities.getWindowAncestor(this);
 
         queryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
