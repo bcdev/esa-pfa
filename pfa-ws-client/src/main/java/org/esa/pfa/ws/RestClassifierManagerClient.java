@@ -35,15 +35,30 @@ import java.net.URI;
 
 public class RestClassifierManagerClient implements ClassifierManager {
 
-    private final WebTarget target;
+    private WebTarget target;
     private final URI uri;
-    private final String appId;
+    private String appDBId;
 
-    public RestClassifierManagerClient(URI uri, String appId) {
+    public RestClassifierManagerClient(final URI uri) {
         this.uri = uri;
-        this.appId = appId;
+    }
+
+    @Override
+    public String[] listApplicationDatabases() {
         Client client = ClientBuilder.newClient();
-        this.target = client.target(uri).path("v1/apps").path(appId);
+        return client.target(uri).path("v1/apps").request().get().readEntity(String.class).split("\n");
+    }
+
+    @Override
+    public void selectApplicationDatabase(final String appDBId) {
+        this.appDBId = appDBId;
+        Client client = ClientBuilder.newClient();
+        this.target = client.target(uri).path("v1/apps").path(appDBId);
+    }
+
+    @Override
+    public String getApplicationDatabase() {
+        return appDBId;
     }
 
     @Override
@@ -52,8 +67,8 @@ public class RestClassifierManagerClient implements ClassifierManager {
     }
 
     @Override
-    public String getApplicationId() {
-        return appId;
+    public String getApplication() {
+        return target.path("getApplication").request().get().readEntity(String.class);
     }
 
     @Override
@@ -64,7 +79,10 @@ public class RestClassifierManagerClient implements ClassifierManager {
     @Override
     public Classifier create(String classifierName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(getApplication());
+        if(applicationDescriptor == null) {
+            throw new IOException("Unknown application id "+getApplication());
+        }
         ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
 
         Form form = new Form();
@@ -86,6 +104,6 @@ public class RestClassifierManagerClient implements ClassifierManager {
         String classifierModelAsXML = response.readEntity(String.class);
 
         ClassifierModel model = ClassifierModel.fromXML(classifierModelAsXML);
-        return new RestClassifier(classifierName,   model, target);
+        return new RestClassifier(classifierName, model, target);
     }
 }

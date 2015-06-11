@@ -53,6 +53,34 @@ public class RestClassifierService {
         dbUri = new File(dbUriProperty).toURI();
     }
 
+    @GET
+    @Path("/")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String listApplicationDatabases() throws IOException {
+
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+        final String[] appDBList = localClassifierManager.listApplicationDatabases();
+
+        System.out.print("listApplicationDatabases [");
+        for(String appDB : appDBList) {
+            System.out.print(appDB+" ");
+        }
+        System.out.println("]");
+
+        return String.join("\n", appDBList);
+    }
+
+    @GET
+    @Path("/{appId}/getApplication")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getApplication(@PathParam(value = "appId") String appId) throws IOException {
+
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+        localClassifierManager.selectApplicationDatabase(appId);
+
+        System.out.println("getApplication appId = [" + appId + "] = "+ localClassifierManager.getApplication());
+        return localClassifierManager.getApplication();
+    }
 
     @GET
     @Path("/{appId}/classifiers")
@@ -60,7 +88,8 @@ public class RestClassifierService {
     public String listClassifiers(@PathParam(value = "appId") String appId) throws IOException {
         System.out.println("list appId = [" + appId + "]");
 
-        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+        localClassifierManager.selectApplicationDatabase(appId);
         return String.join("\n", localClassifierManager.list());
     }
 
@@ -74,7 +103,9 @@ public class RestClassifierService {
         System.out.println("getClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+            localClassifierManager.selectApplicationDatabase(appId);
+
             java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
             if (!Files.exists(classifierPath)) {
                 throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
@@ -95,7 +126,8 @@ public class RestClassifierService {
         System.out.println("createClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+            localClassifierManager.selectApplicationDatabase(appId);
             localClassifierManager.create(classifierName);
         } catch (Throwable ioe) {
             ioe.printStackTrace();
@@ -231,7 +263,7 @@ public class RestClassifierService {
     ) {
         System.out.println("quicklook appId = [" + appId + "],parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
         try {
-           PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
+           PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).resolve(appId).toFile());
             java.nio.file.Path patchImagePath = patchAccess.getPatchImagePath(parentProductName, patchX, patchY, quicklookBandName);
             if (Files.exists(patchImagePath)) {
                 InputStream inputStream = Files.newInputStream(patchImagePath);
@@ -255,7 +287,7 @@ public class RestClassifierService {
     ) {
         System.out.println("features appId = [" + appId + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
         try {
-            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).resolve(appId).toFile());
             return patchAccess.getFeaturesAsText(parentProductName, patchX, patchY);
         } catch (IOException e) {
             e.printStackTrace();
@@ -285,7 +317,7 @@ public class RestClassifierService {
     ) {
         System.out.println("fexLocalPart appId = [" + appId + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
         try {
-            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).toFile());
+            PatchAccess patchAccess = new PatchAccess(Paths.get(dbUri).resolve(appId).toFile());
             final java.nio.file.Path fexPath = patchAccess.findFexPath(parentProductName);
             if (fexPath != null) {
                 final java.nio.file.Path fexResource = fexPath.resolve(localPart);
@@ -306,7 +338,8 @@ public class RestClassifierService {
     ) {
         System.out.println("deleteClassifier appId = [" + appId + "], classifierName = [" + classifierName + "]");
         try {
-            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+            LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+            localClassifierManager.selectApplicationDatabase(appId);
             localClassifierManager.delete(classifierName);
         } catch (IOException e) {
             e.printStackTrace();
@@ -314,7 +347,9 @@ public class RestClassifierService {
     }
 
     private LocalClassifier getLocalClassifier(String appId, String classifierName) throws IOException {
-        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri, appId);
+        LocalClassifierManager localClassifierManager = new LocalClassifierManager(dbUri);
+        localClassifierManager.selectApplicationDatabase(appId);
+
         java.nio.file.Path classifierPath = localClassifierManager.getClassifierPath(classifierName);
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);

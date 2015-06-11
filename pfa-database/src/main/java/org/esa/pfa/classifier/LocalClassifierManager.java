@@ -18,7 +18,9 @@ package org.esa.pfa.classifier;
 
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.op.DatasetDescriptor;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
@@ -34,21 +36,57 @@ import java.util.List;
 public class LocalClassifierManager implements ClassifierManager {
 
     private final URI uri;
-    private final String appId;
-    private final Path classifierStoragePath;
-    private final Path patchPath;
-    private final Path dbPath;
+    private final String[] applicationDatabases;
 
-    public LocalClassifierManager(URI uri, String appId) throws IOException {
+    private String appDBId;
+    private Path classifierStoragePath;
+    private Path patchPath;
+    private Path dbPath;
+
+    public LocalClassifierManager(final URI uri) throws IOException {
         this.uri = uri;
-        this.appId = appId;
-        Path auxPath = Paths.get(uri);
-        classifierStoragePath = auxPath.resolve("Classifiers");
+        final Path auxPath = Paths.get(uri);
+
+        // look for dataset descriptors
+        if (Files.exists(auxPath.resolve("ds-descriptor.xml"))) {
+            DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(auxPath.toFile(), "ds-descriptor.xml"));
+            applicationDatabases = new String[] { "" };
+        } else {
+            final List<String> appList = new ArrayList<>();
+            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(auxPath)) {
+                for (Path path : directoryStream) {
+                    if(Files.isDirectory(path)) {
+                        if (Files.exists(path.resolve("ds-descriptor.xml"))) {
+                            appList.add(path.getFileName().toString());
+                        }
+                    }
+                }
+            }
+            applicationDatabases = appList.toArray(new String[appList.size()]);
+        }
+    }
+
+    @Override
+    public String[] listApplicationDatabases() {
+        return applicationDatabases;
+    }
+
+    @Override
+    public void selectApplicationDatabase(final String appDBId) throws IOException {
+        this.appDBId = appDBId;
+
+        dbPath = Paths.get(uri).resolve(appDBId);
+        patchPath = dbPath;
+
+        classifierStoragePath = dbPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
         }
-        patchPath = auxPath;
-        dbPath = auxPath;
+    }
+
+    @Override
+    public String getApplicationDatabase() {
+        return appDBId;
     }
 
     @Override
@@ -57,8 +95,9 @@ public class LocalClassifierManager implements ClassifierManager {
     }
 
     @Override
-    public String getApplicationId() {
-        return appId;
+    public String getApplication() throws IOException {
+        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
+        return dsDescriptor.getName();
     }
 
     @Override
@@ -80,7 +119,10 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public Classifier create(String classifierName) throws IOException {
         PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(appId);
+        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(getApplication());
+        if(applicationDescriptor == null) {
+            throw new IOException("Unknown application id "+getApplication());
+        }
         Path classifierPath = getClassifierPath(classifierName);
         ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
         LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);

@@ -19,12 +19,11 @@ package org.esa.pfa.rcp.toolviews;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.ui.GridBagUtils;
 import org.esa.snap.framework.ui.ModalDialog;
 import org.esa.snap.rcp.SnapApp;
+import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.netbeans.api.progress.ProgressUtils;
@@ -42,7 +41,10 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 @TopComponent.Description(
@@ -126,24 +128,16 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         JButton dbSelectButton = new JButton(new AbstractAction("...") {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    Preferences preferences = SnapApp.getDefault().getPreferences();
-                    String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
-                    String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
-                    String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.FALSE.toString());
-                    String appIdValue = preferences.get(PROPERTY_KEY_DB_APP, "AlgalBloom");
-                    final SelectDbDialog dlg = new SelectDbDialog(folderValue, remoteValue, isRemoteValue, appIdValue);
+                    final SelectDbDialog dlg = new SelectDbDialog(session);
                     dlg.show();
 
                     String localFolder = dlg.getLocalFolder();
                     String remoteAddress = dlg.getRemoteAddress();
                     String uri = dlg.isLocal() ? localFolder : remoteAddress;
-                    String applicationName = dlg.getApplicationName();
+                    String databaseName = dlg.getDatabaseName();
+                    String application = dlg.getApplication();
 
-                    PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-                    PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorByName(applicationName);
-                    session.createClassifierManager(uri, applicationDescriptor.getId());
-
-                    dbLabel.setText(applicationName + ":" + uri);
+                    dbLabel.setText(application + ":" + uri+databaseName);
                     initClassifierList();
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error connecting to database: "+t.getMessage(), t);
@@ -472,19 +466,22 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         private final JTextField localFolder;
         private final JTextField remoteAddress;
-        private final JComboBox<String> applicationCombo;
+        private final JComboBox<String> databaseCombo;
         private final JRadioButton isLocal;
         private final JRadioButton isRemote;
+        private final JLabel application;
 
-        public SelectDbDialog(String folderValue, String remoteValue, String isRemoteValue, String appIdValue) {
+        private final CBIRSession session;
+        private Exception error = null;
+
+        public SelectDbDialog(final CBIRSession session) {
             super(SnapApp.getDefault().getMainFrame(), "Select Database", ModalDialog.ID_OK, null);
+            this.session = session;
 
-            applicationCombo = new JComboBox<>();
-            for (PFAApplicationDescriptor app : PFAApplicationRegistry.getInstance().getAllDescriptors()) {
-                applicationCombo.addItem(app.getName());
-            }
-            applicationCombo.setEditable(false);
-            applicationCombo.setSelectedItem(appIdValue);
+            final Preferences preferences = SnapApp.getDefault().getPreferences();
+            String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
+            String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
+            String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.FALSE.toString());
 
             boolean isRemoteb = Boolean.parseBoolean(isRemoteValue);
             ButtonGroup group = new ButtonGroup();
@@ -497,6 +494,18 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             remoteAddress = new JTextField(remoteValue);
             localFolder.setColumns(24);
             remoteAddress.setColumns(24);
+            application = new JLabel();
+
+            final ActionListener updateAction = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    update();
+                }
+            };
+            localFolder.addActionListener(updateAction);
+            remoteAddress.addActionListener(updateAction);
+            isLocal.addActionListener(updateAction);
+            isRemote.addActionListener(updateAction);
 
             folderValue = folderValue != null ? folderValue : "";
             final File dbFolder = new File(folderValue);
@@ -513,8 +522,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
                         File selectedFolder = chooser.getSelectedFolder();
                         localFolder.setText(selectedFolder.getAbsolutePath());
-
                     }
+                    update();
                 }
             });
 
@@ -525,15 +534,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             gbc.gridx = 0;
             gbc.gridy = 0;
             gbc.insets = new Insets(3,3,3,3);
-
-            contentPane.add(new Label("Application:"), gbc);
-
-            gbc.gridx = 1;
-            gbc.gridwidth = 2;
-            contentPane.add(applicationCombo, gbc);
-            gbc.gridwidth = 1;
-
-            //////////
 
             gbc.gridx = 0;
             gbc.gridy = 1;
@@ -552,6 +552,37 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             gbc.gridx = 1;
             gbc.gridwidth = 2;
             contentPane.add(remoteAddress, gbc);
+            gbc.gridwidth = 1;
+
+            ///////////
+
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            contentPane.add(new Label("Database:"), gbc);
+            databaseCombo = new JComboBox<>();
+            databaseCombo.setEditable(false);
+            databaseCombo.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if(e.getStateChange() == ItemEvent.SELECTED) {
+                        selectDatabase();
+                    }
+                }
+            });
+
+            gbc.gridx = 1;
+            gbc.gridwidth = 2;
+            contentPane.add(databaseCombo, gbc);
+            gbc.gridwidth = 1;
+
+            gbc.gridx = 0;
+            gbc.gridy = 4;
+            contentPane.add(new Label("Application:"), gbc);
+            gbc.gridx = 1;
+            gbc.gridwidth = 2;
+            contentPane.add(application, gbc);
+
+            update();
 
             setContent(contentPane);
         }
@@ -568,18 +599,60 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             return remoteAddress.getText();
         }
 
-        String getApplicationName() {
-            return (String) applicationCombo.getSelectedItem();
+        String getDatabaseName() {
+            return (String) databaseCombo.getSelectedItem();
+        }
+
+        String getApplication() {
+            return application.getText();
+        }
+
+        private void update() {
+            error = null;
+            String localFolder = getLocalFolder();
+            String remoteAddress = getRemoteAddress();
+            String uri = isLocal() ? localFolder : remoteAddress;
+
+            try {
+                databaseCombo.setModel(new DefaultComboBoxModel<>());
+
+                session.createClassifierManager(uri);
+                final String[] applicationList = session.listApplications();
+
+                for (String app : applicationList) {
+                    databaseCombo.addItem(app);
+                }
+                String appIdValue = SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_APP, "AlgalBloom");
+                databaseCombo.setSelectedItem(appIdValue);
+
+            } catch (Exception e) {
+                error = e;
+                //continue
+            }
+        }
+
+        private void selectDatabase() {
+            try {
+                session.selectApplicationDatabase(getDatabaseName());
+                application.setText(session.getApplication());
+
+            } catch (IOException e) {
+                SnapApp.getDefault().handleError("Error selecting database: "+e.getMessage(), e);
+            }
         }
 
         @Override
         protected void onOK() {
-            Preferences preferences = SnapApp.getDefault().getPreferences();
-            preferences.put(PROPERTY_KEY_DB_PATH, getLocalFolder());
-            preferences.put(PROPERTY_KEY_DB_REMOTE, getRemoteAddress());
-            preferences.put(PROPERTY_KEY_DB_ISREMOTE, Boolean.toString(!isLocal()));
-            preferences.put(PROPERTY_KEY_DB_APP, getApplicationName());
-            hide();
+            if(error == null) {
+                Preferences preferences = SnapApp.getDefault().getPreferences();
+                preferences.put(PROPERTY_KEY_DB_PATH, getLocalFolder());
+                preferences.put(PROPERTY_KEY_DB_REMOTE, getRemoteAddress());
+                preferences.put(PROPERTY_KEY_DB_ISREMOTE, Boolean.toString(!isLocal()));
+                preferences.put(PROPERTY_KEY_DB_APP, getDatabaseName());
+                hide();
+            } else {
+                SnapDialogs.showError("Unable to connect to database: "+ error.toString());
+            }
         }
     }
 

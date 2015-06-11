@@ -26,7 +26,13 @@ public interface ClassifierManager {
 
     URI getURI();
 
-    String getApplicationId();
+    String[] listApplicationDatabases();
+
+    void selectApplicationDatabase(final String appId) throws IOException;
+
+    String getApplicationDatabase();
+
+    String getApplication() throws IOException;
 
     String[] list();
 

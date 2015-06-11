@@ -112,15 +112,12 @@ public class CBIRSession {
         }
     }
 
-    public synchronized ClassifierManager createClassifierManager(String uriString, String appId) throws URISyntaxException, IOException {
+    public synchronized ClassifierManager createClassifierManager(final String uriString) throws URISyntaxException, IOException {
         if (uriString.startsWith("http")) {
             // if HTTP URL: Web Service Client
             URI uri = new URI(uriString);
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new RestClassifierManagerClient(uri, appId);
-                applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
-                quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
-                quicklookBandName2 = quicklookBandName1;
+                classifierManager = new RestClassifierManagerClient(uri);
             }
         } else {
             // if file URL
@@ -132,13 +129,29 @@ public class CBIRSession {
                 uri = file.toURI();
             }
             if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new LocalClassifierManager(uri, appId);
-                applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(appId);
-                quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
-                quicklookBandName2 = quicklookBandName1;
+                classifierManager = new LocalClassifierManager(uri);
             }
         }
         return classifierManager;
+    }
+
+    public String[] listApplications() {
+        return classifierManager.listApplicationDatabases();
+    }
+
+    public synchronized void selectApplicationDatabase(final String appDBId) throws IOException {
+        classifierManager.selectApplicationDatabase(appDBId);
+
+        applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(getApplication());
+        if(applicationDescriptor == null) {
+            throw new IOException("Unknown application id "+getApplication());
+        }
+        quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
+        quicklookBandName2 = quicklookBandName1;
+    }
+
+    public String getApplication() throws IOException {
+        return classifierManager.getApplication();
     }
 
     public void createClassifier(String classifierName) throws IOException {
