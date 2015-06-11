@@ -49,7 +49,7 @@ public class DatasetDescriptorTest {
                         /*16*/ new FeatureType("clumpiness", "A clumpiness index [-1, 1]", Double.class),
         };
 
-        DatasetDescriptor ad = new DatasetDescriptor("test_ds", "1.0", "Wraw!", featureTypes);
+        DatasetDescriptor ad = new DatasetDescriptor("testApp", "1.0", "Wraw!", featureTypes);
         StringWriter writer = new StringWriter();
         ad.write(writer);
 
@@ -57,7 +57,7 @@ public class DatasetDescriptorTest {
 
         assertEquals(
                 "<DatasetDescriptor>\n" +
-                "  <name>test_ds</name>\n" +
+                "  <name>testApp</name>\n" +
                 "  <version>1.0</version>\n" +
                 "  <description>Wraw!</description>\n" +
                 "  <featureTypes>\n" +

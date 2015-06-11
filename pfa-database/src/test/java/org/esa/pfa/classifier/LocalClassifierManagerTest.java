@@ -16,7 +16,9 @@
 
 package org.esa.pfa.classifier;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.snap.util.ResourceInstaller;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,6 +26,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -49,6 +52,12 @@ public class LocalClassifierManagerTest {
         localClassifierManager = new LocalClassifierManager(testFolder.getRoot().toURI());
         localClassifierManager.selectApplicationDatabase(testPFAApplicationDescriptor.getId());
         PFAApplicationRegistry.getInstance().addDescriptor(testPFAApplicationDescriptor);
+
+        final Path appFolder = testFolder.getRoot().toPath().resolve(testPFAApplicationDescriptor.getId());
+        final Path moduleBasePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
+        Path sourcePath = moduleBasePath.resolve("org/esa/pfa/db/");
+        final ResourceInstaller resourceInstaller = new ResourceInstaller(sourcePath, appFolder);
+        resourceInstaller.install(".*.xml", ProgressMonitor.NULL);
     }
 
     @After
@@ -65,8 +74,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void listSome() throws Exception {
-        testFolder.newFile("Classifiers/foo.xml");
-        testFolder.newFile("Classifiers/bar.xml");
+        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/foo.xml");
+        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/bar.xml");
 
         String[] list = localClassifierManager.list();
         assertNotNull(list);
@@ -88,8 +97,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void deleteExisting() throws Exception {
-        testFolder.newFile("Classifiers/foo.xml");
-        testFolder.newFile("Classifiers/bar.xml");
+        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/foo.xml");
+        testFolder.newFile(testPFAApplicationDescriptor.getId() + "/Classifiers/bar.xml");
 
         localClassifierManager.delete("foo");
 

@@ -19,6 +19,7 @@ package org.esa.pfa.classifier;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
+import org.esa.pfa.db.DsIndexerTool;
 import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
@@ -62,7 +63,7 @@ public class LocalClassifier implements Classifier {
         this.classifierPath = classifierPath;
         this.applicationDescriptor = applicationDescriptor;
         this.al = new ActiveLearning(model);
-        if (Files.exists(dbPath.resolve("ds-descriptor.xml"))) {
+        if (Files.exists(dbPath.resolve("ds-descriptor.xml")) && Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
             DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
             Set<String> defaultFeatureSet = applicationDescriptor.getDefaultFeatureSet();
             FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();

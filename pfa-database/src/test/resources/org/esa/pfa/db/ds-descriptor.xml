@@ -1,5 +1,5 @@
 <DatasetDescriptor>
-  <name>test_ds</name>
+  <name>testApp</name>
   <version>1.0</version>
   <description>Wraw!</description>
   <featureTypes>
