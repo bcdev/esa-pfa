@@ -33,6 +33,7 @@
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
         <module>pfa-spark</module>
+        <module>pfa-kit</module>
     </modules>
 
     <dependencyManagement>
