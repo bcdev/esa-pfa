@@ -58,11 +58,10 @@ import org.esa.snap.util.ProductUtils;
 import org.esa.snap.util.ResourceInstaller;
 import org.esa.snap.util.SystemUtils;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -84,7 +83,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final int DEFAULT_PATCH_SIZE = 200;
 
-    public static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "auxdata/pfa-algalblooms");
+    public static final File AUXDATA_DIR = SystemUtils.getAuxDataPath().resolve("pfa-algalblooms").toFile();
 
     String OC4_R = "log10(max(max(reflec_2, reflec_3), reflec_4) / reflec_5)";
     String OC4_CHL = "exp10(0.366 - 3.067*R + 1.930*pow(R,2) + 0.649 *pow(R,3)  - 1.532 *pow(R,4))";
