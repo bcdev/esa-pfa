@@ -29,7 +29,15 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
+import org.esa.pfa.db.DsIndexer;
+import org.esa.pfa.db.DsIndexerTool;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.op.DatasetDescriptor;
+import org.esa.pfa.fe.op.FeatureWriterResult;
+import org.esa.pfa.fe.op.PatchResult;
 import org.esa.snap.framework.gpf.GPF;
 import org.esa.snap.framework.gpf.Operator;
 import org.esa.snap.framework.gpf.OperatorSpi;
@@ -43,13 +51,6 @@ import org.esa.snap.framework.gpf.graph.Node;
 import org.esa.snap.framework.gpf.graph.NodeContext;
 import org.esa.snap.util.SystemUtils;
 import org.esa.snap.util.io.FileUtils;
-import org.esa.pfa.db.DsIndexer;
-import org.esa.pfa.db.DsIndexerTool;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PFAApplicationRegistry;
-import org.esa.pfa.fe.op.DatasetDescriptor;
-import org.esa.pfa.fe.op.FeatureWriterResult;
-import org.esa.pfa.fe.op.PatchResult;
 import scala.Tuple2;
 
 import javax.media.jai.JAI;
@@ -68,6 +69,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -106,19 +108,21 @@ public class ExtractFexApp {
         Configuration configuration = job.getConfiguration();
 
 
-        JavaPairRDD<String, String> productPathRDD = jsc.newAPIHadoopRDD(configuration, PathInputFormat.class, String.class, String.class);
+        JavaPairRDD<String, String> productPathes = jsc.newAPIHadoopRDD(configuration, PathInputFormat.class, String.class, String.class);
 
 
         Function<Tuple2<String, String>, FeatureWriterResult> mapFunction2 = tuple -> processProduct(applicationName, tuple._2(), output);
-        JavaRDD<FeatureWriterResult> patchResultJavaRDD = productPathRDD.map(mapFunction2);
+        JavaRDD<FeatureWriterResult> patchResults = productPathes.map(mapFunction2);
 
-        createLuceneIndex(applicationName, patchResultJavaRDD.toLocalIterator(), output);
-//        patchResultJavaRDD.saveAsTextFile(output);
+        FlatMapFunction<Iterator<FeatureWriterResult>, Integer> luceneFunction = featureWriterResultIterator -> Collections.singletonList(createLuceneIndex(applicationName, featureWriterResultIterator, output));
+        final JavaRDD<Integer> counter = patchResults.coalesce(1, true).mapPartitions(luceneFunction);
+        final List<Integer> collect = counter.collect();
 
-        //patchResultJavaRDD.groupBy(groupFunction).sortByKey(comparator).filter(filterFunction);
+//        patchResults.saveAsTextFile(output);
+        //patchResults.groupBy(groupFunction).sortByKey(comparator).filter(filterFunction);
     }
 
-    private static void createLuceneIndex(String applicationName, Iterator<FeatureWriterResult> patchIterator, String outputDir) throws IOException {
+    private static int createLuceneIndex(String applicationName, Iterator<FeatureWriterResult> patchIterator, String outputDir) throws IOException {
         PFAApplicationDescriptor applicationDescriptor = getApplicationDescriptor(applicationName);
         URI dsURI = applicationDescriptor.getDatasetDescriptorURI();
         DatasetDescriptor datasetDescriptor;
@@ -126,6 +130,7 @@ public class ExtractFexApp {
             datasetDescriptor = DatasetDescriptor.read(inputStreamReader);
         }
 
+        int counter = 0;
         File datasetDir = new File(".", DsIndexerTool.DEFAULT_INDEX_NAME);
         try {
             org.apache.lucene.store.Directory indexDirectory = org.apache.lucene.store.FSDirectory.open(datasetDir);
@@ -151,6 +156,7 @@ public class ExtractFexApp {
                             dsIndexer.addPatchToIndex(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties);
                             csvWriter.write(getRecord(productName, patchResult.getPatchX(), patchResult.getPatchY(), featureProperties));
                         }
+                        counter++;
                     }
                 }
             }
@@ -158,6 +164,7 @@ public class ExtractFexApp {
         } finally {
             FileUtils.deleteTree(datasetDir);
         }
+        return counter;
     }
 
     static String getHeader(Properties featureProperties) {
@@ -235,8 +242,6 @@ public class ExtractFexApp {
     }
 
     static FeatureWriterResult processProduct(String applicationName, String productPath, String targetDir) throws IOException {
-        System.out.println("applicationName = [" + applicationName + "], productPath = [" + productPath + "]");
-
         PFAApplicationDescriptor applicationDescriptor = getApplicationDescriptor(applicationName);
         File tempDir = Files.createTempDirectory(null).toFile();
         try {
@@ -247,7 +252,7 @@ public class ExtractFexApp {
             Graph graph = getGraph(applicationDescriptor, variables);
             FeatureWriterResult featureWriterResult = processGraph(graph, applicationDescriptor);
 
-            copyFezToTargetDir(tempDir, targetDir);
+            copyFezToTargetDir(tempDir, targetDir, applicationDescriptor.getProductNameResolver());
             return featureWriterResult;
         } catch (Exception e) {
             e.printStackTrace();
@@ -267,10 +272,14 @@ public class ExtractFexApp {
         return descriptor;
     }
 
-    private static void copyFezToTargetDir(File targetDir, String outputDir) throws IOException, InterruptedException {
+    private static void copyFezToTargetDir(File tempDir,
+                                           String outputDir,
+                                           PFAApplicationDescriptor.ProductNameResolver productNameResolver) throws IOException, InterruptedException {
+
         FileSystem fileSystem = FileSystem.get(new Configuration());
-        for (File fezFile : targetDir.listFiles((file) -> file.getName().endsWith(".fex.zip"))) {
-            Path outputFilePath = new Path(new Path(outputDir), fezFile.getName());
+        for (File fezFile : tempDir.listFiles((file) -> file.getName().endsWith(".fex.zip"))) {
+            String output = productNameResolver.resolve(outputDir + "/${yyyy}/${MM}/${dd}/${name}", fezFile.getName());
+            Path outputFilePath = new Path(output);
             try (OutputStream os = fileSystem.create(outputFilePath)) {
                 Files.copy(fezFile.toPath(), os);
             }
@@ -288,7 +297,7 @@ public class ExtractFexApp {
     }
 
     private static FeatureWriterResult processGraph(Graph graph,
-                                                    PFAApplicationDescriptor applicationDescriptore) throws IOException, GraphException, InterruptedException {
+                                                    PFAApplicationDescriptor applicationDescriptore) throws Exception {
 
         GraphContext graphContext = new GraphContext(graph);
         try {
@@ -298,15 +307,8 @@ public class ExtractFexApp {
             Operator fexOp = fexOpNodeCtx.getOperator();
 
             Object targetProperty = fexOp.getTargetProperty(applicationDescriptore.getFeatureWriterPropertyName());
-            System.out.println("targetProperty = " + targetProperty);
             if (targetProperty instanceof FeatureWriterResult) {
-                FeatureWriterResult featureWriterResult = (FeatureWriterResult) targetProperty;
-//                List<PatchResult> patchResults = featureWriterResult.getPatchResults();
-                final String productName = featureWriterResult.getProductName();
-                System.out.println("productName = " + productName);
-                final int size = featureWriterResult.getPatchResults().size();
-                System.out.println("size = " + size);
-                return featureWriterResult;
+                return (FeatureWriterResult) targetProperty;
             }
         } finally {
             graphContext.dispose();
