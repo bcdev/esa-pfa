@@ -176,7 +176,7 @@ public class DsIndexer implements AutoCloseable {
         }
 
         indexWriter.addDocument(doc);
-        System.out.printf("[%5d]: product:\"%s\", px:%d, py:%d\n", docID, productName, patchX, patchY);
+        System.out.printf("[%7d]: product:\"%s\", px:%d, py:%d\n", docID, productName, patchX, patchY);
         docID++;
     }
 

@@ -10,17 +10,25 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.NumericUtils;
 import org.esa.pfa.fe.op.DatasetDescriptor;
+import org.esa.snap.util.io.CsvReader;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The PFA Dataset Indexer Tool.
@@ -29,7 +37,10 @@ import java.util.regex.Pattern;
  */
 public class DsIndexerTool {
 
+    public enum FexType {FEX, FEZ}
+
     public static final String DEFAULT_INDEX_NAME = "lucene-index";
+    public static final FexType DEFAULT_FEX_TYPE = FexType.FEZ;
 
     static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
 
@@ -40,6 +51,8 @@ public class DsIndexerTool {
     private int precisionStep;
     private int maxThreadCount;
     private String indexName;
+    private FexType fexType;
+    private File fexArchive;
     // </options>
 
     // <arguments>
@@ -62,20 +75,22 @@ public class DsIndexerTool {
     }
 
 
-
     public DsIndexerTool() {
 
         precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
         maxThreadCount = IndexWriterConfig.DEFAULT_MAX_THREAD_STATES;
         indexName = DEFAULT_INDEX_NAME;
+        fexType = DEFAULT_FEX_TYPE;
 
         options = new Options();
         CommonOptions.addOptions(options);
         options.addOption(CommonOptions.opt('i', "index-name", 1, "string", String.format("Name of the output index directory. Default is '%s'.", indexName)));
         options.addOption(CommonOptions.opt('t', "max-threads", 1, "int", String.format("Number of threads to use for indexing. Default is %d.", maxThreadCount)));
         options.addOption(CommonOptions.opt('p', "precision-step", 1, "int", String.format("Precision step used for indexing numeric data. " +
-                                                                                           "Lower values consume more disk space but speed up searching. " +
-                                                                                           "Suitable values are between 1 and 8. Default is %d.", precisionStep)));
+                                                                                                   "Lower values consume more disk space but speed up searching. " +
+                                                                                                   "Suitable values are between 1 and 8. Default is %d.", precisionStep)));
+        options.addOption(CommonOptions.opt('f', "fex-type", 1, "string", String.format("Type of FEX. One of (FEX, FEZ). Default is '%s'.", indexName)));
+        options.addOption(CommonOptions.opt('d', "fex-archive", 1, "string", "Directory that contains the FEX archive. Default is the <dataset-dir>"));
     }
 
 
@@ -94,7 +109,14 @@ public class DsIndexerTool {
         try (DsIndexer dsIndexer = new DsIndexer(datasetDescriptor, precisionStep, indexDirectory, config)) {
             long t1 = System.currentTimeMillis();
 
-            processDatasetDir(dsIndexer, datasetDir);
+            switch (fexType) {
+                case FEX:
+                    processFexRoot(dsIndexer, fexArchive);
+                    break;
+                case FEZ:
+                    processFezRoot(dsIndexer, fexArchive);
+                    break;
+            }
 
             long t2 = System.currentTimeMillis();
             System.out.println("patches added to index within " + ((t2 - t1) / 1000) + " seconds");
@@ -134,19 +156,25 @@ public class DsIndexerTool {
             this.maxThreadCount = Integer.parseInt(maxThreads);
         }
 
+        String fexTypeString = commandLine.getOptionValue("fex-type");
+        if (fexTypeString != null) {
+            this.fexType = FexType.valueOf(fexTypeString);
+        }
+
+        String fexArchiveString = commandLine.getOptionValue("fex-archive");
+        if (fexArchiveString != null) {
+            this.fexArchive = new File(fexArchiveString);
+        } else {
+            this.fexArchive = datasetDir;
+        }
         return true;
     }
 
-    private void processDatasetDir(DsIndexer dsIndexer, File datasetDir) throws Exception {
-        File[] fexDirs = datasetDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && file.getName().endsWith(".fex");
-            }
-        });
+    private void processFexRoot(DsIndexer dsIndexer, File fexArchive) throws Exception {
+        File[] fexDirs = fexArchive.listFiles(file -> file.isDirectory() && file.getName().endsWith(".fex"));
 
         if (fexDirs == null || fexDirs.length == 0) {
-            throw new Exception("empty dataset directory: " + datasetDir);
+            throw new Exception("empty fex archive directory: " + fexArchive);
         }
 
         for (File fexDir : fexDirs) {
@@ -155,12 +183,7 @@ public class DsIndexerTool {
     }
 
     private boolean processFexDir(DsIndexer dsIndexer, File fexDir) {
-        File[] patchDirs = fexDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && file.getName().startsWith("x");
-            }
-        });
+        File[] patchDirs = fexDir.listFiles(file -> file.isDirectory() && file.getName().startsWith("x"));
 
         if (patchDirs == null || patchDirs.length == 0) {
             System.out.println("warning: no patches in fex directory: " + fexDir);
@@ -182,14 +205,6 @@ public class DsIndexerTool {
         }
 
         String name = patchDir.getName();
-// Doesn't work at all!!!!  (nf)
-/*
-        Pattern patchNamePatter = Pattern.compile("y(?<patchX>[0-9]+)y(?<patchY>[0-9]+)");
-        Matcher matcher = patchNamePatter.matcher(name);
-
-        int patchX = Integer.parseInt(matcher.group("patchX"));
-        int patchY = Integer.parseInt(matcher.group("patchY"));
-*/
         int patchX = Integer.parseInt(name.substring(1, 4));
         int patchY = Integer.parseInt(name.substring(5, 8));
 
@@ -212,5 +227,56 @@ public class DsIndexerTool {
             featureValues.load(reader);
         }
         dsIndexer.addPatchToIndex(productName, patchX, patchY, featureValues);
+    }
+
+    private void processFezRoot(DsIndexer dsIndexer, File fexArchive) throws IOException {
+        FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                System.out.println("path = " + path);
+                String fezName = path.toFile().getName();
+
+                if (fezName.endsWith(".fex.zip")) {
+                    String productName = fezName.substring(0, fezName.length() - 4);
+
+                    FileSystem fezFS = FileSystems.newFileSystem(path, null);
+
+                    Path fexCsvPath = fezFS.getPath("fex-overview.csv");
+                    if (!Files.exists(fexCsvPath)) {
+                        fexCsvPath = fezFS.getPath(productName, "fex-overview.csv");
+                        if (!Files.exists(fexCsvPath)) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    }
+
+                    try (Reader reader = Files.newBufferedReader(fexCsvPath)) {
+                        CsvReader csvReader = new CsvReader(reader, new char[]{'\t'});
+                        String[] header = csvReader.readRecord();
+                        String[] data = csvReader.readRecord();
+                        while (data != null) {
+                            Properties featureValues = new Properties();
+                            for (int i = 0; i < header.length; i++) {
+                                featureValues.setProperty(header[i], data[i]);
+                            }
+
+                            String patchName = featureValues.getProperty("patch");
+                            if (patchName.length() == 6) {
+                                int patchX = Integer.parseInt(patchName.substring(1, 3));
+                                int patchY = Integer.parseInt(patchName.substring(4, 6));
+                                dsIndexer.addPatchToIndex(productName, patchX, patchY, featureValues);
+                            } else if (patchName.length() == 8) {
+                                int patchX = Integer.parseInt(patchName.substring(1, 4));
+                                int patchY = Integer.parseInt(patchName.substring(5, 8));
+                                dsIndexer.addPatchToIndex(productName, patchX, patchY, featureValues);
+                            }
+                            data = csvReader.readRecord();
+                        }
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        };
+        Files.walkFileTree(Paths.get(fexArchive.getAbsolutePath()), visitor);
+
     }
 }
