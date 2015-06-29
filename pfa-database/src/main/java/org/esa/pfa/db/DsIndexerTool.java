@@ -238,8 +238,13 @@ public class DsIndexerTool {
 
                 if (fezName.endsWith(".fex.zip")) {
                     String productName = fezName.substring(0, fezName.length() - 4);
-
-                    FileSystem fezFS = FileSystems.newFileSystem(path, null);
+                    FileSystem fezFS;
+                    try {
+                        fezFS = FileSystems.newFileSystem(path, null);
+                    } catch (Throwable t) {
+                        System.out.println("Failed to get FS." +  t.getMessage());
+                        return FileVisitResult.CONTINUE;
+                    }
 
                     Path fexCsvPath = fezFS.getPath("fex-overview.csv");
                     if (!Files.exists(fexCsvPath)) {
