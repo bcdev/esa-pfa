@@ -40,7 +40,7 @@ import java.util.List;
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2013 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
-        category = "Image Analysis/Feature Extraction")
+        category = "Raster/Image Analysis/Feature Extraction")
 public class UrbanAreaFeatureWriter extends FeatureWriter {
 
     public static final String featureBandName = "_speckle_divergence";

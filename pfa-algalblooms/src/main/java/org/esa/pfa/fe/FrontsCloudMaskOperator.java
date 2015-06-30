@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @OperatorMetadata(alias = "Meris.Fronts.CloudMask",
                   authors = "G.Kirches, M.Paperin (Algorithm), N.Fomferra, R.Quast (Implementation)",
-                  category = "Optical Processing/Pre-Processing")
+                  category = "Optical/Pre-Processing")
 public class FrontsCloudMaskOperator extends Operator {
     @SourceProduct
     private Product sourceProduct;

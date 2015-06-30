@@ -48,7 +48,7 @@ import java.awt.event.ActionListener;
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRLabelingToolView")
 @ActionReferences({
-        @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
+        @ActionReference(path = "Menu/View/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA", position = 3)
 })
 @TopComponent.OpenActionRegistration(

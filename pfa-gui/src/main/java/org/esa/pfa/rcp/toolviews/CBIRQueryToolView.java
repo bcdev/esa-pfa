@@ -51,7 +51,7 @@ import java.util.List;
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIRQueryToolView")
 @ActionReferences({
-        @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
+        @ActionReference(path = "Menu/View/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA", position = 2)
 })
 @TopComponent.OpenActionRegistration(

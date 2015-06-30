@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author Ralf Quast
  */
 @OperatorMetadata(alias = "CbtrFeatureWriter", version = "0.1", autoWriteDisabled = true,
-        category = "Image Analysis/Feature Extraction")
+        category = "Raster/Image Analysis/Feature Extraction")
 public class CbtrFeatureWriter extends FeatureWriter {
 
     @Parameter(defaultValue = "0.0")
