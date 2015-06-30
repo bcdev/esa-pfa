@@ -88,7 +88,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JTextField numRetrievedImages;
     private JButton updateBtn;
     private JLabel iterationsLabel = new JLabel();
+    private JTextField serviceLabel;
     private JTextField dbLabel;
+    private JTextField appLabel;
 
     private final CBIRSession session;
 
@@ -105,28 +107,19 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     public JComponent createControl() {
 
         final JPanel contentPane = new JPanel(new GridBagLayout());
-        final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
 
-        gbc.gridwidth = 1;
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.NONE;
-        contentPane.add(new JLabel("DB:"), gbc);
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         dbLabel = new JTextField("");
         dbLabel.setEnabled(false);
-        contentPane.add(dbLabel, gbc);
-        gbc.gridwidth = 1;
-        gbc.gridx = 3;
-        gbc.fill = GridBagConstraints.NONE;
+        dbLabel.setColumns(20);
+        serviceLabel = new JTextField("");
+        serviceLabel.setEnabled(false);
+        serviceLabel.setColumns(20);
+        appLabel = new JTextField("");
+        appLabel.setEnabled(false);
+        appLabel.setColumns(20);
 
-        JButton dbSelectButton = new JButton(new AbstractAction("...") {
+        JButton dbSelectButton = new JButton(new AbstractAction("Service") {
             public void actionPerformed(ActionEvent e) {
                 try {
                     final SelectDbDialog dlg = new SelectDbDialog(session);
@@ -138,7 +131,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     String databaseName = dlg.getDatabaseName();
                     String application = dlg.getApplication();
 
-                    dbLabel.setText(application + ":" + uri+databaseName);
+                    serviceLabel.setText(uri);
+                    dbLabel.setText(databaseName);
+                    appLabel.setText(application);
                     initClassifierList();
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error connecting to database: "+t.getMessage(), t);
@@ -146,13 +141,62 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             }
         });
 
-        contentPane.add(dbSelectButton, gbc);
+        final JPanel servicePane = new JPanel(new GridBagLayout());
+        final GridBagConstraints sgbc = GridBagUtils.createDefaultConstraints();
+        sgbc.anchor = GridBagConstraints.NORTHWEST;
 
-        gbc.gridwidth = 1;
+        sgbc.fill = GridBagConstraints.NONE;
+        sgbc.gridx = 0;
+        sgbc.gridy = 0;
+        sgbc.gridwidth = 1;
+        servicePane.add(new JLabel("Service: "), sgbc);
+
+        sgbc.gridx = 1;
+        sgbc.fill = GridBagConstraints.HORIZONTAL;
+        sgbc.gridwidth = 3;
+        servicePane.add(serviceLabel, sgbc);
+
+        sgbc.gridx = 0;
+        sgbc.gridy = 1;
+        sgbc.gridwidth = 1;
+        sgbc.fill = GridBagConstraints.NONE;
+        servicePane.add(new JLabel("Database: "), sgbc);
+
+        sgbc.gridx = 1;
+        sgbc.fill = GridBagConstraints.HORIZONTAL;
+        sgbc.gridwidth = 3;
+        servicePane.add(dbLabel, sgbc);
+
+        sgbc.gridx = 0;
+        sgbc.gridy = 2;
+        sgbc.gridwidth = 1;
+        sgbc.fill = GridBagConstraints.NONE;
+        servicePane.add(new JLabel("Application: "), sgbc);
+
+        sgbc.gridx = 1;
+        sgbc.fill = GridBagConstraints.HORIZONTAL;
+        sgbc.gridwidth = 3;
+        servicePane.add(appLabel, sgbc);
+
+        sgbc.gridx = 4;
+        sgbc.gridy = 0;
+        sgbc.gridheight = 3;
+        sgbc.gridwidth = 1;
+        sgbc.fill = GridBagConstraints.VERTICAL;
+        servicePane.add(dbSelectButton, sgbc);
+
+        final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0;
-        gbc.gridy += 2;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        contentPane.add(servicePane, gbc);
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridwidth = 1;
         contentPane.add(new JLabel("Saved Classifiers:"), gbc);
-        gbc.gridy++;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy++;
 
