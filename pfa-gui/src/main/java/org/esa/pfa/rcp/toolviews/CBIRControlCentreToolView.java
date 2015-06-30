@@ -620,6 +620,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 final String[] applicationList = session.listApplications();
 
                 for (String app : applicationList) {
+                    if(app.toLowerCase().contains("not found") || app.trim().isEmpty()) {
+                        throw new Exception("Applications for "+uri+" not found");
+                    }
                     databaseCombo.addItem(app);
                 }
                 String appIdValue = SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_APP, "AlgalBloom");
