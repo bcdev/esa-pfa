@@ -56,9 +56,8 @@ public class LocalDatabaseManager implements DatabaseManager {
         if (Files.isDirectory(dbPath)) {
             return new LocalClassifierManager(dbPath);
         }
-        dbPath = basePath.resolve("ds-descriptor.xml");
-        if (Files.exists(dbPath.resolve("ds-descriptor.xml"))) {
-            return new LocalClassifierManager(dbPath);
+        if (Files.exists(basePath.resolve("ds-descriptor.xml"))) {
+            return new LocalClassifierManager(basePath);
         }
         throw new IllegalArgumentException("Can not find database with name: " + databaseName);
     }
@@ -66,7 +65,7 @@ public class LocalDatabaseManager implements DatabaseManager {
     private static String[] loadAvailableDatabases(Path auxPath) throws IOException {
         // look for dataset descriptors
         if (Files.exists(auxPath.resolve("ds-descriptor.xml"))) {
-            return new String[]{"Database"};
+            return new String[]{"Default"};
         } else {
             final List<String> databaseList = new ArrayList<>();
             try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(auxPath)) {
