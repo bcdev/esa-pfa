@@ -31,12 +31,12 @@ class TestPFAApplicationDescriptor implements PFAApplicationDescriptor {
 
     @Override
     public String getName() {
-        return "testAppDesc";
+        return "TEST Application Name";
     }
 
     @Override
     public String getId() {
-        return "testApp";
+        return "testAppId";
     }
 
     @Override

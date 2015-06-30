@@ -18,7 +18,8 @@ package org.esa.pfa.search;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.pfa.classifier.LocalClassifierManager;
+import org.esa.pfa.classifier.DatabaseManager;
+import org.esa.pfa.classifier.LocalDatabaseManager;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -26,7 +27,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrderBasket;
 import org.esa.pfa.ordering.ProductOrderService;
-import org.esa.pfa.ws.RestClassifierManagerClient;
+import org.esa.pfa.ws.RestDatabaseManager;
 import org.esa.snap.rcp.util.ContextGlobalExtender;
 import org.openide.util.Utilities;
 
@@ -70,6 +71,7 @@ public class CBIRSession {
 
     private Classifier classifier;
     private PFAApplicationDescriptor applicationDescriptor;
+    private DatabaseManager databaseManager;
     private ClassifierManager classifierManager;
 
     private String quicklookBandName1;
@@ -112,12 +114,12 @@ public class CBIRSession {
         }
     }
 
-    public synchronized ClassifierManager createClassifierManager(final String uriString) throws URISyntaxException, IOException {
+    public synchronized DatabaseManager createDatabaseManager(final String uriString) throws URISyntaxException, IOException {
         if (uriString.startsWith("http")) {
             // if HTTP URL: Web Service Client
             URI uri = new URI(uriString);
-            if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new RestClassifierManagerClient(uri);
+            if (databaseManager == null || !databaseManager.getURI().equals(uri)) {
+                databaseManager = new RestDatabaseManager(uri);
             }
         } else {
             // if file URL
@@ -128,30 +130,28 @@ public class CBIRSession {
                 File file = new File(uriString);
                 uri = file.toURI();
             }
-            if (classifierManager == null || !classifierManager.getURI().equals(uri)) {
-                classifierManager = new LocalClassifierManager(uri);
+            if (databaseManager == null || !databaseManager.getURI().equals(uri)) {
+                databaseManager = new LocalDatabaseManager(uri);
             }
         }
-        return classifierManager;
+        return databaseManager;
     }
 
-    public String[] listApplications() {
-        return classifierManager.listApplicationDatabases();
-    }
+    public synchronized void selectDatabase(final String databaseName) throws IOException {
+        System.out.println("CBIRSession.selectDatabase");
+        System.out.println("databaseName = [" + databaseName + "]");
+        classifierManager = databaseManager.createClassifierManager(databaseName);
+        System.out.println("classifierManager = " + classifierManager);
 
-    public synchronized void selectApplicationDatabase(final String appDBId) throws IOException {
-        classifierManager.selectApplicationDatabase(appDBId);
+        String applicationId = classifierManager.getApplicationId();
+        System.out.println("applicationId = " + applicationId);
 
-        applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(getApplication());
+        applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
         if(applicationDescriptor == null) {
-            throw new IOException("Unknown application id "+getApplication());
+            throw new IOException("Unknown application id: " + applicationId);
         }
         quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
         quicklookBandName2 = quicklookBandName1;
-    }
-
-    public String getApplication() throws IOException {
-        return classifierManager.getApplication();
     }
 
     public void createClassifier(String classifierName) throws IOException {
@@ -359,16 +359,16 @@ public class CBIRSession {
      * @return patch quicklook URI
      */
     public URI getPatchQuicklookUri(final Patch patch, final String quicklookBandName) throws IOException {
-        return classifier.getPatchQuicklookUri(patch, quicklookBandName);
+        return classifierManager.getPatchQuicklookUri(patch, quicklookBandName);
     }
 
     public BufferedImage getPatchQuicklook(final Patch patch, final String quicklookBandName) throws IOException {
-        return classifier.getPatchQuicklook(patch, quicklookBandName);
+        return classifierManager.getPatchQuicklook(patch, quicklookBandName);
     }
 
     public void loadFeatures(Patch patch) throws IOException {
         if (patch.getFeatures().length == 0) {
-            final String featuresAsText = classifier.getFeaturesAsText(patch);
+            final String featuresAsText = classifierManager.getFeaturesAsText(patch);
             try (Reader reader = new StringReader(featuresAsText)) {
                 patch.readFeatures(reader, getEffectiveFeatureTypes());
             }
@@ -376,7 +376,11 @@ public class CBIRSession {
     }
 
     public URI getFexOverviewUri(Patch patch) {
-        return classifier.getFexOverviewUri(patch);
+        return classifierManager.getFexOverviewUri(patch);
+    }
+
+    public File getPatchProductFile(Patch patch) throws IOException {
+        return classifierManager.getPatchProductFile(patch);
     }
 
     public Patch[] getRetrievedImages() {

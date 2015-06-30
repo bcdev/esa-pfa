@@ -18,15 +18,18 @@ package org.esa.pfa.classifier;
 
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
+import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.DatasetDescriptor;
+import org.esa.pfa.fe.op.Patch;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,69 +38,29 @@ import java.util.List;
  */
 public class LocalClassifierManager implements ClassifierManager {
 
-    private final URI uri;
-    private final String[] applicationDatabases;
+    private final Path dbPath;
+    private final Path classifierStoragePath;
+    private final PatchAccess patchAccess;
+    private final PFAApplicationDescriptor appDescriptor;
 
-    private String appDBId;
-    private Path classifierStoragePath;
-    private Path patchPath;
-    private Path dbPath;
-
-    public LocalClassifierManager(final URI uri) throws IOException {
-        this.uri = uri;
-        final Path auxPath = Paths.get(uri);
-
-        // look for dataset descriptors
-        if (Files.exists(auxPath.resolve("ds-descriptor.xml"))) {
-            DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(auxPath.toFile(), "ds-descriptor.xml"));
-            applicationDatabases = new String[] { "" };
-        } else {
-            final List<String> appList = new ArrayList<>();
-            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(auxPath)) {
-                for (Path path : directoryStream) {
-                    if(Files.isDirectory(path)) {
-                        if (Files.exists(path.resolve("ds-descriptor.xml"))) {
-                            appList.add(path.getFileName().toString());
-                        }
-                    }
-                }
-            }
-            applicationDatabases = appList.toArray(new String[appList.size()]);
-        }
-    }
-
-    @Override
-    public String[] listApplicationDatabases() {
-        return applicationDatabases;
-    }
-
-    @Override
-    public void selectApplicationDatabase(final String appDBId) throws IOException {
-        this.appDBId = appDBId;
-
-        dbPath = Paths.get(uri).resolve(appDBId);
-        patchPath = dbPath;
-
-        classifierStoragePath = dbPath.resolve("Classifiers");
+    public LocalClassifierManager(Path dbPath) throws IOException {
+        this.dbPath = dbPath;
+        this.patchAccess = new PatchAccess(dbPath.toFile());
+        this.classifierStoragePath = dbPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
         }
-    }
-
-    @Override
-    public String getApplicationDatabase() {
-        return appDBId;
-    }
-
-    @Override
-    public URI getURI() {
-        return uri;
-    }
-
-    @Override
-    public String getApplication() throws IOException {
         DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
-        return dsDescriptor.getName();
+        String appName = dsDescriptor.getName();
+        this.appDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(appName);
+        if (appDescriptor == null) {
+            throw new IOException("Unknown application name " + appName);
+        }
+    }
+
+    @Override
+    public String getApplicationId() {
+        return appDescriptor.getId();
     }
 
     @Override
@@ -118,14 +81,9 @@ public class LocalClassifierManager implements ClassifierManager {
 
     @Override
     public Classifier create(String classifierName) throws IOException {
-        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(getApplication());
-        if(applicationDescriptor == null) {
-            throw new IOException("Unknown application id "+getApplication());
-        }
         Path classifierPath = getClassifierPath(classifierName);
-        ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
-        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        ClassifierModel classifierModel = new ClassifierModel(appDescriptor.getName());
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, appDescriptor, dbPath);
         localClassifier.saveClassifier();
         return localClassifier;
     }
@@ -139,17 +97,48 @@ public class LocalClassifierManager implements ClassifierManager {
     }
 
     @Override
-    public Classifier get(String classifierName) throws IOException {
+    public LocalClassifier get(String classifierName) throws IOException {
         Path classifierPath = getClassifierPath(classifierName);
-        return LocalClassifier.loadClassifier(classifierName, classifierPath, patchPath, dbPath);
+        return LocalClassifier.loadClassifier(classifierName, classifierPath, dbPath);
     }
 
-    public Path getPatchPath() {
-        return patchPath;
+    @Override
+    public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
+        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
+        if (patchImagePath != null) {
+            return patchImagePath.toUri();
+        } else {
+            return null;
+        }
     }
 
-    public Path getDbPath() {
-        return dbPath;
+    @Override
+    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
+        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
+        if (patchImagePath != null) {
+            return ImageIO.read(patchImagePath.toUri().toURL());
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public File getPatchProductFile(Patch patch) throws IOException {
+        return patchAccess.getPatchProductFile(patch);
+    }
+
+    @Override
+    public String getFeaturesAsText(Patch patch) throws IOException {
+        return patchAccess.getFeaturesAsText(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
+    }
+
+    @Override
+    public URI getFexOverviewUri(Patch patch) {
+        return null; // not supported in local mode
+    }
+
+    public PatchAccess getPatchAccess() {
+        return patchAccess;
     }
 
     public Path getClassifierPath(String classifierName) {

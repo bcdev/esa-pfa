@@ -49,15 +49,16 @@ public class LocalClassifierManagerTest {
     @Before
     public void setUp() throws Exception {
         testPFAApplicationDescriptor = new TestPFAApplicationDescriptor();
-        localClassifierManager = new LocalClassifierManager(testFolder.getRoot().toURI());
-        localClassifierManager.selectApplicationDatabase(testPFAApplicationDescriptor.getId());
         PFAApplicationRegistry.getInstance().addDescriptor(testPFAApplicationDescriptor);
 
-        final Path appFolder = testFolder.getRoot().toPath().resolve(testPFAApplicationDescriptor.getId());
+        Path dbPath = testFolder.getRoot().toPath();
+
         final Path moduleBasePath = ResourceInstaller.findModuleCodeBasePath(this.getClass());
         Path sourcePath = moduleBasePath.resolve("org/esa/pfa/db/");
-        final ResourceInstaller resourceInstaller = new ResourceInstaller(sourcePath, appFolder);
+        final ResourceInstaller resourceInstaller = new ResourceInstaller(sourcePath, dbPath);
         resourceInstaller.install(".*.xml", ProgressMonitor.NULL);
+
+        localClassifierManager = new LocalClassifierManager(dbPath);
     }
 
     @After
@@ -74,8 +75,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void listSome() throws Exception {
-        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/foo.xml");
-        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/bar.xml");
+        testFolder.newFile("Classifiers/foo.xml");
+        testFolder.newFile("Classifiers/bar.xml");
 
         String[] list = localClassifierManager.list();
         assertNotNull(list);
@@ -97,8 +98,8 @@ public class LocalClassifierManagerTest {
 
     @Test
     public void deleteExisting() throws Exception {
-        testFolder.newFile(testPFAApplicationDescriptor.getId()+"/Classifiers/foo.xml");
-        testFolder.newFile(testPFAApplicationDescriptor.getId() + "/Classifiers/bar.xml");
+        testFolder.newFile("Classifiers/foo.xml");
+        testFolder.newFile("Classifiers/bar.xml");
 
         localClassifierManager.delete("foo");
 

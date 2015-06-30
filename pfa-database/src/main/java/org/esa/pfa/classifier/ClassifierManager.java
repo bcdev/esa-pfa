@@ -16,6 +16,10 @@
 
 package org.esa.pfa.classifier;
 
+import org.esa.pfa.fe.op.Patch;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
@@ -24,15 +28,7 @@ import java.net.URI;
  */
 public interface ClassifierManager {
 
-    URI getURI();
-
-    String[] listApplicationDatabases();
-
-    void selectApplicationDatabase(final String appId) throws IOException;
-
-    String getApplicationDatabase();
-
-    String getApplication() throws IOException;
+    String getApplicationId();
 
     String[] list();
 
@@ -41,4 +37,15 @@ public interface ClassifierManager {
     void delete(String classifierName) throws IOException;
 
     Classifier get(String classifierName) throws IOException;
+
+    URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException;
+
+    BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException;
+
+    File getPatchProductFile(Patch patch) throws IOException;
+
+    String getFeaturesAsText(Patch patch) throws IOException;
+
+    URI getFexOverviewUri(Patch patch);
+
 }

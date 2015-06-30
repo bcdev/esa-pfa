@@ -62,7 +62,7 @@ public class RestClassifier implements Classifier {
     public void setNumTrainingImages(int numTrainingImages) {
         model.setNumTrainingImages(numTrainingImages);
 
-        target.path("classifiers").path(classifierName).path("setNumTrainingImages").
+        target.path("setNumTrainingImages").
                 queryParam("value", numTrainingImages).
                 request().
                 post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
@@ -77,7 +77,7 @@ public class RestClassifier implements Classifier {
     public void setNumRetrievedImages(int numRetrievedImages) {
         model.setNumRetrievedImages(numRetrievedImages);
 
-        target.path("classifiers").path(classifierName).path("setNumRetrievedImages").
+        target.path("setNumRetrievedImages").
                 queryParam("value", numRetrievedImages).
                 request().
                 post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
@@ -97,7 +97,7 @@ public class RestClassifier implements Classifier {
         Form form = new Form();
         form.param("queryPatches", query.toXML());
 
-        String resultXML = target.path("classifiers").path(classifierName).path("startTraining").
+        String resultXML = target.path("startTraining").
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
                 readEntity(String.class);
@@ -115,7 +115,7 @@ public class RestClassifier implements Classifier {
         form.param("labeledPatches", query.toXML());
         form.param("prePopulate", Boolean.toString(prePopulate));
 
-        String resultXML = target.path("classifiers").path(classifierName).path("trainAndClassify").
+        String resultXML = target.path("trainAndClassify").
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
                 readEntity(String.class);
@@ -130,7 +130,7 @@ public class RestClassifier implements Classifier {
         Form form = new Form();
         form.param("prePopulate", Boolean.toString(prePopulate));
 
-        String resultXML = target.path("classifiers").path(classifierName).path("getMostAmbigous").
+        String resultXML = target.path("getMostAmbigous").
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
                 readEntity(String.class);
@@ -138,55 +138,5 @@ public class RestClassifier implements Classifier {
         RestTransferValue response = RestTransferValue.fromXML(resultXML);
         model.setNumIterations(response.getNumIterations());
         return response.getPatches();
-    }
-
-
-    @Override
-    public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
-        return getPatchQuicklookTarget(patch, quicklookBandName).getUri();
-    }
-
-    @Override
-    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
-        Response response = getPatchQuicklookTarget(patch, quicklookBandName).request().get();
-        if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
-            return response.readEntity(BufferedImage.class);
-        } else {
-            return null;
-        }
-    }
-
-    private WebTarget getPatchQuicklookTarget(Patch patch, String quicklookBandName) {
-        String parentProductName = patch.getParentProductName();
-        String patchX = Integer.toString(patch.getPatchX());
-        String patchY = Integer.toString(patch.getPatchY());
-        return target.path("quicklook")
-                .path(parentProductName)
-                .path(patchX)
-                .path(patchY)
-                .path(quicklookBandName);
-    }
-
-    @Override
-    public File getPatchProductFile(Patch patch) throws IOException {
-        return null; // TODO
-    }
-
-    @Override
-    public String getFeaturesAsText(Patch patch) throws IOException {
-        String parentProductName = patch.getParentProductName();
-        String patchX = Integer.toString(patch.getPatchX());
-        String patchY = Integer.toString(patch.getPatchY());
-        final Response response = target.path("features")
-                .path(parentProductName)
-                .path(patchX)
-                .path(patchY)
-                .request().get();
-        return response.readEntity(String.class);
-    }
-
-    @Override
-    public URI getFexOverviewUri(Patch patch) {
-        return target.path("fex").path(patch.getParentProductName()).getUri();
     }
 }

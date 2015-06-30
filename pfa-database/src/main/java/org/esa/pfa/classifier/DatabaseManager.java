@@ -16,35 +16,17 @@
 
 package org.esa.pfa.classifier;
 
-import com.bc.ceres.core.ProgressMonitor;
-import org.esa.pfa.fe.op.Patch;
-
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
 /**
- * The part of the classifier that does the "real" work.
+ * Created by marcoz on 29.06.15.
  */
-public interface Classifier {
+public interface DatabaseManager {
 
-    String getName();
+    URI getURI();
 
-    int getNumTrainingImages();
+    String[] listDatabases();
 
-    void setNumTrainingImages(int numTrainingImages);
-
-    int getNumRetrievedImages();
-
-    void setNumRetrievedImages(int numRetrievedImages);
-
-    int getNumIterations();
-
-    Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
-
-    Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
-
-    Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
-
+    ClassifierManager createClassifierManager(String databaseName) throws IOException;
 }

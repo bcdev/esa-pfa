@@ -24,17 +24,13 @@ import org.esa.pfa.db.PatchQuery;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
-import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.snap.util.SystemUtils;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,12 +48,11 @@ public class LocalClassifier implements Classifier {
     private final ActiveLearning al;
     private final PFAApplicationDescriptor applicationDescriptor;
     private final PatchQuery db;
-    private final PatchAccess patchAccess;
 
     private final ClassifierModel model;
     private final String classifierName;
 
-    public LocalClassifier(String name, ClassifierModel model, Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path patchPath, Path dbPath) throws IOException {
+    public LocalClassifier(String name, ClassifierModel model, Path classifierPath, PFAApplicationDescriptor applicationDescriptor, Path dbPath) throws IOException {
         this.classifierName = name;
         this.model = model;
         this.classifierPath = classifierPath;
@@ -69,12 +64,10 @@ public class LocalClassifier implements Classifier {
             FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
             FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
             db = new PatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
-            patchAccess = new PatchAccess(patchPath.toFile());
         } else {
             SystemUtils.LOG.severe("LocalClassifier database not found");
             // currently for test only
             db = null;
-            patchAccess = null;
         }
     }
 
@@ -113,14 +106,14 @@ public class LocalClassifier implements Classifier {
     }
 
 
-    public static LocalClassifier loadClassifier(String classifierName, Path classifierPath, Path patchPath, Path dbPath) throws IOException {
+    public static LocalClassifier loadClassifier(String classifierName, Path classifierPath, Path dbPath) throws IOException {
         if (!Files.exists(classifierPath)) {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
         ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
         PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(classifierModel.getApplicationName());
 
-        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, patchPath, dbPath);
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, applicationDescriptor, dbPath);
         localClassifier.al.setTrainingData(ProgressMonitor.NULL);
 
         return localClassifier;
@@ -194,38 +187,4 @@ public class LocalClassifier implements Classifier {
         }
     }
 
-    @Override
-    public URI getPatchQuicklookUri(Patch patch, String quicklookBandName) throws IOException {
-        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
-        if (patchImagePath != null) {
-            return patchImagePath.toUri();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public BufferedImage getPatchQuicklook(Patch patch, String quicklookBandName) throws IOException {
-        Path patchImagePath = patchAccess.getPatchImagePath(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY(), quicklookBandName);
-        if (patchImagePath != null) {
-            return ImageIO.read(patchImagePath.toUri().toURL());
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public File getPatchProductFile(Patch patch) throws IOException {
-        return patchAccess.getPatchProductFile(patch);
-    }
-
-    @Override
-    public String getFeaturesAsText(Patch patch) throws IOException {
-        return patchAccess.getFeaturesAsText(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
-    }
-
-    @Override
-    public URI getFexOverviewUri(Patch patch) {
-        return null; // not supported in local mode
-    }
 }

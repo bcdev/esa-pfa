@@ -19,6 +19,7 @@ package org.esa.pfa.rcp.toolviews;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.DatabaseManager;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.ui.GridBagUtils;
 import org.esa.snap.framework.ui.ModalDialog;
@@ -616,13 +617,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             try {
                 databaseCombo.setModel(new DefaultComboBoxModel<>());
 
-                session.createClassifierManager(uri);
-                final String[] applicationList = session.listApplications();
-
-                for (String app : applicationList) {
-                    if(app.toLowerCase().contains("not found") || app.trim().isEmpty()) {
-                        throw new Exception("Applications for "+uri+" not found");
-                    }
+                DatabaseManager databaseManager = session.createDatabaseManager(uri);
+                for (String app : databaseManager.listDatabases()) {
+                    System.out.println("app = " + app);
                     databaseCombo.addItem(app);
                 }
                 String appIdValue = SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_APP, "AlgalBloom");
@@ -636,8 +633,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         private void selectDatabase() {
             try {
-                session.selectApplicationDatabase(getDatabaseName());
-                application.setText(session.getApplication());
+                session.selectDatabase(getDatabaseName());
+                application.setText(session.getApplicationDescriptor().getName());
 
             } catch (IOException e) {
                 SnapApp.getDefault().handleError("Error selecting database: "+e.getMessage(), e);

@@ -126,7 +126,7 @@ public class PatchContextMenuFactory {
         File patchProductFile = null;
         if (getSession().hasClassifier()) {
             try {
-                patchProductFile = getSession().getClassifier().getPatchProductFile(patch);
+                patchProductFile = getSession().getPatchProductFile(patch);
             } catch (IOException ignore) {
                 Debug.trace(ignore);
             }
