@@ -144,6 +144,9 @@ public class CBIRSession {
         System.out.println("classifierManager = " + classifierManager);
 
         String applicationId = classifierManager.getApplicationId();
+        Classifier deletedClassifier = classifier;
+        classifier = null;
+
         System.out.println("applicationId = " + applicationId);
 
         applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
@@ -152,6 +155,8 @@ public class CBIRSession {
         }
         quicklookBandName1 = applicationDescriptor.getDefaultQuicklookFileName();
         quicklookBandName2 = quicklookBandName1;
+
+        fireNotification(Notification.DeleteClassifier, deletedClassifier);
     }
 
     public void createClassifier(String classifierName) throws IOException {
