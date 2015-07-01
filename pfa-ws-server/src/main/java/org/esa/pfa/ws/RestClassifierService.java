@@ -373,7 +373,13 @@ public class RestClassifierService {
             if (fexPath != null) {
                 final java.nio.file.Path fexResource = fexPath.resolve(localPart);
                 InputStream inputStream = Files.newInputStream(fexResource);
-                return Response.ok().entity(inputStream).build();
+                String mediaType = MediaType.TEXT_PLAIN;
+                if (localPart.endsWith(".html")) {
+                    mediaType = MediaType.TEXT_HTML;
+                } else if (localPart.endsWith(".png")) {
+                    mediaType = "image/png";
+                }
+                return Response.ok().entity(inputStream).type(mediaType).build();
             }
         } catch (IOException e) {
             e.printStackTrace();
