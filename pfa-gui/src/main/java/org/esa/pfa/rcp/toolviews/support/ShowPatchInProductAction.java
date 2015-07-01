@@ -10,7 +10,7 @@ import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.ui.product.ProductSceneView;
 import org.esa.snap.netbeans.docwin.WindowUtilities;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.actions.view.OpenImageViewAction;
+import org.esa.snap.rcp.actions.window.OpenImageViewAction;
 import org.esa.snap.rcp.windows.ProductSceneViewTopComponent;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.ProductUtils;
