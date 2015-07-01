@@ -24,16 +24,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Service for accessing patches.
  */
 public class PatchAccess {
 
-    private final File patchRootDir;
+    private final Path patchRootDir;
+    private final PFAApplicationDescriptor.ProductNameResolver productNameResolver;
 
-    public PatchAccess(File patchRootDir) {
+    public PatchAccess(Path patchRootDir, PFAApplicationDescriptor.ProductNameResolver productNameResolver) {
         this.patchRootDir = patchRootDir;
+        this.productNameResolver = productNameResolver;
     }
 
     public String getFeaturesAsText(String parentProductName, int patchX, int patchY) throws IOException {
@@ -63,33 +66,8 @@ public class PatchAccess {
         return patchProductFile;
     }
 
-    public Path findFexPath(String productName) throws IOException {
-        // check for directory
-        File fexDir = new File(patchRootDir, productName + ".fex");
-        File fezFile = new File(patchRootDir, productName + ".fex.zip");
-        if (fexDir.isDirectory()) {
-            return fexDir.toPath();
-        } else if (fezFile.isFile()) {
-            URI zipUri = URI.create("jar:file:" + fezFile.toURI().getPath() + "!/");
-            Path entryZip = FileUtils.getPathFromURI(zipUri);
-            return entryZip.resolve(productName + ".fex");
-        }
-        throw new IOException("Could not load patch for: " + productName);
-    }
-
     public Path findPatchPath(String productName, int patchX, int patchY) throws IOException {
-        // check for directory
-        File fexDir = new File(patchRootDir, productName + ".fex");
-        File fezFile = new File(patchRootDir, productName + ".fex.zip");
-
-        Path fexPath = null;
-        if (fexDir.isDirectory()) {
-            fexPath = fexDir.toPath();
-        } else if (fezFile.isFile()) {
-            URI zipUri = URI.create("jar:file:" + fezFile.toURI().getPath() + "!/");
-            Path entryZip = FileUtils.getPathFromURI(zipUri);
-            fexPath = entryZip.resolve(productName + ".fex");
-        }
+        Path fexPath = findFexPath(productName);
         if (fexPath != null) {
             Path patchPath = fexPath.resolve(String.format("x%03dy%03d", patchX, patchY));
             if (Files.exists(patchPath)) {
@@ -101,5 +79,35 @@ public class PatchAccess {
             }
         }
         throw new IOException("Could not load patch for: " + productName + "  x: " + patchX + "  y:" + patchY);
+    }
+
+    public Path findFexPath(String productName) throws IOException {
+        // check for directory
+        Path fexDir = patchRootDir.resolve(productName + ".fex");
+        Path fezFile = patchRootDir.resolve(productName + ".fex.zip");
+        if (Files.isDirectory(fexDir)) {
+            return fexDir;
+        }
+        if (Files.isRegularFile(fezFile)) {
+            return handleFez(productName, fezFile.toString());
+        }
+        if (productNameResolver != null) {
+            String fezPath = productNameResolver.resolve(patchRootDir + "/${yyyy}/${MM}/${dd}/${name}.fex.zip", productName);
+            if (Files.isRegularFile(Paths.get(fezPath))) {
+                return handleFez(productName, fezPath);
+            }
+        }
+        throw new IOException("Could not load patch for: " + productName);
+    }
+
+    private Path handleFez(String productName, String fezFile) throws IOException {
+        URI zipUri = URI.create("jar:file:" + fezFile + "!/");
+        Path zipPath = FileUtils.getPathFromURI(zipUri);
+        Path inZipDirPath = zipPath.resolve(productName + ".fex");
+        if (Files.isDirectory(inZipDirPath)) {
+            return inZipDirPath;
+        } else {
+            return zipPath;
+        }
     }
 }

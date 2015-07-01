@@ -45,7 +45,6 @@ public class LocalClassifierManager implements ClassifierManager {
 
     public LocalClassifierManager(Path dbPath) throws IOException {
         this.dbPath = dbPath;
-        this.patchAccess = new PatchAccess(dbPath.toFile());
         this.classifierStoragePath = dbPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
@@ -56,6 +55,7 @@ public class LocalClassifierManager implements ClassifierManager {
         if (appDescriptor == null) {
             throw new IOException("Unknown application name " + appName);
         }
+        this.patchAccess = new PatchAccess(dbPath, appDescriptor.getProductNameResolver());
     }
 
     @Override

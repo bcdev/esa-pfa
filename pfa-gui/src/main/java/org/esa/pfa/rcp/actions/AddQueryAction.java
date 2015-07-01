@@ -183,7 +183,7 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
 
             final Path tmpOutFolder = SystemUtils.getApplicationDataDir().toPath().resolve("tmp" + File.separator + "out");
             final Path fexProductPath = tmpOutFolder.resolve(patch.getParentProductName()+".fex");
-            final PatchAccess patchAccess = new PatchAccess(fexProductPath.toFile());
+            final PatchAccess patchAccess = new PatchAccess(fexProductPath, null);
 
             for(String quicklookBandName : bandNames) {
                 final Path patchImagePath = patchAccess.getPatchImagePath(patch.getPatchName(), 0, 0, quicklookBandName);
