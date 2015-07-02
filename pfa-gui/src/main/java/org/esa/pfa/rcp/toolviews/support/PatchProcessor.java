@@ -34,6 +34,7 @@ import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.util.io.FileUtils;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.CropDescriptor;
@@ -90,10 +91,10 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             patch.setImage(session.getQuicklookBandName1(), patchImage);
             patch.setLabel(Patch.Label.RELEVANT);
 
-            final File tmpInFolder = new File(SystemUtils.getApplicationDataDir(),
-                                              "tmp" + File.separator + "in" + File.separator + patch.getPatchProduct().getName() + ".fex");
-            final File tmpOutFolder = new File(SystemUtils.getApplicationDataDir(),
-                                               "tmp" + File.separator + "out" + File.separator + patch.getPatchProduct().getName() + ".fex");
+            File tmpDir = new File(SystemUtils.getApplicationDataDir(), "tmp");
+            File pfaTmpDir = new File(tmpDir, "pfa");
+            final File tmpInFolder = new File(pfaTmpDir, "in" + File.separator + patch.getPatchProduct().getName() + ".fex");
+            final File tmpOutFolder = new File(pfaTmpDir, "out" + File.separator + patch.getPatchProduct().getName() + ".fex");
             final File subsetFile = new File(tmpInFolder, patch.getPatchName() + ".dim");
             final WriteOp writeOp = new WriteOp(patch.getPatchProduct(), subsetFile, "BEAM-DIMAP");
             writeOp.setDeleteOutputOnFailure(true);
@@ -115,7 +116,8 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             processor.executeGraph(graph, pm);
 
             loadFeatures(patch, tmpOutFolder);
-            // TODO remove tmp folders ???
+
+            FileUtils.deleteTree(pfaTmpDir);
             return patch;
         } finally {
             pm.done();
