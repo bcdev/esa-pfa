@@ -91,7 +91,7 @@ public class ShowPatchInProductAction extends AbstractAction {
             if (patchDimension != null) {
                 zoomToPatchOnViewSelected(product, patch, patchDimension);
             }
-            new OpenImageViewAction(band).openProductSceneView();
+            OpenImageViewAction.showImageView(band);
         }
     }
 
