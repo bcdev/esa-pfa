@@ -15,9 +15,8 @@ import org.esa.snap.rcp.windows.ProductSceneViewTopComponent;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.ProductUtils;
 
-import javax.swing.AbstractAction;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.List;

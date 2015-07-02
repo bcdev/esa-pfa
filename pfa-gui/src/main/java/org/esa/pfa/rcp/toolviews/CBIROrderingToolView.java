@@ -16,7 +16,6 @@
 package org.esa.pfa.rcp.toolviews;
 
 import org.esa.pfa.classifier.Classifier;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.ordering.ProductOrder;
 import org.esa.pfa.ordering.ProductOrderBasket;
@@ -52,7 +51,7 @@ import java.io.File;
 )
 @ActionID(category = "Window", id = "org.esa.pfa.rcp.toolviews.CBIROrderingToolView")
 @ActionReferences({
-        @ActionReference(path = "Menu/Window/Tool Windows/PFA"),
+        @ActionReference(path = "Menu/View/Tool Windows/PFA"),
         @ActionReference(path = "Toolbars/PFA", position = 5)
 })
 @TopComponent.OpenActionRegistration(

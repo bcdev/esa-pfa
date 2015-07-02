@@ -38,7 +38,7 @@ import java.io.IOException;
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
-        category = "Image Analysis/Feature Extraction")
+        category = "Raster/Image Analysis/Feature Extraction")
 public class FloodingFeatureWriter extends FeatureWriter {
 
     public static final String featureBandName = "_flood";
