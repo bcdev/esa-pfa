@@ -170,27 +170,10 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
                 SnapApp.getDefault().handleError("Failed to extract patch", e);
             }
             if (patch != null && patch.getFeatureValues().length > 0) {
-                getPatchQuicklooks(patch);
                 CBIRSession.getInstance().addQueryPatch(patch);
                 // session notifies listeners that a new query is added
             } else {
                 SnapDialogs.showWarning("Failed to extract features for this patch");
-            }
-        }
-
-        public void getPatchQuicklooks(Patch patch) throws IOException {
-            final String[] bandNames = CBIRSession.getInstance().getApplicationDescriptor().getQuicklookFileNames();
-
-            final Path tmpOutFolder = SystemUtils.getApplicationDataDir().toPath().resolve("tmp" + File.separator + "out");
-            final Path fexProductPath = tmpOutFolder.resolve(patch.getParentProductName()+".fex");
-            final PatchAccess patchAccess = new PatchAccess(fexProductPath, null);
-
-            for(String quicklookBandName : bandNames) {
-                final Path patchImagePath = patchAccess.getPatchImagePath(patch.getPatchName(), 0, 0, quicklookBandName);
-                if (patchImagePath != null) {
-                    BufferedImage img = ImageIO.read(patchImagePath.toUri().toURL());
-                    patch.setImage(quicklookBandName, img);
-                }
             }
         }
 

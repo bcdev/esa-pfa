@@ -19,6 +19,9 @@ import com.bc.ceres.binding.dom.DefaultDomElement;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.pfa.fe.op.FeatureWriter;
+import org.esa.pfa.fe.op.Patch;
+import org.esa.pfa.search.CBIRSession;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.gpf.OperatorSpi;
 import org.esa.snap.framework.gpf.graph.Graph;
@@ -27,22 +30,23 @@ import org.esa.snap.framework.gpf.graph.GraphProcessor;
 import org.esa.snap.framework.gpf.graph.Node;
 import org.esa.snap.gpf.operators.standard.ReadOp;
 import org.esa.snap.gpf.operators.standard.WriteOp;
+import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.util.Debug;
 import org.esa.snap.util.ProductUtils;
 import org.esa.snap.util.SystemUtils;
-import org.esa.pfa.fe.op.FeatureWriter;
-import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.search.CBIRSession;
-import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.util.io.FileUtils;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.CropDescriptor;
-import java.awt.Component;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 /**
  * Feature extraction
@@ -124,20 +128,9 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
         }
     }
 
-    private void loadFeatures(final Patch patch, final File datasetDir) {
-//        PatchAccess patchAccess = new PatchAccess(datasetDir.getParentFile(), session.getEffectiveFeatureTypes());
-//        try {
-//            File patchFile = patchAccess.findPatch(patch.getParentProductName(), patch.getPatchX(), patch.getPatchY());
-//            patchAccess.readPatchFeatures(patch, patchFile);
-//        } catch (IOException ioe) {
-//            Debug.trace(ioe);
-//            final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
-//            SnapDialogs.showError(msg);
-//        }
-
-        // TODO maybe harmonize with PatchAccess, but structure is abit different
+    private void loadFeatures(final Patch patch, final File tmpOutFolder) {
         try {
-            final File[] fexDirs = datasetDir.listFiles(new FileFilter() {
+            final File[] fexDirs = tmpOutFolder.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File file) {
                     return file.isDirectory() && file.getName().startsWith(patch.getPatchName());
@@ -158,7 +151,20 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
             }
 
             final File featureFile = new File(patchDirs[0], "features.txt");
+            System.out.println("featureFile = " + featureFile);
+            System.out.println("featureFile.exists() = " + featureFile.exists());
             patch.readFeatureFile(featureFile, session.getEffectiveFeatureTypes());
+
+            final String[] bandNames = CBIRSession.getInstance().getApplicationDescriptor().getQuicklookFileNames();
+            for (String quicklookBandName : bandNames) {
+                File imageFile = new File(patchDirs[0], quicklookBandName);
+                System.out.println("imageFile = " + imageFile);
+                if (imageFile.exists()) {
+                    BufferedImage img = ImageIO.read(imageFile);
+                    System.out.println("img = " + img);
+                    patch.setImage(quicklookBandName, img);
+                }
+            }
         } catch (IOException ioe) {
             Debug.trace(ioe);
             final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
