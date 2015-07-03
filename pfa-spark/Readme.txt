@@ -15,10 +15,11 @@ $SPARK_HOME/bin/spark-submit \
     --class org.esa.pfa.spark.ExtractFexApp \
     --master local \
     --jars ${jars} \
+    --executor-memory 2G \
     pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
     "Algal Bloom Detection" \
     "file:///home/marcoz/Scratch/OC_MERIS_aday/03/MER_RR__1PRACR20080103_111541_000026162064_00438_30552_0000.N1" \
-    /home/marcoz/Scratch/pfa/spark/local-single-product
+    /home/marcoz/Scratch/pfa/spark/2-local-single-product
 
 local, a 5 days
 =======================
@@ -37,7 +38,7 @@ YARN on our Calvalus Cluster
 $SPARK_HOME/bin/spark-submit \
     --class org.esa.pfa.spark.ExtractFexApp \
     --master yarn-cluster \
-    --executor-memory 2G \
+    --executor-memory 1500M \
     --num-executors 300 \
     --conf spark.yarn.queue=lc \
     --jars ${jars} \
@@ -49,13 +50,36 @@ $SPARK_HOME/bin/spark-submit \
 $SPARK_HOME/bin/spark-submit \
     --class org.esa.pfa.spark.ExtractFexApp \
     --master yarn-cluster \
-    --executor-memory 2G \
-    --num-executors 3 \
+    --executor-memory 1500M \
+    --num-executors 300 \
     --conf spark.yarn.queue=lc \
     --jars ${jars} \
     pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
     "Algal Bloom Detection" \
-    "hdfs://calvalus//calvalus/eodata/MER_RR__1P/r03/2003/12/12/MER_RR__1PRACR20031212_094346_000026272022_00251_09323_0000.N1" \
-    hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-one-product
+    "hdfs://calvalus//calvalus/eodata/MER_RR__1P/r03/2013/12/*/*.N1" \
+    hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-2013-12
 
 
+$SPARK_HOME/bin/spark-submit \
+    --class org.esa.pfa.spark.ExtractFexApp \
+    --master yarn-cluster \
+    --executor-memory 1500M \
+    --num-executors 300 \
+    --conf spark.yarn.queue=lc \
+    --jars ${jars} \
+    pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
+    "Algal Bloom Detection" \
+    "hdfs://calvalus//calvalus/eodata/MER_RR__1P/r03/*/*/*/*.N1" \
+    hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-full-mission
+
+$SPARK_HOME/bin/spark-submit \
+        --class org.esa.pfa.spark.ExtractFexApp \
+        --master yarn-cluster \
+        --executor-memory 1500M \
+        --num-executors 300 \
+        --conf spark.yarn.queue=lc \
+        --jars ${jars} \
+        pfa-spark/target/pfa-spark-2.0.0-SNAPSHOT.jar \
+        "Algal Bloom Detection" \
+        "hdfs://calvalus//calvalus/eodata/MER_RR__1P/r03/*/*/*/*.N1" \
+        hdfs://calvalus/calvalus/home/marcoz/PFA/yarn-full-mission
