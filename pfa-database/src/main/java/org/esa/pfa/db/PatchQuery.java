@@ -20,7 +20,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 /**
  * The PFA Dataset Query Tool.
@@ -48,12 +50,14 @@ public class PatchQuery implements QueryInterface {
         //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
         try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, indexName))) {
             IndexReader indexReader = DirectoryReader.open(indexDirectory);
+
             indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
         }
     }
 
     public Patch[] query(String queryExpr, int hitCount) {
         final List<Patch> patchList = new ArrayList<>(100);
+
 
         queryExpr = queryExpr.trim();
 
@@ -117,10 +121,23 @@ public class PatchQuery implements QueryInterface {
     }
 
     public Patch[] getRandomPatches(final int numPatches) {
-        // todo: remove hard coded query expr.
-        return query("product: ENVI*", numPatches);
+        final IndexReader indexReader = indexSearcher.getIndexReader();
+        final List<Patch> patchList = new ArrayList<>(numPatches);
+        IntStream randomInts = new Random().ints(numPatches, 0, indexReader.numDocs());
+        randomInts.forEach(value -> {
+            try {
+                Document doc = indexReader.document(value);
+                String productName = doc.getValues("product")[0];
+                int patchX = Integer.parseInt(doc.getValues("px")[0]);
+                int patchY = Integer.parseInt(doc.getValues("py")[0]);
+
+                Patch patch = new Patch(productName, patchX, patchY);
+                PatchQuery.this.getFeatures(doc, patch);
+                patchList.add(patch);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        return patchList.toArray(new Patch[patchList.size()]);
     }
-
-
-
 }

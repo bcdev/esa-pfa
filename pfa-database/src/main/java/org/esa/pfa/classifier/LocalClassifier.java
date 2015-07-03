@@ -46,7 +46,6 @@ public class LocalClassifier implements Classifier {
 
     private final Path classifierPath;
     private final ActiveLearning al;
-    private final PFAApplicationDescriptor applicationDescriptor;
     private final PatchQuery db;
 
     private final ClassifierModel model;
@@ -56,7 +55,6 @@ public class LocalClassifier implements Classifier {
         this.classifierName = name;
         this.model = model;
         this.classifierPath = classifierPath;
-        this.applicationDescriptor = applicationDescriptor;
         this.al = new ActiveLearning(model);
         if (Files.exists(dbPath.resolve("ds-descriptor.xml")) && Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
             DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
@@ -141,7 +139,8 @@ public class LocalClassifier implements Classifier {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
             }
             al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
-            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 100);
+//            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 100);
+            final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages() * 100);
             al.classify(archivePatches);
             final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
             for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
@@ -171,7 +170,8 @@ public class LocalClassifier implements Classifier {
     }
 
     private void populateArchivePatches(final ProgressMonitor pm) {
-        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
+//        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
+        final Patch[] archivePatches = db.getRandomPatches(NUM_HITS_MAX);
 
         if(archivePatches.length > 0) {
             int numFeaturesQuery = model.getQueryData().get(0).getFeatureValues().length;
