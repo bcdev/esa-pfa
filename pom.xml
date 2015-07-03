@@ -30,6 +30,7 @@
         <module>pfa-ws-server</module>
         <module>pfa-ws-client</module>
         <module>pfa-algalblooms</module>
+        <module>pfa-bitemp-fex</module>
         <module>pfa-gui</module>
         <module>pfa-sar-fex</module>
         <module>pfa-spark</module>
