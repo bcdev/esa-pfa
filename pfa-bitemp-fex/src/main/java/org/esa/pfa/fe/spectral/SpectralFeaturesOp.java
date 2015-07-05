@@ -4,13 +4,16 @@ import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.ProductData;
 import org.esa.snap.framework.gpf.OperatorException;
+import org.esa.snap.framework.gpf.OperatorSpi;
+import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
 import org.esa.snap.framework.gpf.annotations.Parameter;
 import org.esa.snap.framework.gpf.annotations.SourceProduct;
 import org.esa.snap.framework.gpf.annotations.TargetProduct;
 import org.esa.snap.framework.gpf.pointop.PixelOperator;
 import org.esa.snap.framework.gpf.pointop.ProductConfigurer;
 import org.esa.snap.framework.gpf.pointop.Sample;
-import org.esa.snap.framework.gpf.pointop.SampleConfigurer;
+import org.esa.snap.framework.gpf.pointop.SourceSampleConfigurer;
+import org.esa.snap.framework.gpf.pointop.TargetSampleConfigurer;
 import org.esa.snap.framework.gpf.pointop.WritableSample;
 
 import java.util.ArrayList;
@@ -19,6 +22,11 @@ import java.util.regex.Pattern;
 /**
  * Spectral feature operator.
  */
+@OperatorMetadata(
+        alias = "SpectralFeaturesOp",
+        version = "0.5",
+        authors = "Norman Fomferra"
+)
 public class SpectralFeaturesOp extends PixelOperator {
 
     @SourceProduct
@@ -36,6 +44,12 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "Spectral band naming pattern (regex)", defaultValue = "")
     private String spectralBandNamingPattern;
 
+    @Parameter(label = "Mask expression")
+    private String maskExpression;
+
+    @Parameter(label = "Logarithmize sources")
+    private boolean logSources;
+
     public SpectralFeaturesOp() {
     }
 
@@ -47,11 +61,24 @@ public class SpectralFeaturesOp extends PixelOperator {
         int n = spectralBands.length - 1;
 
         double[] values = new double[n + 1];
+        double v;
         for (int i = 0; i <= n; i++) {
-            double v1 = sourceSamples[i].getDouble();
-            double v2 = sourceProduct2 != null ? sourceSamples[n + 1 + i].getDouble() : 0.0;
-            double dv = v1 - v2;
-            values[i] = dv;
+            if (sourceProduct2 != null) {
+                double v1 = sourceSamples[i].getDouble();
+                double v2 = sourceSamples[n + 1 + i].getDouble();
+                v = v1 - v2;
+                if (logSources) {
+                    v = Math.log(v1 / v2);
+                } else {
+                    v = v1 - v2;
+                }
+            } else {
+                v = sourceSamples[i].getDouble();
+                if (logSources) {
+                    v = Math.log(v);
+                }
+            }
+            values[i] = v;
         }
 
         double[] valueSqSums = new double[n + 1];
@@ -70,7 +97,7 @@ public class SpectralFeaturesOp extends PixelOperator {
             valueSqSum = valueSqSums[i - 1];
             if (valueSqSum > 0.0) {
                 angle = Math.acos(values[i - 1] / valueSqSum);
-            }else {
+            } else {
                 angle = 0.0;
             }
             targetSamples[i].set(angle);
@@ -94,14 +121,14 @@ public class SpectralFeaturesOp extends PixelOperator {
         band.setGeophysicalNoDataValue(Double.NaN);
         band.setNoDataValueUsed(true);
         for (int i = 1; i < spectralBands.length; i++) {
-            p.addBand("angle_" + i, ProductData.TYPE_FLOAT32);
+            band = p.addBand("angle_" + i, ProductData.TYPE_FLOAT32);
             band.setGeophysicalNoDataValue(Double.NaN);
             band.setNoDataValueUsed(true);
         }
     }
 
     @Override
-    protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+    protected void configureSourceSamples(SourceSampleConfigurer sampleConfigurer) throws OperatorException {
         int n = spectralBands.length;
         for (int i = 0; i < n; i++) {
             sampleConfigurer.defineSample(i, spectralBands[i].getName());
@@ -111,10 +138,13 @@ public class SpectralFeaturesOp extends PixelOperator {
                 sampleConfigurer.defineSample(n + i, spectralBands[i].getName(), sourceProduct2);
             }
         }
+        if (maskExpression != null && !maskExpression.trim().isEmpty()) {
+            sampleConfigurer.defineValidPixelMask(maskExpression);
+        }
     }
 
     @Override
-    protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+    protected void configureTargetSamples(TargetSampleConfigurer sampleConfigurer) throws OperatorException {
         sampleConfigurer.defineSample(0, "magnitude");
         for (int i = 1; i < spectralBands.length; i++) {
             sampleConfigurer.defineSample(i, "angle_" + i);
@@ -123,31 +153,13 @@ public class SpectralFeaturesOp extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
-
+        super.prepareInputs();
         if (spectralBands == null || spectralBands.length == 0) {
-            Band[] bands = sourceProduct.getBands();
-            ArrayList<Band> sourceBandList = new ArrayList<>();
-            if (spectralBandNamingPattern != null && !spectralBandNamingPattern.isEmpty()) {
-                Pattern pattern = Pattern.compile(spectralBandNamingPattern);
-                for (Band band : bands) {
-                    if (pattern.matcher(band.getName()).matches()) {
-                        sourceBandList.add(band);
-                    }
-                }
-            } else {
-                for (Band band : bands) {
-                    float spectralWavelength = band.getSpectralWavelength();
-                    if (spectralWavelength > 0) {
-                        sourceBandList.add(band);
-                    }
-                }
-            }
-            spectralBands = sourceBandList.toArray(new Band[sourceBandList.size()]);
+            spectralBands = collectSourceBands();
         }
         if (spectralBands.length == 0) {
             throw new OperatorException("No source bands defined.");
         }
-
         if (sourceProduct2 != null) {
             for (Band sourceBand : spectralBands) {
                 Band sourceBand2 = sourceProduct2.getBand(sourceBand.getName());
@@ -156,7 +168,36 @@ public class SpectralFeaturesOp extends PixelOperator {
                 }
             }
         }
+    }
 
-        super.prepareInputs();
+    private Band[] collectSourceBands() {
+        Band[] bands = sourceProduct.getBands();
+        ArrayList<Band> sourceBandList = new ArrayList<>();
+        if (spectralBandNamingPattern != null && !spectralBandNamingPattern.isEmpty()) {
+            Pattern pattern = Pattern.compile(spectralBandNamingPattern);
+            for (Band band : bands) {
+                if (pattern.matcher(band.getName()).matches()) {
+                    sourceBandList.add(band);
+                }
+            }
+        } else {
+            for (Band band : bands) {
+                float spectralWavelength = band.getSpectralWavelength();
+                if (spectralWavelength > 0) {
+                    sourceBandList.add(band);
+                }
+            }
+        }
+        sourceBandList.sort((b1, b2) -> {
+            float d = b1.getSpectralWavelength() - b2.getSpectralWavelength();
+            return d < 0F ? -1 : d > 0F ? 1 : 0;
+        });
+        return sourceBandList.toArray(new Band[sourceBandList.size()]);
+    }
+
+    public static class Spi extends OperatorSpi {
+        public Spi() {
+            super(SpectralFeaturesOp.class);
+        }
     }
 }

@@ -36,6 +36,7 @@ public class SpectralFeaturesOpTest {
         SpectralFeaturesOp op = new SpectralFeaturesOp();
         op.setParameterDefaultValues();
         op.setParameter("spectralBandNamingPattern", "reflec_.");
+        op.setParameter("maskExpression", "X < 1 && Y < 1");
         op.setSourceProduct(sp1);
         Product tp = op.getTargetProduct();
 
@@ -50,6 +51,16 @@ public class SpectralFeaturesOpTest {
         assertEquals((float) Math.acos(0.1 / Math.sqrt(0.4 * 0.4 + 0.3 * 0.3 + 0.2 * 0.2 + 0.1 * 0.1)), angle_1[0], 1e-5F);
         assertEquals((float) Math.acos(0.2 / Math.sqrt(0.4 * 0.4 + 0.3 * 0.3 + 0.2 * 0.2)), angle_2[0], 1e-5F);
         assertEquals((float) Math.acos(0.3 / Math.sqrt(0.4 * 0.4 + 0.3 * 0.3)), angle_3[0], 1e-5F);
+
+        float[] magnitude_inv = tp.getBand("magnitude").readPixels(1, 1, 1, 1, (float[]) null);
+        float[] angle_1_inv = tp.getBand("angle_1").readPixels(1, 1, 1, 1, (float[]) null);
+        float[] angle_2_inv = tp.getBand("angle_2").readPixels(1, 1, 1, 1, (float[]) null);
+        float[] angle_3_inv = tp.getBand("angle_3").readPixels(1, 1, 1, 1, (float[]) null);
+
+        assertEquals(Float.NaN, magnitude_inv[0], 1e-5F);
+        assertEquals(Float.NaN, angle_1_inv[0], 1e-5F);
+        assertEquals(Float.NaN, angle_2_inv[0], 1e-5F);
+        assertEquals(Float.NaN, angle_3_inv[0], 1e-5F);
     }
 
     @Test
