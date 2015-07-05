@@ -129,6 +129,7 @@ public class SpectralFeaturesOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SourceSampleConfigurer sampleConfigurer) throws OperatorException {
+        sampleConfigurer.setValidPixelMask(maskExpression);
         int n = spectralBands.length;
         for (int i = 0; i < n; i++) {
             sampleConfigurer.defineSample(i, spectralBands[i].getName());
@@ -137,9 +138,6 @@ public class SpectralFeaturesOp extends PixelOperator {
             for (int i = 0; i < n; i++) {
                 sampleConfigurer.defineSample(n + i, spectralBands[i].getName(), sourceProduct2);
             }
-        }
-        if (maskExpression != null && !maskExpression.trim().isEmpty()) {
-            sampleConfigurer.defineValidPixelMask(maskExpression);
         }
     }
 
