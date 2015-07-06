@@ -148,7 +148,7 @@ public class RestClassifierService {
     }
 
     @DELETE
-    @Path("/db/{databaseName}/classifiers/{classifierName}")
+    @Path("/db/{databaseName}/classifier/{classifierName}")
     public void deleteClassifier(
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName) {
