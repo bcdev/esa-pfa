@@ -75,6 +75,9 @@ public class PatchQuery implements QueryInterface {
                 for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                     final Document doc = indexSearcher.doc(scoreDoc.doc);
                     String productName = doc.getValues("product")[0];
+                    if (productName.endsWith(".fex")) {
+                        productName = productName.substring(0, productName.length() - 4);
+                    }
                     int patchX = Integer.parseInt(doc.getValues("px")[0]);
                     int patchY = Integer.parseInt(doc.getValues("py")[0]);
 
@@ -131,6 +134,9 @@ public class PatchQuery implements QueryInterface {
                 //System.out.print(value+" ");
                 Document doc = indexReader.document(value);
                 String productName = doc.getValues("product")[0];
+                if (productName.endsWith(".fex")) {
+                    productName = productName.substring(0, productName.length() - 4);
+                }
                 int patchX = Integer.parseInt(doc.getValues("px")[0]);
                 int patchY = Integer.parseInt(doc.getValues("py")[0]);
 
