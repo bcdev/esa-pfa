@@ -91,10 +91,11 @@ public class PatchSelectionInteractor extends FigureEditorInteractor {
         }
     }
 
-    @Override
-    public void mouseExited(MouseEvent event) {
-        cancelInteraction(event);
-    }
+    // canceling the interactor only by pressing the ESC key
+//    @Override
+//    public void mouseExited(MouseEvent event) {
+//        cancelInteraction(event);
+//    }
 
     @Override
     public void mouseReleased(MouseEvent event) {
