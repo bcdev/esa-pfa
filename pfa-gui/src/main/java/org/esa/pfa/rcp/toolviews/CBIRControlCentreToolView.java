@@ -525,8 +525,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
             final Preferences preferences = SnapApp.getDefault().getPreferences();
             String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
-            String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://localhost:8089/pfa/");
-            String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.FALSE.toString());
+            String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://www.brockmann-consult.de/pfa/ws");
+            String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.TRUE.toString());
 
             boolean isRemoteb = Boolean.parseBoolean(isRemoteValue);
             ButtonGroup group = new ButtonGroup();
