@@ -11,9 +11,9 @@
     <artifactId>pfa-kit</artifactId>
     <packaging>nbm</packaging>
 
-    <name>PFA Kit Module</name>
+    <name>ESA PFA</name>
     <description>
-        Product Feature-extraction and Analysis
+        Kit module for the ESA PFA project (Product Feature Extraction and Analysis)
     </description>
 
     <build>
