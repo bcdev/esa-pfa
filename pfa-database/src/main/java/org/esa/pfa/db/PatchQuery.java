@@ -131,7 +131,7 @@ public class PatchQuery implements QueryInterface {
         IntStream randomInts = new Random().ints(numPatches, 0, numDocs);
         randomInts.forEach(value -> {
             try {
-                //System.out.print(value+" ");
+                System.out.print(value+" ");
                 Document doc = indexReader.document(value);
                 String productName = doc.getValues("product")[0];
                 if (productName.endsWith(".fex")) {

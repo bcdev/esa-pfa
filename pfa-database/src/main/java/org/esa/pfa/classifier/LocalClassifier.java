@@ -135,19 +135,30 @@ public class LocalClassifier implements Classifier {
     public Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException {
         pm.beginTask("train and classify", 100);
         try {
+            long t1 = System.currentTimeMillis();
             if (prePopulate) {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
             }
             al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
-//            final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), model.getNumRetrievedImages() * 100);
-            final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages() * 100);
-            al.classify(archivePatches);
+
+            long t2 = System.currentTimeMillis();
+            System.out.println("trainAndClassify.train    = " + (t2-t1));
+
+            int classifiedImages = 0;
             final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
-            for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
-                if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
-                    relavantImages.add(archivePatches[i]);
+            while (relavantImages.size() < model.getNumRetrievedImages()) {
+                final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages());
+                classifiedImages += archivePatches.length;
+                al.classify(archivePatches);
+                for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
+                    if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
+                        relavantImages.add(archivePatches[i]);
+                    }
                 }
             }
+            long t3 = System.currentTimeMillis();
+            System.out.println("classifiedImages          = " + classifiedImages);
+            System.out.println("trainAndClassify.classify = " + (t3-t2));
             return relavantImages.toArray(new Patch[relavantImages.size()]);
         } finally {
             saveClassifier();
@@ -157,7 +168,7 @@ public class LocalClassifier implements Classifier {
 
     @Override
     public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
-        pm.beginTask("train and classify", 100);
+        pm.beginTask("get most ambigous", 100);
         try {
             if (prePopulate) {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
@@ -170,7 +181,6 @@ public class LocalClassifier implements Classifier {
     }
 
     private void populateArchivePatches(final ProgressMonitor pm) {
-//        final Patch[] archivePatches = db.query(applicationDescriptor.getAllQueryExpr(), NUM_HITS_MAX);
         final Patch[] archivePatches = db.getRandomPatches(NUM_HITS_MAX);
 
         if(archivePatches.length > 0) {
