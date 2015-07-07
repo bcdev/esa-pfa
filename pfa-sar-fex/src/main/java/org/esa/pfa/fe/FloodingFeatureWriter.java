@@ -17,13 +17,10 @@ package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.Stx;
-import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.framework.gpf.OperatorSpi;
 import org.esa.snap.framework.gpf.Tile;
 import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
@@ -39,7 +36,7 @@ import java.io.IOException;
         copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
         category = "Raster/Image Analysis/Feature Extraction")
-public class FloodingFeatureWriter extends FeatureWriter {
+public class FloodingFeatureWriter extends AbstractSARFeatureWriter {
 
     public static final String featureBandName = "_flood";
 
@@ -63,31 +60,17 @@ public class FloodingFeatureWriter extends FeatureWriter {
             return false;
         }
 
-        final int patchX = patch.getPatchX();
-        final int patchY = patch.getPatchY();
-        final Product patchProduct = patch.getPatchProduct();
-
         final int numPixelsRequired = patchWidth * patchHeight;
-        final int numPixelsTotal = patchProduct.getSceneRasterWidth() * patchProduct.getSceneRasterHeight();
-
-        final double patchPixelRatio = numPixelsTotal / (double) numPixelsRequired;
-        if (patchPixelRatio < 0.6) {
-            getLogger().warning(String.format("Rejected patch x%dy%d, patchPixelRatio=%f%%", patchX, patchY,
-                    patchPixelRatio * 100));
+        if(isPatchTooSmall(patch, numPixelsRequired)) {
             return false;
         }
 
         final Product featureProduct = patch.getPatchProduct();
-        final Band targetBand = getFeatureBand(featureProduct);
+        final Band targetBand = getFeatureMask(featureProduct, featureBandName);
 
         final int tw = targetBand.getRasterWidth();
         final int th = targetBand.getRasterHeight();
         final double patchSize = tw*th;
-
-        final Stx stx = targetBand.getStx();
-        final double pctValid = (stx.getSampleCount()/patchSize);
-        if(pctValid < minValidPixels)
-            return false;
 
         final Tile srcTile = getSourceTile(targetBand, new Rectangle(0, 0, tw, th));
         final double[] dataArray = new double[tw*th];
@@ -113,17 +96,9 @@ public class FloodingFeatureWriter extends FeatureWriter {
 
         patchOutput.writePatch(patch, features);
 
-        return true;
-    }
+        disposeProducts(featureProduct);
 
-    private static Band getFeatureBand(final Product product) throws OperatorException {
-        final String[] names = product.getMaskGroup().getNodeNames();
-        for(String name : names) {
-            if(name.contains(featureBandName)) {
-                return product.getMaskGroup().get(name);
-            }
-        }
-        throw new OperatorException(featureBandName +" not found");
+        return true;
     }
 
     public static class Spi extends OperatorSpi {

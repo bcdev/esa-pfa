@@ -38,6 +38,7 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
 
     private static final String NAME = "Urban Area Detection";
     private static final String ID = "UrbanArea";
+    private static final String propertyPrefix = "pfa.urbanarea.";
     private static final String DEFAULT_FEATURE_SET =   "speckle_divergence.mean," +
                                                         "speckle_divergence.stdev," +
                                                         "speckle_divergence.cvar," +
@@ -53,7 +54,7 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
     private static Properties properties = new Properties(System.getProperties());
 
     static {
-        File file = new File(SystemUtils.getApplicationDataDir(), "pfa.urbanarea.properties");
+        File file = new File(SystemUtils.getApplicationDataDir(), propertyPrefix+"properties");
         try {
             try (FileReader reader = new FileReader(file)) {
                 properties.load(reader);
@@ -110,12 +111,12 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
 
     @Override
     public String getAllQueryExpr() {
-        return properties.getProperty("pfa.urbanarea.allQuery", DEFAULT_ALL_QUERY);
+        return properties.getProperty(propertyPrefix+"allQuery", DEFAULT_ALL_QUERY);
     }
 
     @Override
     public String getDefaultQuicklookFileName() {
-        return properties.getProperty("pfa.urbanarea.qlName", DEFAULT_QL_NAME);
+        return properties.getProperty(propertyPrefix+"qlName", DEFAULT_QL_NAME);
     }
 
     @Override
@@ -126,7 +127,7 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
     @Override
     public Set<String> getDefaultFeatureSet() {
         if (defaultFeatureSet == null) {
-            String property = properties.getProperty("pfa.urbanarea.featureSet", DEFAULT_FEATURE_SET);
+            String property = properties.getProperty(propertyPrefix+"featureSet", DEFAULT_FEATURE_SET);
             defaultFeatureSet = getStringSet(property);
         }
         return defaultFeatureSet;

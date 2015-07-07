@@ -21,7 +21,9 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 import org.esa.snap.framework.datamodel.Stx;
+import org.esa.snap.framework.datamodel.VirtualBand;
 import org.esa.snap.framework.gpf.OperatorSpi;
 import org.esa.snap.framework.gpf.Tile;
 import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
@@ -29,32 +31,29 @@ import org.esa.snap.framework.gpf.annotations.OperatorMetadata;
 import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Output features into patches
  */
-@OperatorMetadata(alias = "UrbanAreaFeatureWriter",
+@OperatorMetadata(alias = "ChangeDetectionFeatureWriter",
         authors = "Jun Lu, Luis Veci",
-        copyright = "Copyright (C) 2013 by Array Systems Computing Inc.",
+        copyright = "Copyright (C) 2015 by Array Systems Computing Inc.",
         description = "Writes features into patches.",
         category = "Raster/Image Analysis/Feature Extraction")
-public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
+public class ChangeDetectionFeatureWriter extends AbstractSARFeatureWriter {
 
-    public static final String featureBandName = "_speckle_divergence";
-
-    private static final double Tdsl = 0.4; // threshold for detection adopted from Esch's paper.
+    public static final String featureBandName = "ratio";
 
     private FeatureType[] featureTypes;
 
-    public UrbanAreaFeatureWriter() {
+    public ChangeDetectionFeatureWriter() {
         setRequiresAllBands(true);
     }
 
     @Override
     protected FeatureType[] getFeatureTypes() {
         if (featureTypes == null) {
-            featureTypes = new UrbanAreaApplicationDescriptor().getFeatureTypes();
+            featureTypes = new ChangeDetectionApplicationDescriptor().getFeatureTypes();
         }
         return featureTypes;
     }
@@ -71,14 +70,27 @@ public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
         }
 
         final Product featureProduct = patch.getPatchProduct();
+        final Band mstBand = getFeatureBand(featureProduct, "mst");
+        final Band slvBand = getFeatureBand(featureProduct, "slv");
         final Band targetBand = getFeatureBand(featureProduct, featureBandName);
+        final Band featureMask = getFeatureMask(featureProduct, featureBandName);
+
+        final String expression = mstBand.getName() + " / " + slvBand.getName();
+        final VirtualBand virtBand = new VirtualBand("mstSlvRatio",
+                                                     ProductData.TYPE_FLOAT32,
+                                                     mstBand.getSceneRasterWidth(),
+                                                     mstBand.getSceneRasterHeight(),
+                                                     expression);
+        virtBand.setNoDataValueUsed(true);
+        virtBand.setOwner(featureProduct);
+        featureProduct.addBand(virtBand);
 
         final int tw = targetBand.getRasterWidth();
         final int th = targetBand.getRasterHeight();
         final double patchSize = tw*th;
 
         final Stx stx = targetBand.getStx();
-        final double pctValid = (stx.getSampleCount()/patchSize);
+        final double pctValid = stx.getSampleCount()/patchSize;
         if(pctValid < minValidPixels)
             return false;
 
@@ -86,27 +98,28 @@ public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
         final double[] dataArray = new double[tw*th];
 
         final RegionGrower blob = new RegionGrower(srcTile);
-        blob.run(Tdsl, dataArray);
+        blob.run(2, dataArray);
         final double maxClusterSize = blob.getMaxClusterSize();
         final int numSamplesOverThreshold = blob.getNumSamples();
 
-        final double pctOverPnt4 = numSamplesOverThreshold/patchSize;
+        final double percentOver2 = numSamplesOverThreshold/patchSize;
 
-        if(pctOverPnt4 < minValidPixels)
-            return false;
+        //if(percentOver2 < minValidPixels)
+        //    return false;
 
-        final List<Feature> features = new ArrayList<>();
+        final java.util.List<Feature> features = new ArrayList<>();
         if(!skipProductOutput) {
             features.add(new Feature(featureTypes[0], featureProduct));
         }
         if(!skipQuicklookOutput) {
-            features.add(new Feature(featureTypes[1], createColoredBandImage(featureProduct.getBandAt(0), 0, 1)));
-            features.add(new Feature(featureTypes[2], createColoredBandImage(featureProduct.getBandAt(1), 0, 1)));
+            features.add(new Feature(featureTypes[1], createRgbImage(new Band[]{mstBand, slvBand, virtBand})));
+            features.add(new Feature(featureTypes[2], createColoredBandImage(targetBand, -5, 5)));
+            features.add(new Feature(featureTypes[3], createColoredBandImage(featureMask, -5, 5)));
         }
         if(!skipFeaturesOutput) {
-            features.add(createStxFeature(featureTypes[3], targetBand));
-            features.add(new Feature(featureTypes[4], pctOverPnt4));
-            features.add(new Feature(featureTypes[5], maxClusterSize / patchSize));
+            features.add(createStxFeature(featureTypes[4], targetBand));
+            features.add(new Feature(featureTypes[5], percentOver2));
+            features.add(new Feature(featureTypes[6], maxClusterSize / patchSize));
         }
 
         sink.writePatch(patch, features.toArray(new Feature[features.size()]));
@@ -119,7 +132,7 @@ public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(UrbanAreaFeatureWriter.class);
+            super(ChangeDetectionFeatureWriter.class);
         }
     }
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2015 by Array Systems Computing Inc. http://www.array.ca
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
 package org.esa.pfa.fe;
 
 import org.esa.snap.framework.datamodel.PixelPos;
@@ -37,7 +52,7 @@ public class RegionGrower {
 
             final ProductData srcData = srcTile.getDataBuffer();
             final int[][] pixelsScaned = new int[th][tw];
-            final List<PixelPos> clusterPixels = new ArrayList<PixelPos>(2000);
+            final List<PixelPos> clusterPixels = new ArrayList<>(2000);
 
             int cnt = 0;
             final int maxy = ty0 + th;
@@ -91,13 +106,13 @@ public class RegionGrower {
                                    final ProductData data, final Tile tile, final double threshold,
                                    final int[][] pixelsScaned, final List<PixelPos> clusterPixels) {
 
-        final List<PixelPos> seeds = new ArrayList<PixelPos>();
+        final List<PixelPos> seeds = new ArrayList<>();
         seeds.add(new PixelPos(xc, yc));
         pixelsScaned[yc - y0][xc - x0] = 1;
         clusterPixels.add(new PixelPos(xc, yc));
 
         while (seeds.size() > 0) {
-            final List<PixelPos> newSeeds = new ArrayList<PixelPos>();
+            final List<PixelPos> newSeeds = new ArrayList<>();
             for (PixelPos pixel : seeds) {
                 searchNeighbourhood(pixel, x0, y0, w, h, data, tile, threshold, pixelsScaned, clusterPixels, newSeeds);
             }

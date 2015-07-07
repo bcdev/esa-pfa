@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 by Array Systems Computing Inc. http://www.array.ca
+ * Copyright (C) 2015 by Array Systems Computing Inc. http://www.array.ca
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -34,18 +34,19 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor {
+public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDescriptor {
 
-    private static final String NAME = "Flood Detection";
-    private static final String ID = "Flood";
-    private static final String propertyPrefix = "pfa.flood.";
-    private static final String DEFAULT_FEATURE_SET =   "speckle_divergence.mean," +
-                                                        "speckle_divergence.stdev," +
-                                                        "speckle_divergence.cvar," +
-                                                        "speckle_divergence.min," +
-                                                        "speckle_divergence.maxspeckle_divergence.percentOverPnt4" +
-                                                        "speckle_divergence.largestConnectedBlob";
-    private static final String DEFAULT_QL_NAME = "sigma0_ql.png";
+    private static final String NAME = "Change Detection";
+    private static final String ID = "Change";
+    private static final String propertyPrefix = "pfa.change.";
+    private static final String DEFAULT_FEATURE_SET =   "change.mean," +
+                                                        "change.stdev," +
+                                                        "change.cvar," +
+                                                        "change.min," +
+                                                        "change.max," +
+                                                        "change.maxspeckle_divergence.percentOverPnt4" +
+                                                        "change.largestConnectedBlob";
+    private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
@@ -54,7 +55,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static Properties properties = new Properties(System.getProperties());
 
     static {
-        File file = new File(SystemUtils.getApplicationDataDir(), "pfa.flood.properties");
+        File file = new File(SystemUtils.getApplicationDataDir(), propertyPrefix+"properties");
         try {
             try (FileReader reader = new FileReader(file)) {
                 properties.load(reader);
@@ -64,7 +65,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
         }
     }
 
-    public FloodingApplicationDescriptor() {
+    public ChangeDetectionApplicationDescriptor() {
         super(NAME, ID);
     }
 
@@ -80,7 +81,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/FloodingFeatureWriter.xml");
+        return ChangeDetectionApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/ChangeDetectionFeatureWriter.xml");
     }
 
     @Override
@@ -142,7 +143,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
 
     @Override
     public String[] getQuicklookFileNames() {
-        return new String[]{"sigma0_ql.png", "speckle_divergence_ql.png"};
+        return new String[]{"rgb_ql.png", "ratio_ql.png", "change_ql"};
     }
 
     @Override
@@ -170,11 +171,12 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static FeatureType[] createFeatureTypes() {
         return new FeatureType[]{
                     /*00*/ new FeatureType("patch", "Patch product", Product.class),
-                    /*01*/ new FeatureType("sigma0_ql", "Sigma0 quicklook", RenderedImage.class),
-                    /*02*/ new FeatureType("speckle_divergence_ql", "Speckle_divergence quicklook", RenderedImage.class),
-                    /*03*/ new FeatureType("speckle_divergence", "Speckle divergence statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*04*/ new FeatureType("speckle_divergence.percentOverPnt4", "Sample percent over threshold of 0.4", Double.class),
-                    /*05*/ new FeatureType("speckle_divergence.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
+                    /*01*/ new FeatureType("rgb_ql", "RGB quicklook", RenderedImage.class),
+                    /*02*/ new FeatureType("ratio_ql", "Log Ratio quicklook", RenderedImage.class),
+                    /*03*/ new FeatureType("change_ql", "Change quicklook", RenderedImage.class),
+                    /*04*/ new FeatureType("change", "Change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*05*/ new FeatureType("change.percentOver2", "Sample percent over 2", Double.class),
+                    /*06*/ new FeatureType("change.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
         };
     }
 }
