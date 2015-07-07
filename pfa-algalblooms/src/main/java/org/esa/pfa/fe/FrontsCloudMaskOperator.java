@@ -26,8 +26,8 @@ import java.util.Map;
  * @author Norman Fomferra
  */
 @OperatorMetadata(alias = "Meris.Fronts.CloudMask",
-                  authors = "G.Kirches, M.Paperin (Algorithm), N.Fomferra, R.Quast (Implementation)",
-                  category = "Optical/Pre-Processing")
+        authors = "G.Kirches, M.Paperin (Algorithm), N.Fomferra, R.Quast (Implementation)",
+        category = "Optical/Pre-Processing")
 public class FrontsCloudMaskOperator extends Operator {
     @SourceProduct
     private Product sourceProduct;
@@ -69,6 +69,7 @@ public class FrontsCloudMaskOperator extends Operator {
                                  "Meris.Fronts.ROI",
                                  sourceProduct.getSceneRasterWidth(),
                                  sourceProduct.getSceneRasterHeight());
+        roiProduct.setPreferredTileSize(targetProduct.getPreferredTileSize());
         ProductUtils.copyFlagBands(sourceProduct, roiProduct, true);
         roiMask = roiProduct.addMask("roi", roiExpr, "", Color.WHITE, 0.0);
     }
@@ -93,36 +94,36 @@ public class FrontsCloudMaskOperator extends Operator {
         double[] cloudDataAlgoData = new double[targetRectangle.width * targetRectangle.height];
         int[] roiTileData = roiTile.getSamplesInt();
 
-        makedMERISCloudMask(targetRectangle.width,
-                            targetRectangle.height,
-                            getSourceTile(sourceProduct.getBand("reflec_15"), targetRectangle),
-                            getSourceTile(sourceProduct.getBand("reflec_11"), targetRectangle),
-                            getSourceTile(sourceProduct.getBand("reflec_4"), targetRectangle),
-                            getSourceTile(sourceProduct.getBand("reflec_3"), targetRectangle),
-                            getSourceTile(sourceProduct.getBand("reflec_1"), targetRectangle),
-                            cloudDataOriOrFlagData,
-                            cloudDataAlgoData,
-                            roiTileData);
+        makeMERISCloudMask(targetRectangle.width,
+                           targetRectangle.height,
+                           getSourceTile(sourceProduct.getBand("reflec_15"), targetRectangle),
+                           getSourceTile(sourceProduct.getBand("reflec_11"), targetRectangle),
+                           getSourceTile(sourceProduct.getBand("reflec_4"), targetRectangle),
+                           getSourceTile(sourceProduct.getBand("reflec_3"), targetRectangle),
+                           getSourceTile(sourceProduct.getBand("reflec_1"), targetRectangle),
+                           cloudDataOriOrFlagData,
+                           cloudDataAlgoData,
+                           roiTileData);
 
         for (int y = 0; y < targetRectangle.height; y++) {
             for (int x = 0; x < targetRectangle.width; x++) {
                 int i = y * targetRectangle.width + x;
-                cloudDataOriOrFlag.setSample(targetRectangle.x+x, targetRectangle.y+y, cloudDataOriOrFlagData[i]);
+                cloudDataOriOrFlag.setSample(targetRectangle.x + x, targetRectangle.y + y, cloudDataOriOrFlagData[i]);
                 cloudDataAlgo.setSample(targetRectangle.x + x, targetRectangle.y + y, cloudDataAlgoData[i]);
             }
         }
     }
 
-    public static void makedMERISCloudMask(int sourceWidth,
-                                           int sourceHeight,
-                                           Tile sourceTileRefl15,
-                                           Tile sourceTileRefl11,
-                                           Tile sourceTileRefl4,
-                                           Tile sourceTileRefl3,
-                                           Tile sourceTileRefl1,
-                                           double[] sourceCloudDataOriOrFlag,
-                                           double[] sourceCloudDataAlgo,
-                                           int[] flagArray) {
+    public static void makeMERISCloudMask(int sourceWidth,
+                                          int sourceHeight,
+                                          Tile sourceTileRefl15,
+                                          Tile sourceTileRefl11,
+                                          Tile sourceTileRefl4,
+                                          Tile sourceTileRefl3,
+                                          Tile sourceTileRefl1,
+                                          double[] sourceCloudDataOriOrFlag,
+                                          double[] sourceCloudDataAlgo,
+                                          int[] flagArray) {
 
 
         Arrays.fill(sourceCloudDataOriOrFlag, 0.0);
