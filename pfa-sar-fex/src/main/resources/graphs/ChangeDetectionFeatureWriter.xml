@@ -7,101 +7,18 @@
       <file></file>
     </parameters>
   </node>
-  <node id="Find-Image-Pair">
-    <operator>Find-Image-Pair</operator>
-    <sources>
-      <sourceProduct refid="Read"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
-  </node>
-  <node id="CreateStack">
-    <operator>CreateStack</operator>
-    <sources>
-      <sourceProduct refid="Calibration"/>
-      <sourceProduct.1 refid="Calibration(2)"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <masterBands/>
-      <sourceBands/>
-      <resamplingType>BILINEAR_INTERPOLATION</resamplingType>
-      <extent>Minimum</extent>
-      <initialOffsetMethod>ORBIT</initialOffsetMethod>
-    </parameters>
-  </node>
-  <node id="GCP-Selection">
-    <operator>GCP-Selection</operator>
-    <sources>
-      <sourceProduct refid="CreateStack"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <numGCPtoGenerate>20000</numGCPtoGenerate>
-      <coarseRegistrationWindowWidth>128</coarseRegistrationWindowWidth>
-      <coarseRegistrationWindowHeight>128</coarseRegistrationWindowHeight>
-      <rowInterpFactor>2</rowInterpFactor>
-      <columnInterpFactor>2</columnInterpFactor>
-      <maxIteration>10</maxIteration>
-      <gcpTolerance>0.5</gcpTolerance>
-      <applyFineRegistration>true</applyFineRegistration>
-      <fineRegistrationWindowWidth>32</fineRegistrationWindowWidth>
-      <fineRegistrationWindowHeight>32</fineRegistrationWindowHeight>
-      <coherenceWindowSize>3</coherenceWindowSize>
-      <coherenceThreshold>0.6</coherenceThreshold>
-      <useSlidingWindow>false</useSlidingWindow>
-      <computeOffset>false</computeOffset>
-      <onlyGCPsOnLand>true</onlyGCPsOnLand>
-    </parameters>
-  </node>
-  <node id="Warp">
-    <operator>Warp</operator>
-    <sources>
-      <sourceProduct refid="GCP-Selection"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <rmsThreshold>0.05</rmsThreshold>
-      <warpPolynomialOrder>1</warpPolynomialOrder>
-      <interpolationMethod>Bilinear interpolation</interpolationMethod>
-      <excludeMaster>false</excludeMaster>
-      <openResidualsFile>false</openResidualsFile>
-    </parameters>
-  </node>
-  <node id="Calibration">
-    <operator>Calibration</operator>
+  <node id="Land-Sea-Mask">
+    <operator>Land-Sea-Mask</operator>
     <sources>
       <sourceProduct refid="Read"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
       <sourceBands/>
-      <auxFile>Product Auxiliary File</auxFile>
-      <externalAuxFile/>
-      <outputImageInComplex>false</outputImageInComplex>
-      <outputImageScaleInDb>false</outputImageScaleInDb>
-      <createGammaBand>false</createGammaBand>
-      <createBetaBand>false</createBetaBand>
-      <selectedPolarisations/>
-      <outputSigmaBand>true</outputSigmaBand>
-      <outputGammaBand>false</outputGammaBand>
-      <outputBetaBand>false</outputBetaBand>
-      <outputDNBand>false</outputDNBand>
-    </parameters>
-  </node>
-  <node id="Calibration(2)">
-    <operator>Calibration</operator>
-    <sources>
-      <sourceProduct refid="Find-Image-Pair"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands/>
-      <auxFile>Product Auxiliary File</auxFile>
-      <externalAuxFile/>
-      <outputImageInComplex>false</outputImageInComplex>
-      <outputImageScaleInDb>false</outputImageScaleInDb>
-      <createGammaBand>false</createGammaBand>
-      <createBetaBand>false</createBetaBand>
-      <selectedPolarisations/>
-      <outputSigmaBand>true</outputSigmaBand>
-      <outputGammaBand>false</outputGammaBand>
-      <outputBetaBand>false</outputBetaBand>
-      <outputDNBand>false</outputDNBand>
+      <landMask>false</landMask>
+      <useSRTM>true</useSRTM>
+      <geometry/>
+      <invertGeometry>false</invertGeometry>
+      <byPass>false</byPass>
     </parameters>
   </node>
   <node id="Change-Detection">
@@ -110,7 +27,7 @@
       <sourceProduct refid="Land-Sea-Mask"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands></sourceBands>
+      <sourceBands/>
       <includeSourceBands>true</includeSourceBands>
       <outputLogRatio>true</outputLogRatio>
     </parameters>
@@ -121,7 +38,7 @@
       <sourceProduct refid="Change-Detection"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetDir>c:\output</targetDir>
+      <targetDir/>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
@@ -136,51 +53,19 @@
       <minValidPixels>0.1</minValidPixels>
     </parameters>
   </node>
-  <node id="Land-Sea-Mask">
-    <operator>Land-Sea-Mask</operator>
-    <sources>
-      <sourceProduct refid="Warp"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands/>
-      <landMask>false</landMask>
-      <useSRTM>true</useSRTM>
-      <geometry/>
-      <invertGeometry>false</invertGeometry>
-      <byPass>false</byPass>
-    </parameters>
-  </node>
   <applicationData id="Presentation">
     <Description/>
     <node id="Read">
-            <displayPosition x="9.0" y="27.0"/>
+            <displayPosition x="387.0" y="67.0"/>
     </node>
-    <node id="Find-Image-Pair">
-      <displayPosition x="4.0" y="120.0"/>
-    </node>
-    <node id="CreateStack">
-      <displayPosition x="198.0" y="63.0"/>
-    </node>
-    <node id="GCP-Selection">
-      <displayPosition x="290.0" y="63.0"/>
-    </node>
-    <node id="Warp">
-      <displayPosition x="398.0" y="66.0"/>
-    </node>
-    <node id="Calibration">
-      <displayPosition x="104.0" y="39.0"/>
-    </node>
-    <node id="Calibration(2)">
-      <displayPosition x="101.0" y="90.0"/>
+    <node id="Land-Sea-Mask">
+      <displayPosition x="372.0" y="134.0"/>
     </node>
     <node id="Change-Detection">
       <displayPosition x="360.0" y="197.0"/>
     </node>
     <node id="ChangeDetectionFeatureWriter">
       <displayPosition x="329.0" y="240.0"/>
-    </node>
-    <node id="Land-Sea-Mask">
-      <displayPosition x="372.0" y="134.0"/>
     </node>
   </applicationData>
 </graph>

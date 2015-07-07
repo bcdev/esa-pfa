@@ -44,7 +44,7 @@ public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDes
                                                         "change.cvar," +
                                                         "change.min," +
                                                         "change.max," +
-                                                        "change.maxspeckle_divergence.percentOverPnt4" +
+                                                        "change.percentOverPnt4" +
                                                         "change.largestConnectedBlob";
     private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
