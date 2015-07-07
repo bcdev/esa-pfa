@@ -4,7 +4,7 @@
     <operator>Read</operator>
     <sources/>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <file>D:\EO\ASAR\IMM_Europe\ASA_IMM_1PNIPA20061106_204919_000000362052_00401_24503_0005.N1.zip</file>
+      <file></file>
     </parameters>
   </node>
   <node id="Find-Image-Pair">
@@ -110,7 +110,7 @@
       <sourceProduct refid="Land-Sea-Mask"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands>Sigma0_VV_mst_06Nov2006,Sigma0_VV_slv1_26Apr2006</sourceBands>
+      <sourceBands></sourceBands>
       <includeSourceBands>true</includeSourceBands>
       <outputLogRatio>true</outputLogRatio>
     </parameters>
