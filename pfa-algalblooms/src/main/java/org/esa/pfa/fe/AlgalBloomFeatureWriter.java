@@ -33,8 +33,6 @@ import org.esa.snap.framework.datamodel.ConvolutionFilterBand;
 import org.esa.snap.framework.datamodel.ImageInfo;
 import org.esa.snap.framework.datamodel.Kernel;
 import org.esa.snap.framework.datamodel.Mask;
-import org.esa.snap.framework.datamodel.MetadataAttribute;
-import org.esa.snap.framework.datamodel.MetadataElement;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.ProductData;
 import org.esa.snap.framework.datamodel.RGBChannelDef;
@@ -58,7 +56,7 @@ import org.esa.snap.util.ProductUtils;
 import org.esa.snap.util.ResourceInstaller;
 import org.esa.snap.util.SystemUtils;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -67,7 +65,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -166,13 +163,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final String FEX_VALID_MASK = "NOT (l1_flags.INVALID OR l1_flags.LAND_OCEAN)";
 
-    public static final String FEX_CLOUD_MASK_1_NAME = "fex_cloud_1";
-    public static final String FEX_CLOUD_MASK_1_VALUE = "l1_flags.BRIGHT";
-
-    public static final String FEX_CLOUD_MASK_2_NAME = "fex_cloud_2";
-    public static final String FEX_CLOUD_MASK_2_VALUE = "cl_wat_3_val > 1.8";
-
-    private static final String FEX_CLOUD_MASK_3_NAME = "cloud_mask";
+    private static final String FEX_CLOUD_MASK_NAME = "cloud_mask";
 
     public static final String FEX_ROI_MASK_NAME = "fex_roi";
 
@@ -403,7 +394,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         final Product cloudProduct = createFrontsCloudMaskProduct(product);
         ProductUtils.copyBand("cloud_data_ori_or_flag", cloudProduct, product, true);
         ProductUtils.copyMasks(cloudProduct, product);
-        addRoiMask(product, FEX_CLOUD_MASK_3_NAME);
+        addRoiMask(product, FEX_CLOUD_MASK_NAME);
         return cloudProduct;
     }
 
@@ -562,24 +553,6 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         }
         ImageInfo imageInfo = ImageManager.getInstance().getImageInfo(bands);
         return ImageManager.getInstance().createColoredBandImage(bands, imageInfo, 0);
-    }
-
-    private static String[] appendArgs(String operatorName, String[] args) {
-        List<String> algalBloomFex = new ArrayList<>(Arrays.asList(operatorName));
-        algalBloomFex.addAll(Arrays.asList(args));
-        return algalBloomFex.toArray(new String[algalBloomFex.size()]);
-    }
-
-    private static void removeAllMetadata(Product product) {
-        MetadataElement metadataRoot = product.getMetadataRoot();
-        MetadataElement[] elements = metadataRoot.getElements();
-        for (MetadataElement element : elements) {
-            metadataRoot.removeElement(element);
-        }
-        MetadataAttribute[] attributes = metadataRoot.getAttributes();
-        for (MetadataAttribute attribute : attributes) {
-            metadataRoot.removeAttribute(attribute);
-        }
     }
 
     public static class Spi extends OperatorSpi {
