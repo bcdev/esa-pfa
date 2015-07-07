@@ -309,8 +309,8 @@ public abstract class FeatureWriter extends Operator {
                 ImageManager.getInstance().dispose();
                 JAI.getDefaultInstance().getTileCache().flush();
             }
-        } catch (IOException e) {
-            throw new OperatorException(e);
+        } catch (Throwable e) {
+            throw new OperatorException(this.getId()+": "+e.toString());
         }
     }
 
