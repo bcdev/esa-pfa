@@ -169,14 +169,14 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
 
     public static final String FEX_COAST_DIST_PRODUCT_FILE = "coast_dist_2880.dim";
 
+    @Parameter(defaultValue = "8", description = "Number of successful cloudiness tests for cloud mask ('Fronts' algorithm)")
+    private int cloudMaskThreshold;
     @Parameter(defaultValue = "0.2")
     private double minValidPixelRatio;
     @Parameter(defaultValue = "0.0")
     private double minClumpiness;
     @Parameter(defaultValue = "1.005", description = "Cloud correction factor for MCI/FLH computation")
     private double cloudCorrectionFactor;
-    @Parameter(defaultValue = "8", description = "Number of successful cloudiness tests for Fronts cloud mask")
-    private int frontsCloudMaskThreshold;
     @Parameter(defaultValue = "0.00005",
             description = "Threshold for counting pixels whose absolute spatial FLH gradient is higher than the threshold")
     private double flhGradientThreshold;
@@ -409,7 +409,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
         final FrontsCloudMaskOperator op = new FrontsCloudMaskOperator();
         op.setSourceProduct(product);
         op.setRoiExpr(FEX_VALID_MASK);
-        op.setThreshold(frontsCloudMaskThreshold);
+        op.setThreshold(cloudMaskThreshold);
         return op.getTargetProduct();
     }
 

@@ -25,7 +25,7 @@
             <minValidPixelRatio>0.2</minValidPixelRatio>
             <minClumpiness>0.0</minClumpiness>
             <cloudCorrectionFactor>1.005</cloudCorrectionFactor>
-            <frontsCloudMaskThreshold>8</frontsCloudMaskThreshold>
+            <cloudMaskThreshold>8</cloudMaskThreshold>
             <flhGradientThreshold>5.0E-5</flhGradientThreshold>
             <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.DefaultPatchWriterFactory</patchWriterFactoryClassName>
             <patchWriterConfigExtra>foo = bar</patchWriterConfigExtra>
