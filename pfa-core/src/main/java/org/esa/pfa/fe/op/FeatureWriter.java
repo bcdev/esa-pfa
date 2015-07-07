@@ -346,6 +346,15 @@ public abstract class FeatureWriter extends Operator {
                 new ColorPaletteDef(minSample, maxSample)), 0);
     }
 
+    protected static RenderedImage createRgbImage(final Band[] bands) {
+
+        for (Band band : bands) {
+            band.getImageInfo(ProgressMonitor.NULL);
+        }
+        ImageInfo imageInfo = ImageManager.getInstance().getImageInfo(bands);
+        return ImageManager.getInstance().createColoredBandImage(bands, imageInfo, 0);
+    }
+
     protected static void disposeProducts(Product... products) {
         for (Product product : products) {
             product.dispose();
@@ -373,7 +382,6 @@ public abstract class FeatureWriter extends Operator {
                            skewness,
                            stx.getSampleCount());
     }
-
 
     private void populateResult(int patchX, int patchY, Patch patch) throws IOException {
         try (final Writer writer = new StringWriter()) {
