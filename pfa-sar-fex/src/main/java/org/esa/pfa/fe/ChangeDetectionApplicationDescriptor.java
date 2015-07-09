@@ -143,7 +143,7 @@ public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDes
 
     @Override
     public String[] getQuicklookFileNames() {
-        return new String[]{"rgb_ql.png", "ratio_ql.png", "change_ql"};
+        return new String[]{"rgb_ql.png", "ratio_ql.png", "change_ql.png"};
     }
 
     @Override
