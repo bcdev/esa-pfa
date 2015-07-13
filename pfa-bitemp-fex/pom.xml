@@ -21,6 +21,11 @@
             <artifactId>pfa-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-algalblooms</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>ceres-core</artifactId>
         </dependency>
@@ -45,6 +50,7 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-envisat-reader</artifactId>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
