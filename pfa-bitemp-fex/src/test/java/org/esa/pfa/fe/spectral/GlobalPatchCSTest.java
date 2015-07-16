@@ -17,14 +17,9 @@ import static org.junit.Assert.assertEquals;
 public class GlobalPatchCSTest {
 
     @Test
-    public void testRrrr() throws Exception {
-        int N = 1024 * 1024 / 8;
-        Random random = new Random();
-        DataOutputStream stream = new DataOutputStream(new FileOutputStream("M1.DAT"));
-        for (int i = 0; i < N; i++) {
-            stream.writeLong(random.nextLong());
-        }
-        stream.close();
+    public void testReprojection() throws Exception {
+
+        
     }
 
     @Test
