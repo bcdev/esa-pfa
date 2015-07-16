@@ -1,0 +1,4 @@
+﻿Developed under contract to ESA by Brockmann Consult GmbH,
+Arrays Systems Computing Inc, University of Trento
+
+© 2014-2017 by Brockmann Consult GmbH and Arrays Systems Computing Inc
