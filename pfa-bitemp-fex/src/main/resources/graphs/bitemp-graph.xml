@@ -1,0 +1,44 @@
+<graph id="bitemp-fex">
+    <version>1.0</version>
+
+    <node id="Read">
+        <operator>Read</operator>
+        <sources/>
+        <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+            <file>${file}</file>
+        </parameters>
+    </node>
+
+    <node id="Reproject">
+
+        <operator>Reproject</operator>
+
+        <sources>
+            <source>Read</source>
+        </sources>
+
+        <parameters>
+            <crs>GEOGCS["WGS84(DD)",
+                DATUM["WGS84",
+                SPHEROID["WGS84", 6378137.0, 298.257223563]],
+                PRIMEM["Greenwich", 0.0],
+                UNIT["degree", 0.017453292519943295],
+                AXIS["Geodetic longitude", EAST],
+                AXIS["Geodetic latitude", NORTH]]
+            </crs>
+            <resampling>Nearest</resampling>
+            <referencePixelX>0.0</referencePixelX>
+            <referencePixelY>0.0</referencePixelY>
+            <easting>${easting}</easting>
+            <northing>${northing}</northing>
+            <orientation>0.0</orientation>
+            <pixelSizeX>0.009</pixelSizeX>
+            <pixelSizeY>0.009</pixelSizeY>
+            <width>200</width>
+            <height>200</height>
+            <noDataValue>NaN</noDataValue>
+            <includeTiePointGrids>true</includeTiePointGrids>
+        </parameters>
+    </node>
+
+</graph>
