@@ -45,6 +45,7 @@ public class LocalClassifier implements Classifier {
     private static final int NUM_HITS_MAX = 500;
 
     private final Path classifierPath;
+    private final PFAApplicationDescriptor applicationDescriptor;
     private final ActiveLearning al;
     private final PatchQuery db;
 
@@ -55,6 +56,7 @@ public class LocalClassifier implements Classifier {
         this.classifierName = name;
         this.model = model;
         this.classifierPath = classifierPath;
+        this.applicationDescriptor = applicationDescriptor;
         this.al = new ActiveLearning(model);
         if (Files.exists(dbPath.resolve("ds-descriptor.xml")) && Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
             DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
@@ -142,12 +144,12 @@ public class LocalClassifier implements Classifier {
             al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
 
             long t2 = System.currentTimeMillis();
-            System.out.println("trainAndClassify.train    = " + (t2-t1));
+            System.out.println("trainAndClassify.train    = " + (t2 - t1));
 
             int classifiedImages = 0;
             final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
-            while (relavantImages.size() < model.getNumRetrievedImages()) {
-                final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages());
+            while (relavantImages.size() < model.getNumRetrievedImages() && classifiedImages < model.getNumRetrievedImages() * 100) {
+                final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages() * 10);
                 classifiedImages += archivePatches.length;
                 al.classify(archivePatches);
                 for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
@@ -157,6 +159,7 @@ public class LocalClassifier implements Classifier {
                 }
             }
             long t3 = System.currentTimeMillis();
+            System.out.println("relavantImages            = " + relavantImages.size());
             System.out.println("classifiedImages          = " + classifiedImages);
             System.out.println("trainAndClassify.classify = " + (t3-t2));
             return relavantImages.toArray(new Patch[relavantImages.size()]);

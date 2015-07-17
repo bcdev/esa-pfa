@@ -52,7 +52,6 @@ public class RestClassifierService {
     public RestClassifierService() throws IOException, URISyntaxException {
         String dbUriProperty = System.getProperty("pfa.dbPath", null);
         dbUri = new File(dbUriProperty).toURI();
-        System.out.println("dbUri = " + dbUri);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
