@@ -67,10 +67,10 @@ public class RestClassifierManager implements ClassifierManager {
 
         Form form = new Form();
 
-        target.path("classifier").path(classifierName).request().
-                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        WebTarget classifierTarget = target.path("classifier").path(classifierName);
+        classifierTarget.request().post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
-        return new RestClassifier(classifierName, classifierModel, target);
+        return new RestClassifier(classifierName, classifierModel, classifierTarget);
     }
 
     @Override
