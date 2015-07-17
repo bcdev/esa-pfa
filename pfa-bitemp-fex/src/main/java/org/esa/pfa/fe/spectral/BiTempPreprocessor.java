@@ -12,6 +12,7 @@ import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.ProductData;
 import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.gpf.operators.standard.SubsetOp;
+import org.esa.snap.util.SystemUtils;
 
 import java.awt.Color;
 import java.awt.Point;
@@ -110,7 +111,7 @@ public class BiTempPreprocessor {
 
                 if (validPixelRatio > 0.2) {
                     writePatchProduct(subsetProduct, patchIdX, patchIdY);
-                }else {
+                } else {
                     System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getNumBands(), 100 * validPixelRatio);
                 }
 
@@ -147,6 +148,10 @@ public class BiTempPreprocessor {
 
     public static void main(String[] args) throws IOException {
         Locale.setDefault(Locale.ENGLISH);
+        System.setProperty("snap.dataio.reader.tileWidth", "*");
+        System.setProperty("snap.dataio.reader.tileHeight", "200");
+        SystemUtils.init3rdPartyLibs(BiTempPreprocessor.class);
+
         new BiTempPreprocessor().run(args);
     }
 
