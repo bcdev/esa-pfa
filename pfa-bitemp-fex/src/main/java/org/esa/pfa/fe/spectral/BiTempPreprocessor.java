@@ -112,7 +112,7 @@ public class BiTempPreprocessor {
                 if (validPixelRatio > 0.2) {
                     writePatchProduct(subsetProduct, patchIdX, patchIdY);
                 } else {
-                    System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getNumBands(), 100 * validPixelRatio);
+                    System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
                 }
 
                 patchX++;
