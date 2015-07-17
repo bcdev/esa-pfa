@@ -13,7 +13,9 @@ import java.awt.Point;
  * @author Norman
  */
 public class PatchCS {
-    public static final String PATCH_NAME_FORMAT = "X%04dY%04d";
+    public static final String PATCH_X_FORMAT = "X%04d";
+    public static final String PATCH_Y_FORMAT = "Y%04d";
+    public static final String PATCH_NAME_FORMAT = PATCH_X_FORMAT + PATCH_Y_FORMAT;
 
     private final double patchExtend;
     private final int patchSize;

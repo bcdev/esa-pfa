@@ -5,7 +5,11 @@ import org.esa.snap.framework.datamodel.PixelPos;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.TiePointGeoCoding;
 import org.esa.snap.framework.datamodel.TiePointGrid;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.awt.Point;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -15,13 +19,24 @@ import static org.junit.Assert.assertNotNull;
  * @author Norman
  */
 public class PatchCSTest {
+    static {
+        Locale.setDefault(Locale.ENGLISH);
+    }
+
+    @Test
+    public void testFormat() throws Exception {
+        assertEquals("23.87", String.format("%.2f", 23.86843));
+    }
 
     @Test
     public void testPatchIndex() throws Exception {
         PatchCS patchCS = new PatchCS(200, 0.009);
-
-        patchCS.getPatchIndex(90, -180);
-
+        assertEquals(new Point(0, 0), patchCS.getPatchIndex(90, -180));
+        assertEquals(new Point(200, 0), patchCS.getPatchIndex(90, +180));
+        assertEquals(new Point(0, 100), patchCS.getPatchIndex(-90, -180));
+        assertEquals(new Point(200, 100), patchCS.getPatchIndex(-90, +180));
+        assertEquals(new Point(100, 50), patchCS.getPatchIndex(0, 0));
+        assertEquals(new Point(100, 50), patchCS.getPatchIndex(-0.1, 0.1));
     }
 
     @Test
