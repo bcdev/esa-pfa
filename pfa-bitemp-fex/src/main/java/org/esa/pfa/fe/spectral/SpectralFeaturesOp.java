@@ -57,7 +57,7 @@ public class SpectralFeaturesOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (validMaskIndex != -1 && !sourceSamples[spectralBands.length*2].getBoolean()) {
+        if (validMaskIndex != -1 && !sourceSamples[validMaskIndex].getBoolean()) {
             setInvalid(targetSamples);
             return;
         }
@@ -134,10 +134,6 @@ public class SpectralFeaturesOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SourceSampleConfigurer sampleConfigurer) throws OperatorException {
-        if (maskExpression != null && !maskExpression.isEmpty()) {
-            validMaskIndex = spectralBands.length * 2;
-            sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, getSourceProducts());
-        }
         int n = spectralBands.length;
         for (int i = 0; i < n; i++) {
             sampleConfigurer.defineSample(i, spectralBands[i].getName());
@@ -145,6 +141,17 @@ public class SpectralFeaturesOp extends PixelOperator {
         if (sourceProduct2 != null) {
             for (int i = 0; i < n; i++) {
                 sampleConfigurer.defineSample(n + i, spectralBands[i].getName(), sourceProduct2);
+            }
+        }
+        if (maskExpression != null && !maskExpression.isEmpty()) {
+            if (sourceProduct2 != null) {
+                sourceProduct.setRefNo(1);
+                sourceProduct2.setRefNo(2);
+                validMaskIndex = spectralBands.length * 2;
+                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct, sourceProduct2);
+            } else {
+                validMaskIndex = spectralBands.length;
+                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct);
             }
         }
     }
