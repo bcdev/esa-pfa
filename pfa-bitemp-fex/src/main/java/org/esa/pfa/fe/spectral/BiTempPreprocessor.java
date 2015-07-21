@@ -8,12 +8,10 @@ import org.esa.snap.framework.dataio.ProductIO;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.GeoCoding;
 import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.Mask;
 import org.esa.snap.framework.datamodel.MetadataElement;
 import org.esa.snap.framework.datamodel.PixelPos;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.RasterDataNode;
 import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.gpf.operators.standard.SubsetOp;
 import org.esa.snap.util.SystemUtils;
@@ -79,7 +77,7 @@ public class BiTempPreprocessor {
             }
         }
 
-        System.out.printf("Reprojected product raster size is %d x %d pixels",
+        System.out.printf("Reprojected product raster size is %d x %d pixels%n",
                           reprojectedProduct.getSceneRasterWidth(),
                           reprojectedProduct.getSceneRasterHeight());
 
@@ -115,6 +113,10 @@ public class BiTempPreprocessor {
                         subsetOp.setSubSamplingY(1);
                         subsetOp.setCopyMetadata(false);
 
+                try {
+                    if (validPixelRatio > 0.2) {
+                        System.out.printf("Writing patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
+                        writePatchProduct(subsetProduct, patchIdX, patchIdY);
                         Product subsetProduct = subsetOp.getTargetProduct();
                         try {
                             ProductData.UTC startTime = reprojectedProduct.getStartTime();
@@ -151,6 +153,8 @@ public class BiTempPreprocessor {
                     } else {
                         System.out.printf("Rejected patch %s_%s. Only small intersection with source\n", patchIdX, patchIdY);
                     }
+                } finally {
+                    subsetProduct.dispose();
                 } else {
                     System.out.printf("Rejected patch %s_%s. No intersection with source\n", patchIdX, patchIdY);
                 }
@@ -169,21 +173,6 @@ public class BiTempPreprocessor {
                 patchX++;
             }
             patchY++;
-        }
-    }
-
-    private void disposeImages(RasterDataNode[] rasters) {
-        for (RasterDataNode raster : rasters) {
-            MultiLevelImage sourceImage = raster.getSourceImage();
-            if (sourceImage != null) {
-                sourceImage.dispose();
-                raster.setSourceImage(null);
-            }
-            MultiLevelImage validMaskImage = raster.getValidMaskImage();
-            if (validMaskImage != null) {
-                validMaskImage.dispose();
-                raster.resetValidMask();
-            }
         }
     }
 
