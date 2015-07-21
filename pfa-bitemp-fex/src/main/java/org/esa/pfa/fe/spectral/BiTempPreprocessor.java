@@ -3,6 +3,7 @@ package org.esa.pfa.fe.spectral;
 import com.bc.ceres.core.Assert;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.sun.media.jai.util.SunTileCache;
+import com.vividsolutions.jts.geom.Geometry;
 import org.esa.snap.framework.dataio.ProductIO;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.GeoCoding;
@@ -18,9 +19,7 @@ import org.esa.snap.gpf.operators.standard.SubsetOp;
 import org.esa.snap.util.SystemUtils;
 
 import javax.media.jai.JAI;
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileWriter;
@@ -87,6 +86,7 @@ public class BiTempPreprocessor {
         if (spectralBandName == null) {
             throw new IOException("Invalid source product");
         }
+        Geometry sourceGeometry = PatchCS.computeProductGeometry(product);
 
         GeoCoding geoCoding = reprojectedProduct.getGeoCoding();
         GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(0, 0), null);
@@ -97,49 +97,62 @@ public class BiTempPreprocessor {
         for (int y = 0; y < reprojectedProduct.getSceneRasterHeight(); y += patchCS.getPatchSize()) {
             int patchX = patchIndex.x;
             for (int x = 0; x < reprojectedProduct.getSceneRasterWidth(); x += patchCS.getPatchSize()) {
-                SubsetOp subsetOp = new SubsetOp();
-                subsetOp.setParameterDefaultValues();
-                subsetOp.setSourceProduct(reprojectedProduct);
-                subsetOp.setRegion(new Rectangle(x, y, patchCS.getPatchSize(), patchCS.getPatchSize()));
-                subsetOp.setSubSamplingX(1);
-                subsetOp.setSubSamplingY(1);
-                subsetOp.setCopyMetadata(false);
-
-                Product subsetProduct = subsetOp.getTargetProduct();
-                ProductData.UTC startTime = reprojectedProduct.getStartTime();
-
                 String patchIdX = String.format(PatchCS.PATCH_X_FORMAT, patchX);
                 String patchIdY = String.format(PatchCS.PATCH_Y_FORMAT, patchY);
-                String patchIdT = "T" + DATE_FORMAT.format(startTime.getAsDate());
 
-                subsetProduct.setStartTime(reprojectedProduct.getStartTime());
-                subsetProduct.setEndTime(reprojectedProduct.getEndTime());
-                subsetProduct.setName(String.format("%s_%s_%s", patchIdX, patchIdY, patchIdT));
-                MetadataElement metadataRoot = subsetProduct.getMetadataRoot();
-                MetadataElement globalsAttributes = new MetadataElement("Global_Attributes");
-                globalsAttributes.setAttributeString("sourceName", product.getName());
-                globalsAttributes.setAttributeString("sourceFile", product.getFileLocation().getPath());
-                metadataRoot.addElement(globalsAttributes);
+                Geometry patchGeometry = patchCS.getPatchGeometry(patchX, patchY);
 
-                Band spectralBand = subsetProduct.getBand(spectralBandName);
-                Assert.state(spectralBand != null, String.format("spectralBand != null, where is '%s'?", spectralBandName));
-                MultiLevelImage validMaskImage = spectralBand.getValidMaskImage();
-                double validPixelRatio = 1;
-                if (validMaskImage != null) {
-                    validPixelRatio = MaskStats.maskedRatio(validMaskImage);
-                }
+                if (sourceGeometry.intersects(patchGeometry)) {
+                    double patchArea = patchGeometry.getArea();
+                    Geometry intersectionGeometry = patchGeometry.intersection(sourceGeometry);
+                    double intersectionArea = intersectionGeometry.getArea();
+                    if (intersectionArea > 0.2 * patchArea ) {
+                        SubsetOp subsetOp = new SubsetOp();
+                        subsetOp.setParameterDefaultValues();
+                        subsetOp.setSourceProduct(reprojectedProduct);
+                        subsetOp.setRegion(new Rectangle(x, y, patchCS.getPatchSize(), patchCS.getPatchSize()));
+                        subsetOp.setSubSamplingX(1);
+                        subsetOp.setSubSamplingY(1);
+                        subsetOp.setCopyMetadata(false);
 
-                try {
-                    if (validPixelRatio > 0.2) {
-                        writePatchProduct(subsetProduct, patchIdX, patchIdY);
+                        Product subsetProduct = subsetOp.getTargetProduct();
+                        try {
+                            ProductData.UTC startTime = reprojectedProduct.getStartTime();
+                            String patchIdT = "T" + DATE_FORMAT.format(startTime.getAsDate());
+
+                            subsetProduct.setStartTime(reprojectedProduct.getStartTime());
+                            subsetProduct.setEndTime(reprojectedProduct.getEndTime());
+                            subsetProduct.setName(String.format("%s_%s_%s", patchIdX, patchIdY, patchIdT));
+                            MetadataElement metadataRoot = subsetProduct.getMetadataRoot();
+                            MetadataElement globalsAttributes = new MetadataElement("Global_Attributes");
+                            globalsAttributes.setAttributeString("sourceName", product.getName());
+                            globalsAttributes.setAttributeString("sourceFile", product.getFileLocation().getPath());
+                            metadataRoot.addElement(globalsAttributes);
+
+                            Band spectralBand = subsetProduct.getBand(spectralBandName);
+                            Assert.state(spectralBand != null, String.format("spectralBand != null, where is '%s'?", spectralBandName));
+                            MultiLevelImage validMaskImage = spectralBand.getValidMaskImage();
+                            double validPixelRatio = 1;
+                            if (validMaskImage != null) {
+                                validPixelRatio = MaskStats.maskedRatio(validMaskImage);
+                            }
+
+                            if (validPixelRatio > 0.2) {
+                                writePatchProduct(subsetProduct, patchIdX, patchIdY);
+                            } else {
+                                System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
+                            }
+                        } finally {
+                            disposeImages(subsetProduct.getBands());
+                            disposeImages(subsetProduct.getTiePointGrids());
+                            disposeImages(subsetProduct.getMaskGroup().toArray(new Mask[0]));
+                            subsetProduct.dispose();
+                        }
                     } else {
-                        System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
+                        System.out.printf("Rejected patch %s_%s. Only small intersection with source\n", patchIdX, patchIdY);
                     }
-                } finally {
-                    disposeImages(subsetProduct.getBands());
-                    disposeImages(subsetProduct.getTiePointGrids());
-                    disposeImages(subsetProduct.getMaskGroup().toArray(new Mask[0]));
-                    subsetProduct.dispose();
+                } else {
+                    System.out.printf("Rejected patch %s_%s. No intersection with source\n", patchIdX, patchIdY);
                 }
 
                 printWriter.printf("%d\t%d\t%d\t%.1f\t%d\t%d\t%d\t%d%n",

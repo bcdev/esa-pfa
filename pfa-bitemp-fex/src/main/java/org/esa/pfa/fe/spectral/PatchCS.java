@@ -1,11 +1,20 @@
 package org.esa.pfa.fe.spectral;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.esa.snap.framework.datamodel.GeoPos;
 import org.esa.snap.framework.datamodel.Product;
 import org.esa.snap.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.snap.util.ProductUtils;
 
 import java.awt.Point;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
+import java.util.ArrayList;
 
 /**
  * The global patch coordinate system.
@@ -16,6 +25,8 @@ public class PatchCS {
     public static final String PATCH_X_FORMAT = "X%04d";
     public static final String PATCH_Y_FORMAT = "Y%04d";
     public static final String PATCH_NAME_FORMAT = PATCH_X_FORMAT + PATCH_Y_FORMAT;
+
+    private static final GeometryFactory geometryFactory = new GeometryFactory();
 
     private final double patchExtend;
     private final int patchSize;
@@ -47,6 +58,22 @@ public class PatchCS {
         int patchX = (int) ((lon + 180.0) / patchExtend);
         int patchY = (int) ((90.0 - lat) / patchExtend);
         return new Point(patchX, patchY);
+    }
+
+    public Geometry getPatchGeometry(int tileX, int tileY) {
+        double x1 = tileXToDegree(tileX);
+        double x2 = tileXToDegree(tileX + 1);
+        double y1 = tileYToDegree(tileY);
+        double y2 = tileYToDegree(tileY + 1);
+        return geometryFactory.toGeometry(new Envelope(x1, x2, y1, y2));
+    }
+
+    private double tileXToDegree(int tileX) {
+        return ((tileX * patchExtend) - 180.0);
+    }
+
+    private double tileYToDegree(int tileY) {
+        return 90.0 - (tileY * patchExtend);
     }
 
     public Product getReprojectedProduct(Product source) {
@@ -136,4 +163,41 @@ public class PatchCS {
         }
         return  result;
     }
+
+    static Geometry computeProductGeometry(Product product) {
+        final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+        final com.vividsolutions.jts.geom.Polygon[] polygons = new com.vividsolutions.jts.geom.Polygon[paths.length];
+        for (int i = 0; i < paths.length; i++) {
+            polygons[i] = convertAwtPathToJtsPolygon(paths[i]);
+        }
+        final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
+                polygons.length == 1 ? polygons[0] : geometryFactory.createMultiPolygon(polygons));
+        return peuckerSimplifier.getResultGeometry();
+    }
+
+    private static com.vividsolutions.jts.geom.Polygon convertAwtPathToJtsPolygon(Path2D path) {
+        final PathIterator pathIterator = path.getPathIterator(null);
+        ArrayList<double[]> coordList = new ArrayList<>();
+        int lastOpenIndex = 0;
+        while (!pathIterator.isDone()) {
+            final double[] coords = new double[6];
+            final int segType = pathIterator.currentSegment(coords);
+            if (segType == PathIterator.SEG_CLOSE) {
+                // we should only detect a single SEG_CLOSE
+                coordList.add(coordList.get(lastOpenIndex));
+                lastOpenIndex = coordList.size();
+            } else {
+                coordList.add(coords);
+            }
+            pathIterator.next();
+        }
+        final Coordinate[] coordinates = new Coordinate[coordList.size()];
+        for (int i1 = 0; i1 < coordinates.length; i1++) {
+            final double[] coord = coordList.get(i1);
+            coordinates[i1] = new Coordinate(coord[0], coord[1]);
+        }
+
+        return geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+    }
+
 }
