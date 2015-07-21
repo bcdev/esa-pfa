@@ -17,7 +17,9 @@ import org.esa.snap.gpf.operators.standard.SubsetOp;
 import org.esa.snap.util.SystemUtils;
 
 import javax.media.jai.JAI;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileWriter;
@@ -104,7 +106,7 @@ public class BiTempPreprocessor {
                     double patchArea = patchGeometry.getArea();
                     Geometry intersectionGeometry = patchGeometry.intersection(sourceGeometry);
                     double intersectionArea = intersectionGeometry.getArea();
-                    if (intersectionArea > 0.2 * patchArea ) {
+                    if (intersectionArea > 0.2 * patchArea) {
                         SubsetOp subsetOp = new SubsetOp();
                         subsetOp.setParameterDefaultValues();
                         subsetOp.setSourceProduct(reprojectedProduct);
@@ -113,10 +115,6 @@ public class BiTempPreprocessor {
                         subsetOp.setSubSamplingY(1);
                         subsetOp.setCopyMetadata(false);
 
-                try {
-                    if (validPixelRatio > 0.2) {
-                        System.out.printf("Writing patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
-                        writePatchProduct(subsetProduct, patchIdX, patchIdY);
                         Product subsetProduct = subsetOp.getTargetProduct();
                         try {
                             ProductData.UTC startTime = reprojectedProduct.getStartTime();
@@ -140,21 +138,21 @@ public class BiTempPreprocessor {
                             }
 
                             if (validPixelRatio > 0.2) {
-                                writePatchProduct(subsetProduct, patchIdX, patchIdY);
+                                System.out.printf("Writing patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
+                                try {
+                                    writePatchProduct(subsetProduct, patchIdX, patchIdY);
+                                } catch (IOException e) {
+                                    System.err.println("ERROR: " + e.getMessage());
+                                }
                             } else {
                                 System.out.printf("Rejected patch %s with valid-pixel ratio of %.1f%%\n", subsetProduct.getName(), 100 * validPixelRatio);
                             }
                         } finally {
-                            disposeImages(subsetProduct.getBands());
-                            disposeImages(subsetProduct.getTiePointGrids());
-                            disposeImages(subsetProduct.getMaskGroup().toArray(new Mask[0]));
                             subsetProduct.dispose();
                         }
                     } else {
                         System.out.printf("Rejected patch %s_%s. Only small intersection with source\n", patchIdX, patchIdY);
                     }
-                } finally {
-                    subsetProduct.dispose();
                 } else {
                     System.out.printf("Rejected patch %s_%s. No intersection with source\n", patchIdX, patchIdY);
                 }
@@ -188,19 +186,13 @@ public class BiTempPreprocessor {
             Files.createDirectories(outputDir);
         }
 
-        System.out.println("Writing patch " + outputFile);
-        long dt;
-        try {
-            long t1 = System.currentTimeMillis();
-            ProductIO.writeProduct(patchProduct, outputFile.toFile(), "BEAM-DIMAP", false);
-            long t2 = System.currentTimeMillis();
-            dt = t2 - t1;
-            writtenPatchCount++;
-            patchTimeSum += dt;
-            System.out.printf("Patch written after %d ms (%.1f ms in average)\n", dt, patchTimeSum / writtenPatchCount);
-        } catch (IOException e) {
-            System.err.println("ERROR: " + e.getMessage());
-        }
+        long t1 = System.currentTimeMillis();
+        ProductIO.writeProduct(patchProduct, outputFile.toFile(), "BEAM-DIMAP", false);
+        long t2 = System.currentTimeMillis();
+        long dt = t2 - t1;
+        writtenPatchCount++;
+        patchTimeSum += dt;
+        System.out.printf("Patch written after %d ms (%.1f ms in average)\n", dt, patchTimeSum / writtenPatchCount);
     }
 
     public static void main(String[] args) throws IOException {
