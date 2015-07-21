@@ -50,12 +50,17 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "Logarithmize sources")
     private boolean logSources;
 
+    private int validMaskIndex = -1;
+
     public SpectralFeaturesOp() {
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-
+        if (validMaskIndex != -1 && !sourceSamples[spectralBands.length*2].getBoolean()) {
+            setInvalid(targetSamples);
+            return;
+        }
         // see https://en.wikipedia.org/wiki/N-sphere
 
         int n = spectralBands.length - 1;
@@ -129,7 +134,10 @@ public class SpectralFeaturesOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SourceSampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.setValidPixelMask(maskExpression);
+        if (maskExpression != null && !maskExpression.isEmpty()) {
+            validMaskIndex = spectralBands.length * 2;
+            sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, getSourceProducts());
+        }
         int n = spectralBands.length;
         for (int i = 0; i < n; i++) {
             sampleConfigurer.defineSample(i, spectralBands[i].getName());
