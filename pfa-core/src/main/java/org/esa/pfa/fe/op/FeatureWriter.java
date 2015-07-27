@@ -306,7 +306,6 @@ public abstract class FeatureWriter extends Operator {
             patchProduct.dispose();
 
             if (disposeGlobalCaches) {
-                ImageManager.getInstance().dispose();
                 JAI.getDefaultInstance().getTileCache().flush();
             }
         } catch (Throwable e) {
