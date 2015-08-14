@@ -17,10 +17,8 @@ package org.esa.pfa.fe;
 
 import com.bc.ceres.core.ServiceRegistry;
 import com.bc.ceres.core.ServiceRegistryManager;
-import org.esa.snap.BeamCoreActivator;
+import org.esa.snap.SnapCoreActivator;
 import org.esa.snap.util.Guardian;
-
-import java.util.Set;
 
 /**
  * An <code>PFAApplicationRegistry</code> provides access to multiple different
@@ -32,8 +30,8 @@ public class PFAApplicationRegistry {
 
     private PFAApplicationRegistry() {
         descriptors = ServiceRegistryManager.getInstance().getServiceRegistry(PFAApplicationDescriptor.class);
-        if (!BeamCoreActivator.isStarted()) {
-            BeamCoreActivator.loadServices(descriptors);
+        if (!SnapCoreActivator.isStarted()) {
+            SnapCoreActivator.loadServices(descriptors);
         }
     }
 
