@@ -1,6 +1,6 @@
 package org.esa.pfa.fe.spectral;
 
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -22,19 +22,19 @@ import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.gpf.OperatorSpi;
-import org.esa.snap.framework.gpf.graph.Graph;
-import org.esa.snap.framework.gpf.graph.GraphIO;
-import org.esa.snap.framework.gpf.graph.GraphProcessor;
-import org.esa.snap.framework.gpf.graph.Node;
-import org.esa.snap.gpf.operators.standard.ReadOp;
-import org.esa.snap.gpf.operators.standard.WriteOp;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.OperatorSpi;
+import org.esa.snap.core.gpf.common.ReadOp;
+import org.esa.snap.core.gpf.common.WriteOp;
+import org.esa.snap.core.gpf.graph.Graph;
+import org.esa.snap.core.gpf.graph.GraphIO;
+import org.esa.snap.core.gpf.graph.GraphProcessor;
+import org.esa.snap.core.gpf.graph.Node;
+import org.esa.snap.core.util.Debug;
+import org.esa.snap.core.util.ProductUtils;
+import org.esa.snap.core.util.SystemUtils;
+import org.esa.snap.core.util.io.FileUtils;
 import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.util.Debug;
-import org.esa.snap.util.ProductUtils;
-import org.esa.snap.util.SystemUtils;
-import org.esa.snap.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.RenderedOp;
@@ -130,22 +130,12 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
 
     private void loadFeatures(final Patch patch, final File tmpOutFolder) {
         try {
-            final File[] fexDirs = tmpOutFolder.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory() && file.getName().startsWith(patch.getPatchName());
-                }
-            });
+            final File[] fexDirs = tmpOutFolder.listFiles(file -> file.isDirectory() && file.getName().startsWith(patch.getPatchName()));
             if (fexDirs == null || fexDirs.length == 0) {
                 return;
             }
 
-            final File[] patchDirs = fexDirs[0].listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory() && file.getName().startsWith("x");
-                }
-            });
+            final File[] patchDirs = fexDirs[0].listFiles(file -> file.isDirectory() && file.getName().startsWith("x"));
             if (patchDirs == null || patchDirs.length == 0) {
                 return;
             }

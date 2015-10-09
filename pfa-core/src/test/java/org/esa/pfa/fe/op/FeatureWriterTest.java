@@ -1,8 +1,8 @@
 package org.esa.pfa.fe.op;
 
 import com.bc.ceres.binding.PropertySet;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.gpf.GPF;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.pfa.fe.op.out.PatchWriter;
 import org.esa.pfa.fe.op.out.PatchWriterFactory;
@@ -95,7 +95,7 @@ public class FeatureWriterTest {
     }
 
     private static class MyPatchWriter implements PatchWriter {
-        ArrayList<MyPatchOutput> patchOutputs = new ArrayList<MyPatchOutput>();
+        ArrayList<MyPatchOutput> patchOutputs = new ArrayList<>();
         boolean initialized;
         boolean closed;
 

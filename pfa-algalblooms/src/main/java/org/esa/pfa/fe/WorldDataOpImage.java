@@ -1,12 +1,12 @@
 package org.esa.pfa.fe;
 
 import com.bc.ceres.core.Assert;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.jai.RasterDataNodeSampleOpImage;
-import org.esa.snap.jai.ResolutionLevel;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.image.RasterDataNodeSampleOpImage;
+import org.esa.snap.core.image.ResolutionLevel;
 
 /**
  * Reads data from a 'world image' in  equirectangular projection.

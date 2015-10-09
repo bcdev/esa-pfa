@@ -17,9 +17,9 @@
 package org.esa.pfa.fe.spectral;
 
 import com.bc.ceres.core.Assert;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Mask;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
 import java.io.FileFilter;

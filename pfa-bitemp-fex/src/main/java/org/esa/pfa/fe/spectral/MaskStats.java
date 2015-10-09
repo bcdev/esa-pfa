@@ -1,7 +1,7 @@
 package org.esa.pfa.fe.spectral;
 
 import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.snap.framework.datamodel.Mask;
+import org.esa.snap.core.datamodel.Mask;
 
 import java.awt.image.DataBufferByte;
 

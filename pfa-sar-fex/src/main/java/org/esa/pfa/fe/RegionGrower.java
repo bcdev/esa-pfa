@@ -15,9 +15,9 @@
  */
 package org.esa.pfa.fe;
 
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.gpf.Tile;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.Tile;
 
 import java.util.ArrayList;
 import java.util.List;

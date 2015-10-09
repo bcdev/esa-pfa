@@ -8,9 +8,9 @@ import org.esa.pfa.gui.ordering.ProductOrder;
 import org.esa.pfa.gui.ordering.ProductOrderBasket;
 import org.esa.pfa.gui.ordering.ProductOrderService;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.util.SystemUtils;
 
 import javax.swing.AbstractAction;
 import java.awt.Desktop;

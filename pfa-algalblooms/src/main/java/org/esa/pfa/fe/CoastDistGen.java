@@ -3,15 +3,15 @@ package org.esa.pfa.fe;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.swing.LayerCanvas;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.CrsGeoCoding;
-import org.esa.snap.framework.datamodel.MetadataElement;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.VirtualBand;
-import org.esa.snap.glevel.BandImageMultiLevelSource;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.MetadataElement;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.VirtualBand;
+import org.esa.snap.core.image.BandImageMultiLevelSource;
+import org.esa.snap.core.util.io.FileUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
@@ -141,12 +141,7 @@ public class CoastDistGen {
         System.out.println("Rendering land mask from shapefiles in " + shapefilesPath + "...");
         final long t0 = currentTimeMillis();
 
-        File[] shapefiles = new File(shapefilesPath).listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".shp") || name.endsWith(".SHP");
-            }
-        });
+        File[] shapefiles = new File(shapefilesPath).listFiles((dir, name) -> name.endsWith(".shp") || name.endsWith(".SHP"));
         if (shapefiles == null || shapefiles.length == 0) {
             System.err.println(MessageFormat.format("Error: No shapefiles found in {0}.", shapefilesPath));
             System.exit(1);
@@ -494,7 +489,7 @@ public class CoastDistGen {
     }
 
     public static FeatureSource<SimpleFeatureType, SimpleFeature> getFeatureSource(URL url) throws IOException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put(ShapefileDataStoreFactory.URLP.key, url);
         map.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
         DataStore shapefileStore = DataStoreFinder.getDataStore(map);

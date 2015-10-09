@@ -17,9 +17,9 @@ package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.util.Debug;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.Debug;
+import org.esa.snap.core.util.SystemUtils;
 
 import java.awt.Dimension;
 import java.awt.image.RenderedImage;
@@ -134,12 +134,11 @@ public class AlgalBloomApplicationDescriptor extends AbstractApplicationDescript
             String yyyy = productName.substring(14, 14 + 4);
             String MM = productName.substring(14 + 4, 14 + 6);
             String dd = productName.substring(14 + 6, 14 + 8);
-            String name = productName;
             return pattern
                     .replace("${yyyy}", yyyy)
                     .replace("${MM}", MM)
                     .replace("${dd}", dd)
-                    .replace("${name}", name);
+                    .replace("${name}", productName);
         };
     }
 

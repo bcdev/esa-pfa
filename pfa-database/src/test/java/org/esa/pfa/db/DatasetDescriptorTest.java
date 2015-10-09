@@ -1,6 +1,6 @@
 package org.esa.pfa.db;
 
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
 import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
@@ -14,7 +14,7 @@ import java.io.StringWriter;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Created by Norman on 31.01.14.
+ * @author Norman
  */
 public class DatasetDescriptorTest {
 
@@ -64,7 +64,7 @@ public class DatasetDescriptorTest {
                 "    <FeatureType>\n" +
                 "      <name>patch</name>\n" +
                 "      <description>Patch product</description>\n" +
-                "      <valueType>org.esa.snap.framework.datamodel.Product</valueType>\n" +
+                "      <valueType>org.esa.snap.core.datamodel.Product</valueType>\n" +
                 "    </FeatureType>\n" +
                 "    <FeatureType>\n" +
                 "      <name>rgb1_ql</name>\n" +

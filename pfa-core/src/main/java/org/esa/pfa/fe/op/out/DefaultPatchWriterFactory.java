@@ -3,9 +3,9 @@ package org.esa.pfa.fe.op.out;
 import com.bc.ceres.core.ExtensionFactory;
 import com.bc.ceres.core.ExtensionManager;
 import org.esa.pfa.fe.op.Feature;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.SystemUtils;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.operator.FileStoreDescriptor;

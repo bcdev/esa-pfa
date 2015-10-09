@@ -1,7 +1,7 @@
 package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.binding.PropertySet;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;

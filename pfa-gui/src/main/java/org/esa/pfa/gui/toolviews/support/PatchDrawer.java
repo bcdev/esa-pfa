@@ -17,7 +17,7 @@ package org.esa.pfa.gui.toolviews.support;
 
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.framework.ui.UIUtils;
+import org.esa.snap.ui.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;

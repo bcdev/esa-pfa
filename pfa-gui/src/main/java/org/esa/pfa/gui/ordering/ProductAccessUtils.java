@@ -1,10 +1,10 @@
 package org.esa.pfa.gui.ordering;
 
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.SystemUtils;
+import org.esa.snap.core.util.io.WildcardMatcher;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.util.SystemUtils;
-import org.esa.snap.util.io.WildcardMatcher;
 import org.netbeans.api.progress.ProgressUtils;
 
 import java.io.File;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by Norman on 05.06.2015.
+ * @author Norman
  */
 public class ProductAccessUtils {
 
@@ -23,9 +23,7 @@ public class ProductAccessUtils {
 
         if (runOffEDT) {
             AtomicReference<File> returnValue = new AtomicReference<>();
-            Runnable operation = () -> {
-                returnValue.set(findLocalFile(productName));
-            };
+            Runnable operation = () -> returnValue.set(findLocalFile(productName));
             ProgressUtils.runOffEventDispatchThread(operation, "Find Local Product", new AtomicBoolean(), false, 50, 1000);
             productFile = returnValue.get();
         } else {

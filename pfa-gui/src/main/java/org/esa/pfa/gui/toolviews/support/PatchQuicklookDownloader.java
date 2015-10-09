@@ -17,7 +17,7 @@ package org.esa.pfa.gui.toolviews.support;
 
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.util.SystemUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -97,8 +97,7 @@ class PatchQuicklookDownloader extends SwingWorker<BufferedImage, Void> {
 
             if (patchX != qlKey.patchX) return false;
             if (patchY != qlKey.patchY) return false;
-            if (!quickLookName.equals(qlKey.quickLookName)) return false;
-            return parentProductName.equals(qlKey.parentProductName);
+            return quickLookName.equals(qlKey.quickLookName) && parentProductName.equals(qlKey.parentProductName);
 
         }
 

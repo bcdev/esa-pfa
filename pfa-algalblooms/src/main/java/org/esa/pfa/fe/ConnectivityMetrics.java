@@ -1,7 +1,7 @@
 package org.esa.pfa.fe;
 
-import org.esa.snap.framework.datamodel.Mask;
-import org.esa.snap.util.ShapeRasterizer;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.util.ShapeRasterizer;
 
 import java.awt.image.DataBufferByte;
 import java.util.Random;

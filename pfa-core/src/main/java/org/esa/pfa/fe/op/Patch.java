@@ -1,8 +1,8 @@
 package org.esa.pfa.fe.op;
 
-import org.esa.snap.framework.datamodel.Product;
 
-import java.awt.*;
+import org.esa.snap.core.datamodel.Product;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
@@ -167,8 +167,7 @@ public final class Patch {
     }
 
     public interface PatchListener {
-
-        public void notifyStateChanged(final Patch patch);
+        void notifyStateChanged(final Patch patch);
     }
 
     public void readFeatureFile(File featureFile, FeatureType[] effectiveFeatureTypes) throws IOException {

@@ -2,7 +2,7 @@ package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertySet;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public abstract class PatchWriterFactory {
     private PropertySet configuration;
 
     public void configure(Map<String, Object> properties) {
-        this.configuration = PropertyContainer.createMapBacked(new HashMap<String, Object>(properties));
+        this.configuration = PropertyContainer.createMapBacked(new HashMap<>(properties));
     }
 
     public PropertySet getConfiguration() {

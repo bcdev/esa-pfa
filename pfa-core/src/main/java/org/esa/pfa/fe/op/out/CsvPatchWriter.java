@@ -1,14 +1,12 @@
 package org.esa.pfa.fe.op.out;
 
 import com.bc.ceres.binding.PropertySet;
-import org.esa.snap.framework.datamodel.Product;
 import org.esa.pfa.fe.op.AttributeType;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
+import org.esa.snap.core.datamodel.Product;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;

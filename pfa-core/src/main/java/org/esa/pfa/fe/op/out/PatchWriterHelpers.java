@@ -1,7 +1,7 @@
 package org.esa.pfa.fe.op.out;
 
-import org.esa.snap.framework.datamodel.Product;
 import org.esa.pfa.fe.op.FeatureType;
+import org.esa.snap.core.datamodel.Product;
 
 import java.awt.image.RenderedImage;
 import java.io.IOException;

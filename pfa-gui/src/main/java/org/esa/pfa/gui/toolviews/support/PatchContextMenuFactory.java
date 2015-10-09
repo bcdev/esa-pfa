@@ -3,7 +3,7 @@ package org.esa.pfa.gui.toolviews.support;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.util.Debug;
+import org.esa.snap.core.util.Debug;
 
 import javax.swing.*;
 import java.awt.*;

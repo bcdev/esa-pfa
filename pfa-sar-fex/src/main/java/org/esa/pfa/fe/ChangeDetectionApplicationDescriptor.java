@@ -17,8 +17,8 @@ package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.SystemUtils;
 
 import java.awt.*;
 import java.awt.image.RenderedImage;

@@ -14,7 +14,7 @@ package org.esa.pfa.fe;/*
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-import org.esa.snap.framework.datamodel.Mask;
+import org.esa.snap.core.datamodel.Mask;
 
 /**
  * For computing the contagion index, see Li & Reynolds (1993, Landscape Ecology vol. 8 no. 3 pp 155-162)

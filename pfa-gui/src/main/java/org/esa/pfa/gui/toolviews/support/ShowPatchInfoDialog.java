@@ -3,7 +3,7 @@ package org.esa.pfa.gui.toolviews.support;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.snap.framework.ui.ModelessDialog;
+import org.esa.snap.ui.ModelessDialog;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;

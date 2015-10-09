@@ -17,10 +17,10 @@ package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.gpf.OperatorException;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.OperatorException;
+import org.esa.snap.core.util.SystemUtils;
 
 /**
  * Base class for SAR Feature Writers

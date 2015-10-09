@@ -18,7 +18,7 @@ package org.esa.pfa.classifier;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
-import org.esa.snap.util.ResourceInstaller;
+import org.esa.snap.core.util.ResourceInstaller;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

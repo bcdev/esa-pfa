@@ -16,7 +16,8 @@
 
 package org.esa.pfa.fe.op.out;
 
-import org.esa.snap.framework.datamodel.GeoPos;
+
+import org.esa.snap.core.datamodel.GeoPos;
 
 import java.io.IOException;
 import java.io.Writer;

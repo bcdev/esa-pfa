@@ -1,10 +1,10 @@
 package org.esa.pfa.gui.toolviews.support;
 
 import org.esa.pfa.gui.ordering.ProductAccessUtils;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.rcp.SnapDialogs;
-import org.esa.snap.util.SystemUtils;
 import org.netbeans.api.progress.ProgressUtils;
 
 import javax.swing.AbstractAction;
