@@ -61,12 +61,12 @@ public class RestClassifierService {
     @Produces(MediaType.TEXT_PLAIN)
     public String listDatabases() throws IOException {
 
-        System.out.println("listDatabases");
+        //System.out.println("listDatabases");
 
         LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
         String[] databases = localDatabaseManager.listDatabases();
 
-        System.out.println("listDatabases = " + String.join("\n", databases));
+        //System.out.println("listDatabases = " + String.join("\n", databases));
 
         return String.join("\n", databases);
     }
@@ -78,13 +78,13 @@ public class RestClassifierService {
     @Produces(MediaType.TEXT_PLAIN)
     public String getApplicationId(@PathParam(value = "databaseName") String databaseName) throws IOException {
 
-        System.out.println("getApplicationId databaseName = [" + databaseName + "]");
+        //System.out.println("getApplicationId databaseName = [" + databaseName + "]");
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
             ClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
             String applicationId = classifierManager.getApplicationId();
 
-            System.out.println("getApplicationId databaseName = [" + databaseName + "] = " + applicationId);
+            //System.out.println("getApplicationId databaseName = [" + databaseName + "] = " + applicationId);
             return applicationId;
         } catch (Throwable ioe) {
             ioe.printStackTrace();
@@ -97,12 +97,12 @@ public class RestClassifierService {
     @Produces(MediaType.TEXT_PLAIN)
     public String listClassifiers(@PathParam(value = "databaseName") String databaseName) throws IOException {
 
-        System.out.println("listClassifiers databaseName = [" + databaseName + "]");
+        //System.out.println("listClassifiers databaseName = [" + databaseName + "]");
 
         LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
         ClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
 
-        System.out.println("listClassifiers databaseName = [" + databaseName + "] = " + String.join("\n", classifierManager.list()));
+        //System.out.println("listClassifiers databaseName = [" + databaseName + "] = " + String.join("\n", classifierManager.list()));
 
         return String.join("\n", classifierManager.list());
     }
@@ -113,7 +113,7 @@ public class RestClassifierService {
     public String getClassifier(@PathParam(value = "databaseName") String databaseName,
                                 @PathParam(value = "classifierName") String classifierName) {
 
-        System.out.println("getClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("getClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -135,7 +135,7 @@ public class RestClassifierService {
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName) {
 
-        System.out.println("createClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("createClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -152,7 +152,7 @@ public class RestClassifierService {
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName) {
 
-        System.out.println("deleteClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("deleteClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -170,7 +170,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @QueryParam(value = "value") int numTrainingImages) {
 
-        System.out.println("setNumTrainingImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("setNumTrainingImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -190,7 +190,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @QueryParam(value = "value") int numRetrievedImages) {
 
-        System.out.println("setNumRetrievedImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("setNumRetrievedImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -211,7 +211,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("queryPatches") String queryPatches) {
 
-        System.out.println("populateArchivePatches databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        //System.out.println("populateArchivePatches databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -302,7 +302,7 @@ public class RestClassifierService {
             @PathParam("patchY") int patchY,
             @PathParam("quicklookBandName") String quicklookBandName) {
 
-        System.out.println("quicklook databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
+        //System.out.println("quicklook databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -330,7 +330,7 @@ public class RestClassifierService {
             @PathParam("patchX") int patchX,
             @PathParam("patchY") int patchY) {
 
-        System.out.println("features databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
+        //System.out.println("features databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
 
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
@@ -350,7 +350,7 @@ public class RestClassifierService {
             @PathParam(value = "databaseName") String databaseName,
             @PathParam("parentProductName") String parentProductName
     ) {
-        System.out.println("fex databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "]");
+        //System.out.println("fex databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "]");
 
         final URI fexUri = uriInfo.getBaseUri().resolve("v1/db/" + databaseName + "/fex/" + parentProductName + "/fex-overview.html");
         return Response.temporaryRedirect(fexUri).build();
@@ -363,7 +363,7 @@ public class RestClassifierService {
             @PathParam("parentProductName") String parentProductName,
             @PathParam("localPart") String localPart
     ) {
-        System.out.println("fexLocalPart databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
+        //System.out.println("fexLocalPart databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
         try {
             LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
             LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
