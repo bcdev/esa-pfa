@@ -489,7 +489,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
                 new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
                     @Override
                     protected RenderedImage createImage(int level) {
-                        return new WorldDataOpImage(product.getGeoCoding(), coastDistBand,
+                        return new WorldDataOpImage(product.getSceneGeoCoding(), coastDistBand,
                                                     ResolutionLevel.create(getModel(), level),
                                                     coastDistWidth, coastDistHeight, coastDistData);
                     }

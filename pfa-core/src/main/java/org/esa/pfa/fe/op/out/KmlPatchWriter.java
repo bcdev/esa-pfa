@@ -50,7 +50,7 @@ public class KmlPatchWriter implements PatchWriter {
     @Override
     public void writePatch(Patch patch, Feature... features) throws IOException {
         final Product patchProduct = patch.getPatchProduct();
-        final GeoCoding geoCoding = patchProduct.getGeoCoding();
+        final GeoCoding geoCoding = patchProduct.getSceneGeoCoding();
         int kmlWriterIndex = 0;
         for (final Feature feature : features) {
             if (PatchWriterHelpers.isImageFeatureType(feature.getFeatureType())) {

@@ -5,7 +5,6 @@ import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.TiePointGeoCoding;
 import org.esa.snap.core.datamodel.TiePointGrid;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.awt.Point;
@@ -50,7 +49,7 @@ public class PatchCSTest {
         source.addTiePointGrid(latTPG);
         source.addTiePointGrid(lonTPG);
         source.addBand("reflec_8", "2.3");
-        source.setGeoCoding(new TiePointGeoCoding(latTPG, lonTPG));
+        source.setSceneGeoCoding(new TiePointGeoCoding(latTPG, lonTPG));
 
         double pixelRes = 0.009; // = 360 / 40000
         int patchSize = 200;
@@ -82,7 +81,7 @@ public class PatchCSTest {
     }
 
     private void testGeoCoding(Product target, double x, double y, double expectedLon, double expectedLat) {
-        GeoPos geoPos = target.getGeoCoding().getGeoPos(new PixelPos(x, y), null);
+        GeoPos geoPos = target.getSceneGeoCoding().getGeoPos(new PixelPos(x, y), null);
         assertEquals(expectedLon, geoPos.lon, 1e-5);
         assertEquals(expectedLat, geoPos.lat, 1e-5);
     }

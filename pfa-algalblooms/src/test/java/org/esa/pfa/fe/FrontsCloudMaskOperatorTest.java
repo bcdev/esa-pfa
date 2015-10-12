@@ -24,7 +24,7 @@ public class FrontsCloudMaskOperatorTest {
         int w = 2;
         int h = 2;
         Product sourceProduct = new Product("A", "B", w, h);
-        sourceProduct.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, w, h, 0, 0, 1, 1));
+        sourceProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, w, h, 0, 0, 1, 1));
         addBand(sourceProduct, "reflec_1", new double[]{
                 0.3819109,
                 0.22538304,
@@ -62,7 +62,7 @@ public class FrontsCloudMaskOperatorTest {
         operator.setThreshold(11);
 
         Product targetProduct = operator.getTargetProduct();
-        assertNotNull(targetProduct.getGeoCoding());
+        assertNotNull(targetProduct.getSceneGeoCoding());
 
         Band[] bands = targetProduct.getBands();
         assertEquals(2, bands.length);

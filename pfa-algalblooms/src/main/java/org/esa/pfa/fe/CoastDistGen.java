@@ -44,7 +44,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -179,7 +178,7 @@ public class CoastDistGen {
         AffineTransform transform = new AffineTransform();
         transform.translate(easting, northing);
         transform.scale(pixelSize, -pixelSize);
-        product.setGeoCoding(new CrsGeoCoding(crs, new Rectangle(0, 0, width, height), transform));
+        product.setSceneGeoCoding(new CrsGeoCoding(crs, new Rectangle(0, 0, width, height), transform));
 
         Band landMaskBand = product.addBand("land_mask", ProductData.TYPE_INT8);
         landMaskBand.setSourceImage(landMaskImage);

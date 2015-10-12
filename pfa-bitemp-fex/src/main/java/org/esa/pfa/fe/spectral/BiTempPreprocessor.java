@@ -88,7 +88,7 @@ public class BiTempPreprocessor {
         }
         Geometry sourceGeometry = PatchCS.computeProductGeometry(product);
 
-        GeoCoding geoCoding = reprojectedProduct.getGeoCoding();
+        GeoCoding geoCoding = reprojectedProduct.getSceneGeoCoding();
         GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(0, 0), null);
 
         Point patchIndex = patchCS.getPatchIndex(geoPos.lat, geoPos.lon);
