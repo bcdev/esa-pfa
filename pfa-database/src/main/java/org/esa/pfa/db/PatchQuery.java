@@ -11,6 +11,9 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.NumericUtils;
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.op.DatasetDescriptor;
 import org.esa.pfa.fe.op.Feature;
 import org.esa.pfa.fe.op.FeatureType;
@@ -18,9 +21,13 @@ import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
@@ -125,8 +132,16 @@ public class PatchQuery implements QueryInterface {
 
     public Patch[] getRandomPatches(final int numPatches) {
         final IndexReader indexReader = indexSearcher.getIndexReader();
-        final List<Patch> patchList = new ArrayList<>(numPatches);
+
         int numDocs = indexReader.numDocs();
+//        System.out.println("numDocs = " + numDocs);
+
+//        return getPatches1(numPatches, indexReader, numDocs);
+        return getPatches2(numPatches, indexReader, numDocs);
+    }
+
+    private Patch[] getPatches1(int numPatches, IndexReader indexReader, int numDocs) {
+        final List<Patch> patchList = new ArrayList<>(numPatches);
         IntStream randomInts = new Random().ints(numPatches, 0, numDocs);
         randomInts.forEach(value -> {
             try {
@@ -146,5 +161,81 @@ public class PatchQuery implements QueryInterface {
             }
         });
         return patchList.toArray(new Patch[patchList.size()]);
+    }
+
+    private Patch[] getPatches2(int numPatches, IndexReader indexReader, int numDocs) {
+        int start = new Random().nextInt(numDocs-numPatches);
+        Patch[] patches = new Patch[numPatches];
+        for (int i = 0; i < patches.length; i++) {
+            Document doc = null;
+            try {
+                doc = indexReader.document(start + i);
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+
+            String productName = doc.getValues("product")[0];
+            if (productName.endsWith(".fex")) {
+                productName = productName.substring(0, productName.length() - 4);
+            }
+            int patchX = Integer.parseInt(doc.getValues("px")[0]);
+            int patchY = Integer.parseInt(doc.getValues("py")[0]);
+
+            Patch patch = new Patch(productName, patchX, patchY);
+            PatchQuery.this.getFeatures(doc, patch);
+
+            patches[i] = patch;
+        }
+        return patches;
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path dbPath = Paths.get(args[0]);
+        System.out.println("dbPath = " + dbPath);
+
+        long t1 = System.currentTimeMillis();
+        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
+        String appName = dsDescriptor.getName();
+        PFAApplicationDescriptor applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(appName);
+        if (applicationDescriptor == null) {
+            throw new IOException("Unknown application name " + appName);
+        }
+
+        PatchQuery db;
+        if (Files.exists(dbPath.resolve("ds-descriptor.xml")) && Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
+            Set<String> defaultFeatureSet = applicationDescriptor.getDefaultFeatureSet();
+            FeatureType[] featureTypes = dsDescriptor.getFeatureTypes();
+            FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
+            db = new PatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
+        } else {
+            throw new IOException();
+        }
+        long t2 = System.currentTimeMillis();
+
+        int NumRetrievedImages = 50;
+
+        int classifiedImages = 0;
+        final List<Patch> relavantImages = new ArrayList<>(NumRetrievedImages);
+        while (relavantImages.size() < NumRetrievedImages && classifiedImages < NumRetrievedImages * 100) {
+            final Patch[] archivePatches = db.getRandomPatches(NumRetrievedImages * 2);
+            classifiedImages += archivePatches.length;
+//            al.classify(archivePatches);
+            for (int i = 0; i < archivePatches.length && relavantImages.size() < NumRetrievedImages; i++) {
+                if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
+                    relavantImages.add(archivePatches[i]);
+                }
+            }
+        }
+        System.out.println("relavantImages            = " + relavantImages.size());
+        System.out.println("classifiedImages          = " + classifiedImages);
+//        Patch[] randomPatches = db.getRandomPatches(5000);
+//        System.out.println("randomPatches.length = " + randomPatches.length);
+
+        long t3 = System.currentTimeMillis();
+
+        long delta1 = t2 - t1;
+        long delta2 = t3 - t2;
+        System.out.println("delta1 = " + delta1);
+        System.out.println("delta2 = " + delta2);
     }
 }

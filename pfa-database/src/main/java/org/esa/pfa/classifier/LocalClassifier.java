@@ -149,7 +149,7 @@ public class LocalClassifier implements Classifier {
             int classifiedImages = 0;
             final List<Patch> relavantImages = new ArrayList<>(model.getNumRetrievedImages());
             while (relavantImages.size() < model.getNumRetrievedImages() && classifiedImages < model.getNumRetrievedImages() * 100) {
-                final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages() * 10);
+                final Patch[] archivePatches = db.getRandomPatches(model.getNumRetrievedImages());
                 classifiedImages += archivePatches.length;
                 al.classify(archivePatches);
                 for (int i = 0; i < archivePatches.length && relavantImages.size() < model.getNumRetrievedImages(); i++) {
