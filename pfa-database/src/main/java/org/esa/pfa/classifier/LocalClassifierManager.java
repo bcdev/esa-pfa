@@ -16,10 +16,14 @@
 
 package org.esa.pfa.classifier;
 
+import org.esa.pfa.db.DsIndexerTool;
+import org.esa.pfa.db.PatchQuery;
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.PatchAccess;
 import org.esa.pfa.fe.op.DatasetDescriptor;
+import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 
 import javax.imageio.ImageIO;
@@ -32,35 +36,44 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A local implementation for the classifier
  */
 public class LocalClassifierManager implements ClassifierManager {
 
-    private final Path dbPath;
     private final Path classifierStoragePath;
     private final PatchAccess patchAccess;
-    private final PFAApplicationDescriptor appDescriptor;
+    private final PFAApplicationDescriptor applicationDescriptor;
+    private final String applicationName;
+    private final PatchQuery patchQuery;
 
     public LocalClassifierManager(Path dbPath) throws IOException {
-        this.dbPath = dbPath;
         this.classifierStoragePath = dbPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
         }
-        DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
-        String appName = dsDescriptor.getName();
-        this.appDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(appName);
-        if (appDescriptor == null) {
-            throw new IOException("Unknown application name " + appName);
+        DatasetDescriptor datasetDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
+        applicationName = datasetDescriptor.getName();
+        this.applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(applicationName);
+        if (applicationDescriptor == null) {
+            throw new IOException("Unknown application name " + applicationName);
         }
-        this.patchAccess = new PatchAccess(dbPath, appDescriptor.getProductNameResolver());
+        Set<String> defaultFeatureSet = applicationDescriptor.getDefaultFeatureSet();
+        FeatureType[] featureTypes = datasetDescriptor.getFeatureTypes();
+        FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
+        patchAccess = new PatchAccess(dbPath, applicationDescriptor.getProductNameResolver());
+        if (Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
+            patchQuery = new PatchQuery(dbPath.toFile(), datasetDescriptor, effectiveFeatureTypes);
+        } else {
+            patchQuery = null; // tests only
+        }
     }
 
     @Override
     public String getApplicationId() {
-        return appDescriptor.getId();
+        return applicationDescriptor.getId();
     }
 
     @Override
@@ -82,8 +95,8 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public Classifier create(String classifierName) throws IOException {
         Path classifierPath = getClassifierPath(classifierName);
-        ClassifierModel classifierModel = new ClassifierModel(appDescriptor.getName());
-        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, appDescriptor, dbPath);
+        ClassifierModel classifierModel = new ClassifierModel(applicationName);
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, patchQuery);
         localClassifier.saveClassifier();
         return localClassifier;
     }
@@ -99,7 +112,11 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public LocalClassifier get(String classifierName) throws IOException {
         Path classifierPath = getClassifierPath(classifierName);
-        return LocalClassifier.loadClassifier(classifierName, classifierPath, dbPath);
+        if (!Files.exists(classifierPath)) {
+            throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
+        }
+        ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
+        return new LocalClassifier(classifierName, classifierModel, classifierPath, patchQuery);
     }
 
     @Override
