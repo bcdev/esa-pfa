@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by marcoz on 29.06.15.
+ * @author marcoz
  */
 public class LocalDatabaseManager implements DatabaseManager {
 

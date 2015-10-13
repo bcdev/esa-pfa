@@ -36,7 +36,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -47,11 +46,10 @@ import java.nio.file.Files;
 @Path("/v1")
 public class RestClassifierService {
 
-    private final URI dbUri;
+    private final LocalDatabaseManager localDbManager;
 
     public RestClassifierService() throws IOException, URISyntaxException {
-        String dbUriProperty = System.getProperty("pfa.dbPath", null);
-        dbUri = new File(dbUriProperty).toURI();
+        localDbManager = CachingLocalDatabaseManager.getInstance();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +61,7 @@ public class RestClassifierService {
 
         //System.out.println("listDatabases");
 
-        LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-        String[] databases = localDatabaseManager.listDatabases();
+        String[] databases = localDbManager.listDatabases();
 
         //System.out.println("listDatabases = " + String.join("\n", databases));
 
@@ -80,8 +77,7 @@ public class RestClassifierService {
 
         //System.out.println("getApplicationId databaseName = [" + databaseName + "]");
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            ClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            ClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             String applicationId = classifierManager.getApplicationId();
 
             //System.out.println("getApplicationId databaseName = [" + databaseName + "] = " + applicationId);
@@ -99,8 +95,7 @@ public class RestClassifierService {
 
         //System.out.println("listClassifiers databaseName = [" + databaseName + "]");
 
-        LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-        ClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+        ClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
 
         //System.out.println("listClassifiers databaseName = [" + databaseName + "] = " + String.join("\n", classifierManager.list()));
 
@@ -116,8 +111,7 @@ public class RestClassifierService {
         //System.out.println("getClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             java.nio.file.Path classifierPath = classifierManager.getClassifierPath(classifierName);
             if (!Files.exists(classifierPath)) {
                 throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
@@ -138,8 +132,7 @@ public class RestClassifierService {
         //System.out.println("createClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             classifierManager.create(classifierName);
         } catch (Throwable ioe) {
             ioe.printStackTrace();
@@ -155,8 +148,7 @@ public class RestClassifierService {
         //System.out.println("deleteClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             classifierManager.delete(classifierName);
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,8 +165,7 @@ public class RestClassifierService {
         //System.out.println("setNumTrainingImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
             classifier.setNumTrainingImages(numTrainingImages);
             classifier.saveClassifier();
@@ -193,8 +184,7 @@ public class RestClassifierService {
         //System.out.println("setNumRetrievedImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
             classifier.setNumRetrievedImages(numRetrievedImages);
             classifier.saveClassifier();
@@ -214,8 +204,7 @@ public class RestClassifierService {
         //System.out.println("populateArchivePatches databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
 
             RestTransferValue query = RestTransferValue.fromXML(queryPatches);
@@ -243,8 +232,7 @@ public class RestClassifierService {
         System.out.println("trainAndClassify databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
 
             RestTransferValue query = RestTransferValue.fromXML(labeledPatches);
@@ -272,8 +260,7 @@ public class RestClassifierService {
         System.out.println("getMostAmbigous databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
 
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
@@ -305,8 +292,7 @@ public class RestClassifierService {
         //System.out.println("quicklook databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "], quicklookBandName = [" + quicklookBandName + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             PatchAccess patchAccess = classifierManager.getPatchAccess();
 
             java.nio.file.Path patchImagePath = patchAccess.getPatchImagePath(parentProductName, patchX, patchY, quicklookBandName);
@@ -333,8 +319,7 @@ public class RestClassifierService {
         //System.out.println("features databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], patchX = [" + patchX + "], patchY = [" + patchY + "]");
 
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             PatchAccess patchAccess = classifierManager.getPatchAccess();
             return patchAccess.getFeaturesAsText(parentProductName, patchX, patchY);
         } catch (IOException e) {
@@ -365,8 +350,7 @@ public class RestClassifierService {
     ) {
         //System.out.println("fexLocalPart databaseName = [" + databaseName + "], parentProductName = [" + parentProductName + "], localPart = [" + localPart + "]");
         try {
-            LocalDatabaseManager localDatabaseManager = new LocalDatabaseManager(dbUri);
-            LocalClassifierManager classifierManager = localDatabaseManager.createClassifierManager(databaseName);
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             PatchAccess patchAccess = classifierManager.getPatchAccess();
             final java.nio.file.Path fexPath = patchAccess.findFexPath(parentProductName);
             if (fexPath != null) {
