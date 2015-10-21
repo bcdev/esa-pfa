@@ -95,7 +95,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
         final JPanel retPanel = new JPanel(new BorderLayout(2, 2));
         retPanel.setBorder(BorderFactory.createTitledBorder("Retrieved Images"));
 
-        drawer = new PatchDrawer(session, true, new Patch[]{});
+        drawer = new PatchDrawer(session);
         drawer.setPatchContextMenuFactory(new RetrievedPatchContextMenuFactory());
         final JScrollPane scrollPane1 = new JScrollPane(drawer);
 

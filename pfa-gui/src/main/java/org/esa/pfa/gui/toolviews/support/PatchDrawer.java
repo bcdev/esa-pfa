@@ -55,7 +55,7 @@ public class PatchDrawer extends JPanel {
     private PatchDrawing selection = null;
 
     public PatchDrawer(final CBIRSession session) {
-        this(session, false, NO_PATCHES);
+        this(session, true, NO_PATCHES);
     }
 
     public PatchDrawer(final CBIRSession session, final boolean multiRow, final Patch[] imageList) {
@@ -78,16 +78,23 @@ public class PatchDrawer extends JPanel {
         this.patches = patches;
         this.removeAll();
 
+        final Insets insets = getInsets();
+        final int width = getWidth() - (insets.left + insets.right);
+
         if (patches.length == 0) {
+            setPreferredSize(new Dimension(width, imgHeight + 2 * margin));
             JLabel label = new JLabel();
             label.setIcon(iconPatch);
             this.add(label);
         } else {
             if (multiRow) {
-                int numCol = 10;
-                int numRow = patches.length / numCol;
+                int numCol = Math.max(width / (imgWidth + margin), 1);
+                int numRow = (int)Math.ceil(patches.length / (double)numCol);
                 int numImages = session.getImageMode().equals(CBIRSession.ImageMode.DUAL) ? 2 : 1;
-                setPreferredSize(new Dimension(((imgWidth * numImages) + margin) * numCol, (imgHeight + margin) * numRow));
+
+                int preferedWidth = (imgWidth * numImages + margin) * numCol + margin;
+                int preferedHeight = (imgHeight + margin) * numRow + margin;
+                setPreferredSize(new Dimension(preferedWidth, preferedHeight));
             }
 
             for (Patch patch : patches) {

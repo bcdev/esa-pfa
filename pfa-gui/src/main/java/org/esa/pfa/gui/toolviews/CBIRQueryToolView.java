@@ -97,11 +97,11 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
         drawer = new PatchDrawer(session);
         drawer.setMinimumSize(new Dimension(500, 310));
-        final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                                                       JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        final JScrollPane scrollPane = new JScrollPane(drawer, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                                       JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         final DragScrollListener dl = new DragScrollListener(drawer);
-        dl.setDraggableElements(DragScrollListener.DRAGABLE_HORIZONTAL_SCROLL_BAR);
+        dl.setDraggableElements(DragScrollListener.DRAGABLE_VERTICAL_SCROLL_BAR);
         drawer.addMouseListener(dl);
         drawer.addMouseMotionListener(dl);
 

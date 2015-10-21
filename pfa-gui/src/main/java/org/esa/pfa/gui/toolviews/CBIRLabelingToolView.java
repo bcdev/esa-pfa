@@ -86,39 +86,39 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
 
     public JComponent createControl() {
 
-        final JPanel relPanel = new JPanel(new BorderLayout(2, 2));
-        relPanel.setBorder(BorderFactory.createTitledBorder("Relevant Images"));
+        final JPanel relevantPanel = new JPanel(new BorderLayout(2, 2));
+        relevantPanel.setBorder(BorderFactory.createTitledBorder("Relevant Images"));
 
         relavantDrawer = new PatchDrawer(session);
-        final JScrollPane scrollPane1 = new JScrollPane(relavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                                                        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        final JScrollPane relevantSP = new JScrollPane(relavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                                        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        final DragScrollListener dl = new DragScrollListener(relavantDrawer);
-        dl.setDraggableElements(DragScrollListener.DRAGABLE_HORIZONTAL_SCROLL_BAR);
-        relavantDrawer.addMouseListener(dl);
-        relavantDrawer.addMouseMotionListener(dl);
+        final DragScrollListener relevantDSL = new DragScrollListener(relavantDrawer);
+        relevantDSL.setDraggableElements(DragScrollListener.DRAGABLE_VERTICAL_SCROLL_BAR);
+        relavantDrawer.addMouseListener(relevantDSL);
+        relavantDrawer.addMouseMotionListener(relevantDSL);
 
-        relPanel.add(scrollPane1, BorderLayout.CENTER);
+        relevantPanel.add(relevantSP, BorderLayout.CENTER);
 
-        final JPanel irrelPanel = new JPanel(new BorderLayout(2, 2));
-        irrelPanel.setBorder(BorderFactory.createTitledBorder("Irrelevant Images"));
+        final JPanel irrelevantPanel = new JPanel(new BorderLayout(2, 2));
+        irrelevantPanel.setBorder(BorderFactory.createTitledBorder("Irrelevant Images"));
 
         irrelavantDrawer = new PatchDrawer(session);
-        final JScrollPane scrollPane2 = new JScrollPane(irrelavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                                                        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        final JScrollPane irrelevantSP = new JScrollPane(irrelavantDrawer, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                                        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        final DragScrollListener dl2 = new DragScrollListener(irrelavantDrawer);
-        dl.setDraggableElements(DragScrollListener.DRAGABLE_HORIZONTAL_SCROLL_BAR);
-        irrelavantDrawer.addMouseListener(dl2);
-        irrelavantDrawer.addMouseMotionListener(dl2);
+        final DragScrollListener irrelevantDSL = new DragScrollListener(irrelavantDrawer);
+        relevantDSL.setDraggableElements(DragScrollListener.DRAGABLE_VERTICAL_SCROLL_BAR);
+        irrelavantDrawer.addMouseListener(irrelevantDSL);
+        irrelavantDrawer.addMouseMotionListener(irrelevantDSL);
 
-        irrelPanel.add(scrollPane2, BorderLayout.CENTER);
+        irrelevantPanel.add(irrelevantSP, BorderLayout.CENTER);
 
-        final JPanel listsPanel = new JPanel();
-        final BoxLayout layout = new BoxLayout(listsPanel, BoxLayout.Y_AXIS);
-        listsPanel.setLayout(layout);
-        listsPanel.add(relPanel);
-        listsPanel.add(irrelPanel);
+        JSplitPane drawerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        drawerPane.setContinuousLayout(true);
+        drawerPane.setResizeWeight(0.25);
+        drawerPane.setTopComponent(relevantPanel);
+        drawerPane.setBottomComponent(irrelevantPanel);
 
         final JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         iterationsLabel = new JLabel();
@@ -134,7 +134,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
 
         final JPanel mainPane = new JPanel(new BorderLayout(5, 5));
         mainPane.add(topOptionsPanel, BorderLayout.NORTH);
-        mainPane.add(listsPanel, BorderLayout.CENTER);
+        mainPane.add(drawerPane, BorderLayout.CENTER);
         mainPane.add(bottomPanel, BorderLayout.SOUTH);
 
         updateControls();
