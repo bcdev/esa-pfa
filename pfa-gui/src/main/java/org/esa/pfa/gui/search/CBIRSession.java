@@ -27,6 +27,7 @@ import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.ordering.ProductOrderBasket;
 import org.esa.pfa.gui.ordering.ProductOrderService;
+import org.esa.pfa.gui.prefs.DatabaseOptionsPanelController;
 import org.esa.pfa.ws.RestDatabaseManager;
 import org.esa.snap.rcp.util.ContextGlobalExtender;
 import org.openide.util.Utilities;
@@ -84,6 +85,7 @@ public class CBIRSession {
     private CBIRSession() {
         productOrderBasket = new ProductOrderBasket();
         productOrderService = new ProductOrderService(productOrderBasket);
+        DatabaseOptionsPanelController.initSession(this);
     }
 
     public static CBIRSession getInstance() {

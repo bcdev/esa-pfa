@@ -20,6 +20,7 @@ import com.bc.ceres.core.SubProgressMonitor;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.DatabaseManager;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
@@ -75,12 +76,6 @@ import java.util.prefs.Preferences;
  */
 public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRSession.Listener {
 
-    private final static Dimension preferredDimension = new Dimension(550, 300);
-    private final static String PROPERTY_KEY_DB_PATH = "app.file.cbir.dbPath";
-    private final static String PROPERTY_KEY_DB_REMOTE = "app.file.cbir.remoteAddress";
-    private final static String PROPERTY_KEY_DB_ISREMOTE = "app.file.cbir.isRemote";
-    private final static String PROPERTY_KEY_DB_APP = "app.file.cbir.appId";
-
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
     private JButton queryBtn, labelBtn, applyBtn;
@@ -88,9 +83,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JTextField numRetrievedImages;
     private JButton updateBtn;
     private JLabel iterationsLabel = new JLabel();
-    private JTextField serviceLabel;
-    private JTextField dbLabel;
-    private JTextField appLabel;
+    private JLabel applicationLabel;
 
     private final CBIRSession session;
 
@@ -108,82 +101,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         final JPanel contentPane = new JPanel(new GridBagLayout());
 
+        applicationLabel = new JLabel("");
 
-        dbLabel = new JTextField("");
-        dbLabel.setEnabled(false);
-        dbLabel.setColumns(20);
-        serviceLabel = new JTextField("");
-        serviceLabel.setEnabled(false);
-        serviceLabel.setColumns(20);
-        appLabel = new JTextField("");
-        appLabel.setEnabled(false);
-        appLabel.setColumns(20);
-
-        JButton dbSelectButton = new JButton(new AbstractAction("Service") {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    final SelectDbDialog dlg = new SelectDbDialog(session);
-                    dlg.show();
-
-                    String localFolder = dlg.getLocalFolder();
-                    String remoteAddress = dlg.getRemoteAddress();
-                    String uri = dlg.isLocal() ? localFolder : remoteAddress;
-                    String databaseName = dlg.getDatabaseName();
-                    String application = dlg.getApplication();
-
-                    serviceLabel.setText(uri);
-                    dbLabel.setText(databaseName);
-                    appLabel.setText(application);
-                    initClassifierList();
-                } catch (Throwable t) {
-                    SnapApp.getDefault().handleError("Error connecting to database: "+t.getMessage(), t);
-                }
-            }
-        });
-
-        final JPanel servicePane = new JPanel(new GridBagLayout());
-        final GridBagConstraints sgbc = GridBagUtils.createDefaultConstraints();
-        sgbc.anchor = GridBagConstraints.NORTHWEST;
-
-        sgbc.fill = GridBagConstraints.NONE;
-        sgbc.gridx = 0;
-        sgbc.gridy = 0;
-        sgbc.gridwidth = 1;
-        servicePane.add(new JLabel("Service: "), sgbc);
-
-        sgbc.gridx = 1;
-        sgbc.fill = GridBagConstraints.HORIZONTAL;
-        sgbc.gridwidth = 3;
-        servicePane.add(serviceLabel, sgbc);
-
-        sgbc.gridx = 0;
-        sgbc.gridy = 1;
-        sgbc.gridwidth = 1;
-        sgbc.fill = GridBagConstraints.NONE;
-        servicePane.add(new JLabel("Database: "), sgbc);
-
-        sgbc.gridx = 1;
-        sgbc.fill = GridBagConstraints.HORIZONTAL;
-        sgbc.gridwidth = 3;
-        servicePane.add(dbLabel, sgbc);
-
-        sgbc.gridx = 0;
-        sgbc.gridy = 2;
-        sgbc.gridwidth = 1;
-        sgbc.fill = GridBagConstraints.NONE;
-        servicePane.add(new JLabel("Application: "), sgbc);
-
-        sgbc.gridx = 1;
-        sgbc.fill = GridBagConstraints.HORIZONTAL;
-        sgbc.gridwidth = 3;
-        servicePane.add(appLabel, sgbc);
-
-        sgbc.gridx = 4;
-        sgbc.gridy = 0;
-        sgbc.gridheight = 3;
-        sgbc.gridwidth = 1;
-        sgbc.fill = GridBagConstraints.VERTICAL;
-        servicePane.add(dbSelectButton, sgbc);
+        final JPanel applicationPanel = new JPanel(new BorderLayout(4, 4));
+        applicationPanel.add(applicationLabel, BorderLayout.NORTH);
 
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -192,7 +113,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
-        contentPane.add(servicePane, gbc);
+
+        contentPane.add(applicationPanel, gbc);
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = 1;
@@ -448,6 +370,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private void updateControls() {
+        PFAApplicationDescriptor appDescriptor = session.getApplicationDescriptor();
+        if (appDescriptor != null) {
+            applicationLabel.setText("Application: " + appDescriptor.getName());
+        } else {
+            applicationLabel.setText("");
+        }
         newBtn.setEnabled(session.hasClassifierManager());
 
         final boolean hasActiveClassifier = session.hasClassifier();
@@ -504,199 +432,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         @Override
         protected void onOK() {
             hide();
-        }
-    }
-
-    private static class SelectDbDialog extends ModalDialog {
-
-        private final JTextField localFolder;
-        private final JTextField remoteAddress;
-        private final JComboBox<String> databaseCombo;
-        private final JRadioButton isLocal;
-        private final JRadioButton isRemote;
-        private final JLabel application;
-
-        private final CBIRSession session;
-        private Exception error = null;
-
-        public SelectDbDialog(final CBIRSession session) {
-            super(SnapApp.getDefault().getMainFrame(), "Select Database", ModalDialog.ID_OK, null);
-            this.session = session;
-
-            final Preferences preferences = SnapApp.getDefault().getPreferences();
-            String folderValue = preferences.get(PROPERTY_KEY_DB_PATH, "");
-            String remoteValue = preferences.get(PROPERTY_KEY_DB_REMOTE, "http://www.brockmann-consult.de/pfa/ws");
-            String isRemoteValue = preferences.get(PROPERTY_KEY_DB_ISREMOTE, Boolean.TRUE.toString());
-
-            boolean isRemoteb = Boolean.parseBoolean(isRemoteValue);
-            ButtonGroup group = new ButtonGroup();
-            isLocal = new JRadioButton("Local", !isRemoteb);
-            isRemote = new JRadioButton("Remote", isRemoteb);
-            group.add(isLocal);
-            group.add(isRemote);
-
-            localFolder = new JTextField(folderValue);
-            remoteAddress = new JTextField(remoteValue);
-            localFolder.setColumns(24);
-            remoteAddress.setColumns(24);
-            application = new JLabel();
-
-            final ActionListener updateAction = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    update();
-                }
-            };
-            localFolder.addActionListener(updateAction);
-            remoteAddress.addActionListener(updateAction);
-            isLocal.addActionListener(updateAction);
-            isRemote.addActionListener(updateAction);
-
-            folderValue = folderValue != null ? folderValue : "";
-            final File dbFolder = new File(folderValue);
-
-            final JButton fileChooserButton = new JButton(new AbstractAction("...") {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    FolderChooser chooser = new FolderChooser();
-                    chooser.setDialogTitle("Find database folder");
-                    if (dbFolder.exists()) {
-                        chooser.setSelectedFolder(dbFolder);
-                    }
-                    final Window window = SwingUtilities.getWindowAncestor((JComponent) event.getSource());
-                    if (chooser.showDialog(window, "Select") == JFileChooser.APPROVE_OPTION) {
-                        File selectedFolder = chooser.getSelectedFolder();
-                        localFolder.setText(selectedFolder.getAbsolutePath());
-                    }
-                    update();
-                }
-            });
-
-            final JPanel contentPane = new JPanel(new GridBagLayout());
-            final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTHWEST;
-            gbc.gridx = 0;
-            gbc.gridy = 0;
-            gbc.insets = new Insets(3,3,3,3);
-
-            gbc.gridx = 0;
-            gbc.gridy = 1;
-            contentPane.add(this.isLocal, gbc);
-            gbc.gridx = 1;
-            contentPane.add(localFolder, gbc);
-            gbc.gridx = 2;
-            contentPane.add(fileChooserButton, gbc);
-
-            //////////
-
-            gbc.gridx = 0;
-            gbc.gridy = 2;
-            contentPane.add(isRemote, gbc);
-
-            gbc.gridx = 1;
-            gbc.gridwidth = 2;
-            contentPane.add(remoteAddress, gbc);
-            gbc.gridwidth = 1;
-
-            ///////////
-
-            gbc.gridx = 0;
-            gbc.gridy = 3;
-            contentPane.add(new Label("Database:"), gbc);
-            databaseCombo = new JComboBox<>();
-            databaseCombo.setEditable(false);
-            databaseCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if(e.getStateChange() == ItemEvent.SELECTED) {
-                        selectDatabase();
-                    }
-                }
-            });
-
-            gbc.gridx = 1;
-            gbc.gridwidth = 2;
-            contentPane.add(databaseCombo, gbc);
-            gbc.gridwidth = 1;
-
-            gbc.gridx = 0;
-            gbc.gridy = 4;
-            contentPane.add(new Label("Application:"), gbc);
-            gbc.gridx = 1;
-            gbc.gridwidth = 2;
-            contentPane.add(application, gbc);
-
-            update();
-
-            setContent(contentPane);
-        }
-
-        boolean isLocal() {
-            return isLocal.isSelected();
-        }
-
-        String getLocalFolder() {
-            return localFolder.getText();
-        }
-
-        String getRemoteAddress() {
-            return remoteAddress.getText();
-        }
-
-        String getDatabaseName() {
-            return (String) databaseCombo.getSelectedItem();
-        }
-
-        String getApplication() {
-            return application.getText();
-        }
-
-        private void update() {
-            error = null;
-            String localFolder = getLocalFolder();
-            String remoteAddress = getRemoteAddress();
-            String uri = isLocal() ? localFolder : remoteAddress;
-
-            try {
-                databaseCombo.setModel(new DefaultComboBoxModel<>());
-
-                DatabaseManager databaseManager = session.createDatabaseManager(uri);
-                for (String app : databaseManager.listDatabases()) {
-                    System.out.println("app = " + app);
-                    databaseCombo.addItem(app);
-                }
-                String appIdValue = SnapApp.getDefault().getPreferences().get(PROPERTY_KEY_DB_APP, "AlgalBloom");
-                databaseCombo.setSelectedItem(appIdValue);
-
-            } catch (Exception e) {
-                error = e;
-                //continue
-            }
-        }
-
-        private void selectDatabase() {
-            try {
-                session.selectDatabase(getDatabaseName());
-                application.setText(session.getApplicationDescriptor().getName());
-
-            } catch (IOException e) {
-                SnapApp.getDefault().handleError("Error selecting database: "+e.getMessage(), e);
-            }
-        }
-
-        @Override
-        protected void onOK() {
-            if(error == null) {
-                Preferences preferences = SnapApp.getDefault().getPreferences();
-                preferences.put(PROPERTY_KEY_DB_PATH, getLocalFolder());
-                preferences.put(PROPERTY_KEY_DB_REMOTE, getRemoteAddress());
-                preferences.put(PROPERTY_KEY_DB_ISREMOTE, Boolean.toString(!isLocal()));
-                preferences.put(PROPERTY_KEY_DB_APP, getDatabaseName());
-                hide();
-            } else {
-                SnapDialogs.showError("Unable to connect to database: "+ error.toString());
-            }
         }
     }
 
