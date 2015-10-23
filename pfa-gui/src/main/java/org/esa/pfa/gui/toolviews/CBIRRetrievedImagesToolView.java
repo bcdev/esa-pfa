@@ -108,7 +108,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
         final JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(accuracyLabel);
 
-        improveBtn = new JButton("Improve Classifier");
+        improveBtn = new JButton("Labeling");
         improveBtn.setActionCommand("improveBtn");
         improveBtn.addActionListener(this);
         bottomPanel.add(improveBtn);

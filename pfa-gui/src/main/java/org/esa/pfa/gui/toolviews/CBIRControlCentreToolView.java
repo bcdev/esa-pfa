@@ -306,7 +306,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        labelBtn = new JButton(new AbstractAction("Label") {
+        labelBtn = new JButton(new AbstractAction("Labeling") {
             public void actionPerformed(ActionEvent e) {
                 if (!session.hasClassifier()) {
                     return;
@@ -332,7 +332,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        applyBtn = new JButton(new AbstractAction("Apply") {
+        applyBtn = new JButton(new AbstractAction("Retrieve") {
             public void actionPerformed(ActionEvent e) {
                 try {
                     if (!session.hasClassifier()) {

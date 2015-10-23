@@ -121,7 +121,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
         editBtn.setEnabled(false);
         bottomPanel.add(editBtn);
 
-        startTrainingBtn = new JButton("Start Training");
+        startTrainingBtn = new JButton("Labeling");
         startTrainingBtn.setActionCommand("startTrainingBtn");
         startTrainingBtn.addActionListener(this);
         startTrainingBtn.setEnabled(false);
