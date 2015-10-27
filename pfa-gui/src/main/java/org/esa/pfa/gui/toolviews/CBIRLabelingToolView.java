@@ -124,7 +124,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
         iterationsLabel = new JLabel();
         bottomPanel.add(iterationsLabel);
 
-        applyBtn = new JButton("Use Lables and Retrieve");
+        applyBtn = new JButton("Use Labels and Retrieve");
         applyBtn.setActionCommand("applyBtn");
         applyBtn.addActionListener(this);
         bottomPanel.add(applyBtn);
