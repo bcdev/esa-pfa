@@ -58,8 +58,7 @@ public class ServerMain {
         CachingLocalDatabaseManager.setDbUri(new File(dbPath).toURI());
         final HttpServer server = startServer(URI.create(serverUri));
 
-        System.out.println(String.format("Jersey app started with WADL available at " +
-                                                 "%s/application.wadl\nHit enter to stop it...", serverUri));
+        System.out.println(String.format("Jersey app started with WADL available at %s/application.wadl", serverUri));
 //        System.in.read();
 //        server.shutdownNow();
     }
