@@ -92,6 +92,9 @@ public class DsIndexer implements AutoCloseable {
         indexWriter.close();
     }
 
+    public long getNumDocs() {
+        return docID;
+    }
 
     private interface IndexableFieldFactory {
         IndexableField createIndexableField(String fieldName, String fieldValue, Field.Store fieldStore);

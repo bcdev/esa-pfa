@@ -119,7 +119,7 @@ public class DsIndexerTool {
             }
 
             long t2 = System.currentTimeMillis();
-            System.out.println("patches added to index within " + ((t2 - t1) / 1000) + " seconds");
+            System.out.println(dsIndexer.getNumDocs()+" patches added to index within " + ((t2 - t1) / 1000) + " seconds");
         }
         return 0;
     }
