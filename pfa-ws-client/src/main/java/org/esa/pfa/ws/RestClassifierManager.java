@@ -18,9 +18,6 @@ package org.esa.pfa.ws;
 
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.pfa.classifier.ClassifierModel;
-import org.esa.pfa.fe.PFAApplicationDescriptor;
-import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.fe.op.Patch;
 
 import javax.ws.rs.client.Entity;
@@ -58,19 +55,9 @@ public class RestClassifierManager implements ClassifierManager {
 
     @Override
     public Classifier create(String classifierName) throws IOException {
-        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
-        PFAApplicationDescriptor applicationDescriptor = applicationRegistry.getDescriptorById(getApplicationId());
-        if (applicationDescriptor == null) {
-            throw new IOException("Unknown application id " + getApplicationId());
-        }
-        ClassifierModel classifierModel = new ClassifierModel(applicationDescriptor.getName());
-
-        Form form = new Form();
-
         WebTarget classifierTarget = target.path("classifier").path(classifierName);
-        classifierTarget.request().post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-
-        return new RestClassifier(classifierName, classifierModel, classifierTarget);
+        classifierTarget.request().post(Entity.entity(new Form(), MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        return new RestClassifier(classifierName, classifierTarget);
     }
 
     @Override
@@ -80,11 +67,7 @@ public class RestClassifierManager implements ClassifierManager {
 
     @Override
     public Classifier get(String classifierName) throws IOException {
-        Response response = target.path("classifier").path(classifierName).request().get();
-        String classifierModelAsXML = response.readEntity(String.class);
-
-        ClassifierModel model = ClassifierModel.fromXML(classifierModelAsXML);
-        return new RestClassifier(classifierName, model, target.path("classifier").path(classifierName));
+        return new RestClassifier(classifierName, target.path("classifier").path(classifierName));
     }
 
     @Override

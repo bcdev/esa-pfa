@@ -267,6 +267,16 @@ public class CBIRSession {
         classifierStats = classifier.getClassifierStats();
     }
 
+    public void setNumRetrievedImagesMax(final int numRetrievedImagesMax) throws Exception {
+        classifier.setNumRetrievedImagesMax(numRetrievedImagesMax);
+        classifierStats = classifier.getClassifierStats();
+    }
+
+    public void setNumRandomImages(final int numRandomImages) throws Exception {
+        classifier.setNumRandomImages(numRandomImages);
+        classifierStats = classifier.getClassifierStats();
+    }
+
     public ClassifierStats getClassifierStats() {
         return classifierStats;
     }

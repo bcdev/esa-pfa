@@ -17,14 +17,11 @@ package org.esa.pfa.gui.toolviews;
 
 
 import com.bc.ceres.core.SubProgressMonitor;
-import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierStats;
-import org.esa.pfa.classifier.DatabaseManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.esa.snap.ui.GridBagUtils;
@@ -44,11 +41,6 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.prefs.Preferences;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
@@ -82,11 +74,14 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JButton queryBtn, labelBtn, applyBtn;
     private JTextField numTrainingImages;
     private JTextField numRetrievedImages;
+    private JTextField numRetrievedImagesMax;
+    private JTextField numRandomImages;
     private JButton updateBtn;
-    private JLabel iterationsLabel = new JLabel();
-    private JLabel patchesInTrainingLabel = new JLabel();
-    private JLabel patchesInQueryLabel = new JLabel();
-    private JLabel patchesInTestLabel = new JLabel();
+    private JLabel iterationsLabel;
+    private JLabel patchesInTrainingLabel;
+    private JLabel patchesInQueryLabel;
+    private JLabel patchesInTestLabel;
+    private JLabel patchesInDBLabel;
     private JLabel applicationLabel;
 
     private final CBIRSession session;
@@ -162,6 +157,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbcOpt.weightx = 0.8;
         numTrainingImages = new JTextField();
         numTrainingImages.setColumns(3);
+        numTrainingImages.setHorizontalAlignment(JTextField.RIGHT);
         numTrainingImages.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,6 +179,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbcOpt.gridx = 1;
         numRetrievedImages = new JTextField();
         numRetrievedImages.setColumns(3);
+        numRetrievedImages.setHorizontalAlignment(JTextField.RIGHT);
         numRetrievedImages.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -197,27 +194,87 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         });
         optionsPane.add(numRetrievedImages, gbcOpt);
 
-        gbcOpt.weightx = 1;
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of retrieved images max:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        numRetrievedImagesMax = new JTextField();
+        numRetrievedImagesMax.setColumns(3);
+        numRetrievedImagesMax.setHorizontalAlignment(JTextField.RIGHT);
+        numRetrievedImagesMax.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if (session.hasClassifier()) {
+                        session.setNumRetrievedImagesMax(Integer.parseInt(numRetrievedImagesMax.getText()));
+                    }
+                } catch (Throwable t) {
+                    SnapApp.getDefault().handleError("Error setting retrieved images max", t);
+                }
+            }
+        });
+        optionsPane.add(numRetrievedImagesMax, gbcOpt);
+
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of random images:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        numRandomImages = new JTextField();
+        numRandomImages.setColumns(3);
+        numRandomImages.setHorizontalAlignment(JTextField.RIGHT);
+        numRandomImages.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if (session.hasClassifier()) {
+                        session.setNumRandomImages(Integer.parseInt(numRandomImages.getText()));
+                    }
+                } catch (Throwable t) {
+                    SnapApp.getDefault().handleError("Error setting random images", t);
+                }
+            }
+        });
+        optionsPane.add(numRandomImages, gbcOpt);
+
+        iterationsLabel = new JLabel();
+        iterationsLabel.setHorizontalAlignment(JLabel.RIGHT);
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
         optionsPane.add(new JLabel("# of iterations:"), gbcOpt);
         gbcOpt.gridx = 1;
         optionsPane.add(iterationsLabel, gbcOpt);
+
+        patchesInTrainingLabel = new JLabel();
+        patchesInTrainingLabel.setHorizontalAlignment(JLabel.RIGHT);
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
         optionsPane.add(new JLabel("# of training patches:"), gbcOpt);
         gbcOpt.gridx = 1;
         optionsPane.add(patchesInTrainingLabel, gbcOpt);
+
+        patchesInQueryLabel = new JLabel();
+        patchesInQueryLabel.setHorizontalAlignment(JLabel.RIGHT);
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
         optionsPane.add(new JLabel("# of query patches:"), gbcOpt);
         gbcOpt.gridx = 1;
         optionsPane.add(patchesInQueryLabel, gbcOpt);
+
+        patchesInTestLabel = new JLabel();
+        patchesInTestLabel.setHorizontalAlignment(JLabel.RIGHT);
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of test pacthes:"), gbcOpt);
+        optionsPane.add(new JLabel("# of test patches:"), gbcOpt);
         gbcOpt.gridx = 1;
         optionsPane.add(patchesInTestLabel, gbcOpt);
+
+        patchesInDBLabel = new JLabel();
+        patchesInDBLabel.setHorizontalAlignment(JLabel.RIGHT);
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of patches in DB:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        optionsPane.add(patchesInDBLabel, gbcOpt);
 
         updateBtn = new JButton(new AbstractAction("Update") {
             public void actionPerformed(ActionEvent e) {
@@ -225,6 +282,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     if (session.hasClassifier()) {
                         session.setNumTrainingImages(Integer.parseInt(numTrainingImages.getText()));
                         session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
+                        session.setNumRetrievedImagesMax(Integer.parseInt(numRetrievedImagesMax.getText()));
+                        session.setNumRandomImages(Integer.parseInt(numRandomImages.getText()));
                     }
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error updating retrieved images", t);
@@ -401,6 +460,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         numTrainingImages.setEnabled(hasActiveClassifier);
         numRetrievedImages.setEnabled(hasActiveClassifier);
+        numRetrievedImagesMax.setEnabled(hasActiveClassifier);
+        numRandomImages.setEnabled(hasActiveClassifier);
         updateBtn.setEnabled(hasActiveClassifier);
 
         queryBtn.setEnabled(hasActiveClassifier);
@@ -413,10 +474,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             int numIterations = classifierStats.getNumIterations();
             numTrainingImages.setText(String.valueOf(classifierStats.getNumTrainingImages()));
             numRetrievedImages.setText(String.valueOf(classifierStats.getNumRetrievedImages()));
+            numRetrievedImagesMax.setText(String.valueOf(classifierStats.getNumRetrievedImagesMax()));
+            numRandomImages.setText(String.valueOf(classifierStats.getNumRandomImages()));
             iterationsLabel.setText(String.valueOf(numIterations));
             patchesInQueryLabel.setText(String.valueOf(classifierStats.getNumPatchesInQueryData()));
             patchesInTestLabel.setText(String.valueOf(classifierStats.getNumPatchesInTestData()));
             patchesInTrainingLabel.setText(String.valueOf(classifierStats.getNumPatchesInTrainingData()));
+            patchesInDBLabel.setText(String.valueOf(classifierStats.getNumPatchesInDatabase()));
 
             labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);

@@ -32,6 +32,10 @@ public interface Classifier {
 
     void setNumRetrievedImages(int numRetrievedImages);
 
+    void setNumRetrievedImagesMax(int numRetrievedImagesMax);
+
+    void setNumRandomImages(int numRandomImages);
+
     ClassifierStats getClassifierStats();
 
     Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
@@ -39,5 +43,4 @@ public interface Classifier {
     Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
 
     Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
-
 }

@@ -79,10 +79,7 @@ public class RestClassifierService {
         //System.out.println("getApplicationId databaseName = [" + databaseName + "]");
         try {
             ClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
-            String applicationId = classifierManager.getApplicationId();
-
-            //System.out.println("getApplicationId databaseName = [" + databaseName + "] = " + applicationId);
-            return applicationId;
+            return classifierManager.getApplicationId();
         } catch (Throwable ioe) {
             ioe.printStackTrace();
             return "";
@@ -162,9 +159,6 @@ public class RestClassifierService {
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName,
             @QueryParam(value = "value") int numTrainingImages) {
-
-        //System.out.println("setNumTrainingImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
-
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
@@ -181,9 +175,6 @@ public class RestClassifierService {
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName,
             @QueryParam(value = "value") int numRetrievedImages) {
-
-        //System.out.println("setNumRetrievedImages databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
-
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
@@ -193,6 +184,39 @@ public class RestClassifierService {
             ioe.printStackTrace();
         }
     }
+
+    @POST
+    @Path("/db/{databaseName}/classifier/{classifierName}/setNumRetrievedImagesMax")
+    public void setNumRetrievedImagesMax(
+            @PathParam(value = "databaseName") String databaseName,
+            @PathParam(value = "classifierName") String classifierName,
+            @QueryParam(value = "value") int numRetrievedImagesMax) {
+        try {
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
+            LocalClassifier classifier = classifierManager.get(classifierName);
+            classifier.setNumRetrievedImagesMax(numRetrievedImagesMax);
+            classifier.saveClassifier();
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    @POST
+    @Path("/db/{databaseName}/classifier/{classifierName}/setNumRandomImages")
+    public void setNumRandomImages(
+            @PathParam(value = "databaseName") String databaseName,
+            @PathParam(value = "classifierName") String classifierName,
+            @QueryParam(value = "value") int numRandomImages) {
+        try {
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
+            LocalClassifier classifier = classifierManager.get(classifierName);
+            classifier.setNumRandomImages(numRandomImages);
+            classifier.saveClassifier();
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
 
     @GET
     @Path("/db/{databaseName}/classifier/{classifierName}/getClassifierStats")
@@ -208,25 +232,32 @@ public class RestClassifierService {
             ClassifierStats classifierStats = classifier.getClassifierStats();
             int numTrainingImages = classifierStats.getNumTrainingImages();
             int numRetrievedImages = classifierStats.getNumRetrievedImages();
+            int numRetrievedImagesMax = classifierStats.getNumRetrievedImagesMax();
+            int numRandomImages = classifierStats.getNumRandomImages();
             int numIterations = classifierStats.getNumIterations();
             int numPatchesInTestData = classifierStats.getNumPatchesInTestData();
-            int numNumPatchesInQueryData = classifierStats.getNumPatchesInQueryData();
-            int numNumPatchesInTrainingData = classifierStats.getNumPatchesInTrainingData();
+            int numPatchesInQueryData = classifierStats.getNumPatchesInQueryData();
+            int numPatchesInTrainingData = classifierStats.getNumPatchesInTrainingData();
+            int numPatchesInDatabase = classifierStats.getNumPatchesInDatabase();
 
             StringBuilder sb = new StringBuilder();
             sb.append(numTrainingImages).append(" ");
             sb.append(numRetrievedImages).append(" ");
+            sb.append(numRetrievedImagesMax).append(" ");
+            sb.append(numRandomImages).append(" ");
             sb.append(numIterations).append(" ");
             sb.append(numPatchesInTestData).append(" ");
-            sb.append(numNumPatchesInQueryData).append(" ");
-            sb.append(numNumPatchesInTrainingData);
+            sb.append(numPatchesInQueryData).append(" ");
+            sb.append(numPatchesInTrainingData).append(" ");
+            sb.append(numPatchesInDatabase);
 
-            return sb.toString();
+            String s = sb.toString();
+            System.out.println("getClassifierStats = " + s);
+            return s;
         } catch (Throwable ioe) {
             ioe.printStackTrace();
             return "";
         }
-
     }
 
     @POST

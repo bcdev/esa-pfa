@@ -17,7 +17,6 @@
 package org.esa.pfa.classifier;
 
 import com.thoughtworks.xstream.XStream;
-import libsvm.svm_model;
 import org.esa.pfa.activelearning.SvmModelReference;
 import org.esa.pfa.fe.op.Patch;
 
@@ -37,10 +36,14 @@ public class ClassifierModel {
 
     private static final int NUM_TRAINING_IMAGES_DEFAULT = 12;
     private static final int NUM_RETRIEVED_IMAGES_DEFAULT = 50;
+    private static final int NUM_RETRIEVED_IMAGES_MAX_DEFAULT = 100 * NUM_RETRIEVED_IMAGES_DEFAULT;
+    private static final int NUM_RANDOM_IMAGES_DEFAULT = 500;
 
     private String applicationName;
-    private int numTrainingImages = NUM_TRAINING_IMAGES_DEFAULT;;
+    private int numTrainingImages = NUM_TRAINING_IMAGES_DEFAULT;
     private int numRetrievedImages = NUM_RETRIEVED_IMAGES_DEFAULT;
+    private int numRetrievedImagesMax = NUM_RETRIEVED_IMAGES_MAX_DEFAULT;
+    private int numRandomImages = NUM_RANDOM_IMAGES_DEFAULT;
     private int numIterations;
     private SvmModelReference svmModelReference;
 
@@ -74,6 +77,22 @@ public class ClassifierModel {
 
     public void setNumRetrievedImages(int numRetrievedImages) {
         this.numRetrievedImages = numRetrievedImages;
+    }
+
+    public int getNumRetrievedImagesMax() {
+        return numRetrievedImagesMax;
+    }
+
+    public void setNumRetrievedImagesMax(int numRetrievedImagesMax) {
+        this.numRetrievedImagesMax = numRetrievedImagesMax;
+    }
+
+    public int getNumRandomImages() {
+        return numRandomImages;
+    }
+
+    public void setNumRandomImages(int numRandomImages) {
+        this.numRandomImages = numRandomImages;
     }
 
     public int getNumIterations() {

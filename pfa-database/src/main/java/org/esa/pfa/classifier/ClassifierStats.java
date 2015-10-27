@@ -23,18 +23,33 @@ public class ClassifierStats {
 
     private final int numTrainingImages;
     private final int numRetrievedImages;
-    private final int numIterationss;
+    private final int numRetrievedImagesMax;
+    private final int numRandomImages;
+    private final int numIterations;
     private final int numPatchesInTestData;
-    private final int numNumPatchesInQueryData;
-    private final int numNumPatchesInTrainingData;
+    private final int numPatchesInQueryData;
+    private final int numPatchesInTrainingData;
+    private final int numPatchesInDatabase;
 
-    public ClassifierStats(int numTrainingImages, int numRetrievedImages, int numIterationss, int numPatchesInTestData, int numNumPatchesInQueryData, int numNumPatchesInTrainingData) {
+
+    public ClassifierStats(int numTrainingImages,
+                           int numRetrievedImages,
+                           int numRetrievedImagesMax,
+                           int numRandomImages,
+                           int numIterations,
+                           int numPatchesInTestData,
+                           int numPatchesInQueryData,
+                           int numPatchesInTrainingData,
+                           int numPatchesInDatabase) {
         this.numTrainingImages = numTrainingImages;
         this.numRetrievedImages = numRetrievedImages;
-        this.numIterationss = numIterationss;
+        this.numRetrievedImagesMax = numRetrievedImagesMax;
+        this.numRandomImages = numRandomImages;
+        this.numIterations = numIterations;
         this.numPatchesInTestData = numPatchesInTestData;
-        this.numNumPatchesInQueryData = numNumPatchesInQueryData;
-        this.numNumPatchesInTrainingData = numNumPatchesInTrainingData;
+        this.numPatchesInQueryData = numPatchesInQueryData;
+        this.numPatchesInTrainingData = numPatchesInTrainingData;
+        this.numPatchesInDatabase = numPatchesInDatabase;
     }
 
     public int getNumTrainingImages() {
@@ -45,8 +60,16 @@ public class ClassifierStats {
         return numRetrievedImages;
     }
 
+    public int getNumRetrievedImagesMax() {
+        return numRetrievedImagesMax;
+    }
+
+    public int getNumRandomImages() {
+        return numRandomImages;
+    }
+
     public int getNumIterations() {
-        return numIterationss;
+        return numIterations;
     }
 
     public int getNumPatchesInTestData() {
@@ -54,11 +77,15 @@ public class ClassifierStats {
     }
 
     public int getNumPatchesInQueryData() {
-        return numNumPatchesInQueryData;
+        return numPatchesInQueryData;
     }
 
     public int getNumPatchesInTrainingData() {
-        return numNumPatchesInTrainingData;
+        return numPatchesInTrainingData;
     }
 
+
+    public int getNumPatchesInDatabase() {
+        return numPatchesInDatabase;
+    }
 }

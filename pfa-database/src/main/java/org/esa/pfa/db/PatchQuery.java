@@ -130,6 +130,10 @@ public class PatchQuery implements QueryInterface {
         return null;
     }
 
+    public int getNumPatchesInDatabase() {
+        return indexSearcher.getIndexReader().numDocs();
+    }
+
     public Patch[] getRandomPatches(final int numPatches) {
         final IndexReader indexReader = indexSearcher.getIndexReader();
 
@@ -167,7 +171,7 @@ public class PatchQuery implements QueryInterface {
         int start = new Random().nextInt(numDocs-numPatches);
         Patch[] patches = new Patch[numPatches];
         for (int i = 0; i < patches.length; i++) {
-            Document doc = null;
+            Document doc;
             try {
                 doc = indexReader.document(start + i);
             } catch (IOException e) {

@@ -32,8 +32,6 @@ import java.util.List;
  */
 public class LocalClassifier implements Classifier {
 
-    private static final int NUM_HITS_MAX = 500;
-
     private final Path classifierPath;
     private final ActiveLearning al;
     private final PatchQuery patchQuery;
@@ -67,14 +65,27 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
+    public void setNumRetrievedImagesMax(int numRetrievedImagesMax) {
+        classifierModel.setNumRetrievedImagesMax(numRetrievedImagesMax);
+    }
+
+    @Override
+    public void setNumRandomImages(int numRandomImages) {
+        classifierModel.setNumRandomImages(numRandomImages);
+    }
+
+    @Override
     public ClassifierStats getClassifierStats() {
         return new ClassifierStats(
                 classifierModel.getNumTrainingImages(),
                 classifierModel.getNumRetrievedImages(),
+                classifierModel.getNumRetrievedImagesMax(),
+                classifierModel.getNumRandomImages(),
                 classifierModel.getNumIterations(),
                 classifierModel.getTestData().size(),
                 classifierModel.getQueryData().size(),
-                classifierModel.getTrainingData().size()
+                classifierModel.getTrainingData().size(),
+                patchQuery.getNumPatchesInDatabase()
         );
     }
 
@@ -114,13 +125,16 @@ public class LocalClassifier implements Classifier {
 
             long t4 = System.currentTimeMillis();
 
+            final int numRetrievedImages = classifierModel.getNumRetrievedImages();
+            final int numRetrievedImagesMax = classifierModel.getNumRetrievedImagesMax();
+            final List<Patch> relavantImages = new ArrayList<>(numRetrievedImages);
+
             int classifiedImagesCounter = 0;
-            final List<Patch> relavantImages = new ArrayList<>(classifierModel.getNumRetrievedImages());
-            while (relavantImages.size() < classifierModel.getNumRetrievedImages() && classifiedImagesCounter < classifierModel.getNumRetrievedImages() * 100) {
-                final Patch[] archivePatches = patchQuery.getRandomPatches(classifierModel.getNumRetrievedImages());
+            while (relavantImages.size() < numRetrievedImages && classifiedImagesCounter < numRetrievedImagesMax) {
+                final Patch[] archivePatches = patchQuery.getRandomPatches(numRetrievedImages);
                 classifiedImagesCounter += archivePatches.length;
                 al.classify(archivePatches);
-                for (int i = 0; i < archivePatches.length && relavantImages.size() < classifierModel.getNumRetrievedImages(); i++) {
+                for (int i = 0; i < archivePatches.length && relavantImages.size() < numRetrievedImages; i++) {
                     if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
                         relavantImages.add(archivePatches[i]);
                     }
@@ -178,7 +192,7 @@ public class LocalClassifier implements Classifier {
     }
 
     private void populateArchivePatches(final ProgressMonitor pm) {
-        final Patch[] archivePatches = patchQuery.getRandomPatches(NUM_HITS_MAX);
+        final Patch[] archivePatches = patchQuery.getRandomPatches(classifierModel.getNumRandomImages());
 
         if(archivePatches.length > 0) {
             int numFeaturesQuery = classifierModel.getQueryData().get(0).getFeatureValues().length;

@@ -18,7 +18,6 @@ package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.Classifier;
-import org.esa.pfa.classifier.ClassifierModel;
 import org.esa.pfa.classifier.ClassifierStats;
 import org.esa.pfa.fe.op.Patch;
 
@@ -36,13 +35,11 @@ public class RestClassifier implements Classifier {
 
 
     private final String classifierName;
-    private ClassifierModel model;
     private final WebTarget target;
 
 
-    public RestClassifier(String classifierName, ClassifierModel model, WebTarget target) {
+    public RestClassifier(String classifierName, WebTarget target) {
         this.classifierName = classifierName;
-        this.model = model;
         this.target = target;
     }
 
@@ -53,23 +50,29 @@ public class RestClassifier implements Classifier {
 
     @Override
     public void setNumTrainingImages(int numTrainingImages) {
-        model.setNumTrainingImages(numTrainingImages);
-
-        target.path("setNumTrainingImages").
-                queryParam("value", numTrainingImages).
-                request().
-                post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
+        setIntValue("setNumTrainingImages", numTrainingImages);
     }
 
     @Override
     public void setNumRetrievedImages(int numRetrievedImages) {
-        model.setNumRetrievedImages(numRetrievedImages);
+        setIntValue("setNumRetrievedImages", numRetrievedImages);
+    }
 
-        target.path("setNumRetrievedImages").
-                queryParam("value", numRetrievedImages).
+    @Override
+    public void setNumRetrievedImagesMax(int numRetrievedImagesMax) {
+        setIntValue("setNumRetrievedImagesMax", numRetrievedImagesMax);
+    }
+
+    @Override
+    public void setNumRandomImages(int numRandomImages) {
+        setIntValue("setNumRandomImages", numRandomImages);
+    }
+
+    private void setIntValue(String parameter, int value) {
+        target.path(parameter).
+                queryParam("value", value).
                 request().
                 post(Entity.entity("dummy", MediaType.TEXT_PLAIN));
-
     }
 
     @Override
@@ -78,16 +81,19 @@ public class RestClassifier implements Classifier {
         String classifierStateValues = response.readEntity(String.class);
         System.out.println("classifierStateValues = " + classifierStateValues);
         String[] values = classifierStateValues.split(" ");
-        if (values.length != 6) {
-            return new ClassifierStats(0, 0, 0, 0, 0, 0);
+        if (values.length != 9) {
+            return new ClassifierStats(0, 0, 0, 0, 0, 0, 0, 0, 0);
         } else {
-            int i1 = Integer.parseInt(values[0]);
-            int i2 = Integer.parseInt(values[1]);
-            int i3 = Integer.parseInt(values[2]);
-            int i4 = Integer.parseInt(values[3]);
-            int i5 = Integer.parseInt(values[4]);
-            int i6 = Integer.parseInt(values[5]);
-            return new ClassifierStats(i1, i2, i3, i4, i5, i6);
+            int i0 = Integer.parseInt(values[0]);
+            int i1 = Integer.parseInt(values[1]);
+            int i2 = Integer.parseInt(values[2]);
+            int i3 = Integer.parseInt(values[3]);
+            int i4 = Integer.parseInt(values[4]);
+            int i5 = Integer.parseInt(values[5]);
+            int i6 = Integer.parseInt(values[6]);
+            int i7 = Integer.parseInt(values[7]);
+            int i8 = Integer.parseInt(values[8]);
+            return new ClassifierStats(i0, i1, i2, i3, i4, i5, i6, i7, i8);
         }
     }
 
