@@ -167,7 +167,7 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
                 CBIRSession.getInstance().addQueryPatch(patch);
                 // session notifies listeners that a new query is added
             } else {
-                SnapDialogs.showWarning("Failed to extract features for this patch");
+                SnapDialogs.showWarning("No features found in this patch");
             }
         }
 
