@@ -18,6 +18,7 @@ package org.esa.pfa.ws;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.ClassifierManager;
+import org.esa.pfa.classifier.ClassifierStats;
 import org.esa.pfa.classifier.LocalClassifier;
 import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.classifier.LocalDatabaseManager;
@@ -193,6 +194,40 @@ public class RestClassifierService {
         }
     }
 
+    @GET
+    @Path("/db/{databaseName}/classifier/{classifierName}/getClassifierStats")
+    @Produces(MediaType.TEXT_PLAIN)
+
+    public String getClassifierStats(
+            @PathParam(value = "databaseName") String databaseName,
+            @PathParam(value = "classifierName") String classifierName) {
+
+        try {
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
+            LocalClassifier classifier = classifierManager.get(classifierName);
+            ClassifierStats classifierStats = classifier.getClassifierStats();
+            int numTrainingImages = classifierStats.getNumTrainingImages();
+            int numRetrievedImages = classifierStats.getNumRetrievedImages();
+            int numIterations = classifierStats.getNumIterations();
+            int numPatchesInTestData = classifierStats.getNumPatchesInTestData();
+            int numNumPatchesInQueryData = classifierStats.getNumPatchesInQueryData();
+            int numNumPatchesInTrainingData = classifierStats.getNumPatchesInTrainingData();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(numTrainingImages).append(" ");
+            sb.append(numRetrievedImages).append(" ");
+            sb.append(numIterations).append(" ");
+            sb.append(numPatchesInTestData).append(" ");
+            sb.append(numNumPatchesInQueryData).append(" ");
+            sb.append(numNumPatchesInTrainingData);
+
+            return sb.toString();
+        } catch (Throwable ioe) {
+            ioe.printStackTrace();
+            return "";
+        }
+
+    }
 
     @POST
     @Path("/db/{databaseName}/classifier/{classifierName}/startTraining")
@@ -213,7 +248,6 @@ public class RestClassifierService {
 
             RestTransferValue response = new RestTransferValue();
             response.setPatches(rPatches);
-            response.setNumIterations(classifier.getNumIterations());
             return response.toXML();
         } catch (IOException e) {
             e.printStackTrace();
@@ -242,7 +276,6 @@ public class RestClassifierService {
 
             RestTransferValue response = new RestTransferValue();
             response.setPatches(rPatches);
-            response.setNumIterations(classifier.getNumIterations());
             return response.toXML();
         } catch (IOException e) {
             e.printStackTrace();
@@ -269,7 +302,6 @@ public class RestClassifierService {
 
             RestTransferValue response = new RestTransferValue();
             response.setPatches(rPatches);
-            response.setNumIterations(classifier.getNumIterations());
             return response.toXML();
         } catch (Throwable e) {
             e.printStackTrace();

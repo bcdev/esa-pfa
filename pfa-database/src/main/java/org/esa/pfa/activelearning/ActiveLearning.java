@@ -54,10 +54,6 @@ public class ActiveLearning {
         svmClassifier = new SVM(NUM_FOLDS, LOWER_LIMIT, UPPER_LIMIT, model.getSvmModelReference());
     }
 
-    public void resetQuery() {
-        model.setNumIterations(0);
-    }
-
     /**
      * Set training data with relevant patches from query image.
      *

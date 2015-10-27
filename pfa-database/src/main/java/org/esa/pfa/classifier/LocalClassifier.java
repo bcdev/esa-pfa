@@ -40,6 +40,7 @@ public class LocalClassifier implements Classifier {
 
     private final ClassifierModel classifierModel;
     private final String classifierName;
+    private boolean aiNeedsInit;
 
     public LocalClassifier(String name, ClassifierModel classifierModel, Path classifierPath, PatchQuery patchQuery) throws IOException {
         this.classifierName = name;
@@ -47,9 +48,7 @@ public class LocalClassifier implements Classifier {
         this.classifierPath = classifierPath;
         this.patchQuery = patchQuery;
         this.al = new ActiveLearning(classifierModel);
-        if (!classifierModel.getTrainingData().isEmpty()) {
-            al.setTrainingData(ProgressMonitor.NULL);
-        }
+        aiNeedsInit = true;
     }
 
     @Override
@@ -58,18 +57,8 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public int getNumTrainingImages() {
-        return classifierModel.getNumTrainingImages();
-    }
-
-    @Override
     public void setNumTrainingImages(int numTrainingImages) {
         classifierModel.setNumTrainingImages(numTrainingImages);
-    }
-
-    @Override
-    public int getNumRetrievedImages() {
-        return classifierModel.getNumRetrievedImages();
     }
 
     @Override
@@ -78,8 +67,15 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public int getNumIterations() {
-        return classifierModel.getNumIterations();
+    public ClassifierStats getClassifierStats() {
+        return new ClassifierStats(
+                classifierModel.getNumTrainingImages(),
+                classifierModel.getNumRetrievedImages(),
+                classifierModel.getNumIterations(),
+                classifierModel.getTestData().size(),
+                classifierModel.getQueryData().size(),
+                classifierModel.getTrainingData().size()
+        );
     }
 
     public void saveClassifier() throws IOException {
@@ -91,7 +87,7 @@ public class LocalClassifier implements Classifier {
     public Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException {
         pm.beginTask("start training", 100);
         try {
-            al.resetQuery();
+            classifierModel.setNumIterations(0);
             al.setQueryPatches(queryPatches);
             populateArchivePatches(SubProgressMonitor.create(pm, 50));
             return al.getMostAmbiguousPatches(classifierModel.getNumTrainingImages(), SubProgressMonitor.create(pm, 50));
@@ -106,19 +102,23 @@ public class LocalClassifier implements Classifier {
         pm.beginTask("train and classify", 100);
         try {
             long t1 = System.currentTimeMillis();
+
+            initActiveLearningWithTrainingData();
+            long t2 = System.currentTimeMillis();
+
             if (prePopulate) {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
             }
+            long t3 = System.currentTimeMillis();
             al.train(labeledPatches, SubProgressMonitor.create(pm, 50));
 
-            long t2 = System.currentTimeMillis();
-            System.out.println("trainAndClassify.train    = " + (t2 - t1));
+            long t4 = System.currentTimeMillis();
 
-            int classifiedImages = 0;
+            int classifiedImagesCounter = 0;
             final List<Patch> relavantImages = new ArrayList<>(classifierModel.getNumRetrievedImages());
-            while (relavantImages.size() < classifierModel.getNumRetrievedImages() && classifiedImages < classifierModel.getNumRetrievedImages() * 100) {
+            while (relavantImages.size() < classifierModel.getNumRetrievedImages() && classifiedImagesCounter < classifierModel.getNumRetrievedImages() * 100) {
                 final Patch[] archivePatches = patchQuery.getRandomPatches(classifierModel.getNumRetrievedImages());
-                classifiedImages += archivePatches.length;
+                classifiedImagesCounter += archivePatches.length;
                 al.classify(archivePatches);
                 for (int i = 0; i < archivePatches.length && relavantImages.size() < classifierModel.getNumRetrievedImages(); i++) {
                     if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
@@ -126,10 +126,15 @@ public class LocalClassifier implements Classifier {
                     }
                 }
             }
-            long t3 = System.currentTimeMillis();
-            System.out.println("relavantImages            = " + relavantImages.size());
-            System.out.println("classifiedImages          = " + classifiedImages);
-            System.out.println("trainAndClassify.classify = " + (t3-t2));
+            long t5 = System.currentTimeMillis();
+            System.out.println("# relavant Images    = " + relavantImages.size());
+            System.out.println("# classified Images  = " + classifiedImagesCounter);
+
+            System.out.println("trainAndClassify.initActiveLearning = " + (t2-t1));
+            System.out.println("trainAndClassify.prePopulate        = " + (t3-t2));
+            System.out.println("trainAndClassify.train              = " + (t4-t3));
+            System.out.println("trainAndClassify.classify           = " + (t5-t4));
+
             return relavantImages.toArray(new Patch[relavantImages.size()]);
         } finally {
             saveClassifier();
@@ -141,13 +146,34 @@ public class LocalClassifier implements Classifier {
     public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
         pm.beginTask("get most ambigous", 100);
         try {
+            long t1 = System.currentTimeMillis();
+            initActiveLearningWithTrainingData();
+
+            long t2 = System.currentTimeMillis();
             if (prePopulate) {
                 populateArchivePatches(SubProgressMonitor.create(pm, 50));
             }
-            return al.getMostAmbiguousPatches(classifierModel.getNumTrainingImages(), SubProgressMonitor.create(pm, 50));
+            long t3 = System.currentTimeMillis();
+            Patch[] mostAmbiguousPatches = al.getMostAmbiguousPatches(classifierModel.getNumTrainingImages(), SubProgressMonitor.create(pm, 50));
+            long t4 = System.currentTimeMillis();
+
+            System.out.println("# most Ambiguous Patches = " + mostAmbiguousPatches.length);
+
+            System.out.println("getMostAmbigous.initActiveLearning      = " + (t2-t1));
+            System.out.println("getMostAmbigous.prePopulate             = " + (t3-t2));
+            System.out.println("getMostAmbigous.getMostAmbiguousPatches = " + (t4-t3));
+
+            return mostAmbiguousPatches;
         } finally {
             saveClassifier();
             pm.done();
+        }
+    }
+
+    private void initActiveLearningWithTrainingData() {
+        if (!classifierModel.getTrainingData().isEmpty() && aiNeedsInit) {
+            al.setTrainingData(ProgressMonitor.NULL);
+            aiNeedsInit = false;
         }
     }
 

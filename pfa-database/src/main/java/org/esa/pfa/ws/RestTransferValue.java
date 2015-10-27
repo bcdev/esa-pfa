@@ -27,16 +27,7 @@ import java.io.StringWriter;
  */
 public class RestTransferValue {
 
-    private int numIterations;
     private Patch[] patches;
-
-    public int getNumIterations() {
-        return numIterations;
-    }
-
-    public void setNumIterations(int numIterations) {
-        this.numIterations = numIterations;
-    }
 
     public Patch[] getPatches() {
         return patches;

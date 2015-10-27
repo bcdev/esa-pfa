@@ -19,10 +19,7 @@ package org.esa.pfa.classifier;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.fe.op.Patch;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
 /**
  * The part of the classifier that does the "real" work.
@@ -31,15 +28,11 @@ public interface Classifier {
 
     String getName();
 
-    int getNumTrainingImages();
-
     void setNumTrainingImages(int numTrainingImages);
-
-    int getNumRetrievedImages();
 
     void setNumRetrievedImages(int numRetrievedImages);
 
-    int getNumIterations();
+    ClassifierStats getClassifierStats();
 
     Patch[] startTraining(Patch[] queryPatches, ProgressMonitor pm) throws IOException;
 

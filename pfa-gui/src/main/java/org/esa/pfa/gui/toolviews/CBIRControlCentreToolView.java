@@ -19,6 +19,7 @@ package org.esa.pfa.gui.toolviews;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.Classifier;
+import org.esa.pfa.classifier.ClassifierStats;
 import org.esa.pfa.classifier.DatabaseManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.gui.search.CBIRSession;
@@ -83,6 +84,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JTextField numRetrievedImages;
     private JButton updateBtn;
     private JLabel iterationsLabel = new JLabel();
+    private JLabel patchesInTrainingLabel = new JLabel();
+    private JLabel patchesInQueryLabel = new JLabel();
+    private JLabel patchesInTestLabel = new JLabel();
     private JLabel applicationLabel;
 
     private final CBIRSession session;
@@ -172,12 +176,11 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         });
         optionsPane.add(numTrainingImages, gbcOpt);
 
+        gbcOpt.weightx = 1;
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
-        gbcOpt.weightx = 1;
         optionsPane.add(new JLabel("# of retrieved images:"), gbcOpt);
         gbcOpt.gridx = 1;
-        gbcOpt.weightx = 1;
         numRetrievedImages = new JTextField();
         numRetrievedImages.setColumns(3);
         numRetrievedImages.addActionListener(new ActionListener() {
@@ -193,13 +196,28 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             }
         });
         optionsPane.add(numRetrievedImages, gbcOpt);
+
+        gbcOpt.weightx = 1;
         gbcOpt.gridy++;
         gbcOpt.gridx = 0;
-        gbcOpt.weightx = 1;
         optionsPane.add(new JLabel("# of iterations:"), gbcOpt);
         gbcOpt.gridx = 1;
-        gbcOpt.weightx = 1;
         optionsPane.add(iterationsLabel, gbcOpt);
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of training patches:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        optionsPane.add(patchesInTrainingLabel, gbcOpt);
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of query patches:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        optionsPane.add(patchesInQueryLabel, gbcOpt);
+        gbcOpt.gridy++;
+        gbcOpt.gridx = 0;
+        optionsPane.add(new JLabel("# of test pacthes:"), gbcOpt);
+        gbcOpt.gridx = 1;
+        optionsPane.add(patchesInTestLabel, gbcOpt);
 
         updateBtn = new JButton(new AbstractAction("Update") {
             public void actionPerformed(ActionEvent e) {
@@ -390,10 +408,15 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         applyBtn.setEnabled(hasActiveClassifier);
 
         if (hasActiveClassifier) {
-            final int numIterations = session.getNumIterations();
-            numTrainingImages.setText(String.valueOf(session.getNumTrainingImages()));
-            numRetrievedImages.setText(String.valueOf(session.getNumRetrievedImages()));
+            ClassifierStats classifierStats = session.getClassifierStats();
+
+            int numIterations = classifierStats.getNumIterations();
+            numTrainingImages.setText(String.valueOf(classifierStats.getNumTrainingImages()));
+            numRetrievedImages.setText(String.valueOf(classifierStats.getNumRetrievedImages()));
             iterationsLabel.setText(String.valueOf(numIterations));
+            patchesInQueryLabel.setText(String.valueOf(classifierStats.getNumPatchesInQueryData()));
+            patchesInTestLabel.setText(String.valueOf(classifierStats.getNumPatchesInTestData()));
+            patchesInTrainingLabel.setText(String.valueOf(classifierStats.getNumPatchesInTrainingData()));
 
             labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);

@@ -18,6 +18,7 @@ package org.esa.pfa.gui.search;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
+import org.esa.pfa.classifier.ClassifierStats;
 import org.esa.pfa.classifier.DatabaseManager;
 import org.esa.pfa.classifier.LocalDatabaseManager;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
@@ -71,6 +72,7 @@ public class CBIRSession {
     private final List<Listener> listenerList = new ArrayList<>(1);
 
     private Classifier classifier;
+    private ClassifierStats classifierStats;
     private PFAApplicationDescriptor applicationDescriptor;
     private DatabaseManager databaseManager;
     private ClassifierManager classifierManager;
@@ -148,6 +150,7 @@ public class CBIRSession {
         String applicationId = classifierManager.getApplicationId();
         Classifier deletedClassifier = classifier;
         classifier = null;
+        classifierStats = null;
 
         System.out.println("applicationId = " + applicationId);
 
@@ -165,6 +168,7 @@ public class CBIRSession {
         try {
 
             classifier = classifierManager.create(classifierName);
+            classifierStats = classifier.getClassifierStats();
             clearPatchLists();
 
             ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
@@ -183,6 +187,7 @@ public class CBIRSession {
         try {
             if (classifierManager != null) {
                 classifier = classifierManager.get(classifierName);
+                classifierStats = classifier.getClassifierStats();
                 clearPatchLists();
 
                 ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
@@ -212,6 +217,7 @@ public class CBIRSession {
                 classifierManager.delete(classifier.getName());
             }
             classifier = null;
+            classifierStats = null;
 
             ContextGlobalExtender contextGlobalExtender = Utilities.actionsGlobalContext().lookup(ContextGlobalExtender.class);
             if (contextGlobalExtender != null) {
@@ -253,22 +259,16 @@ public class CBIRSession {
 
     public void setNumTrainingImages(final int numTrainingImages) throws Exception {
         classifier.setNumTrainingImages(numTrainingImages);
-    }
-
-    public int getNumTrainingImages() {
-        return classifier.getNumTrainingImages();
+        classifierStats = classifier.getClassifierStats();
     }
 
     public void setNumRetrievedImages(final int numRetrievedImages) throws Exception {
         classifier.setNumRetrievedImages(numRetrievedImages);
+        classifierStats = classifier.getClassifierStats();
     }
 
-    public int getNumRetrievedImages() {
-        return classifier.getNumRetrievedImages();
-    }
-
-    public int getNumIterations() {
-        return classifier.getNumIterations();
+    public ClassifierStats getClassifierStats() {
+        return classifierStats;
     }
 
     public String getQuicklookBandName1() {
@@ -298,6 +298,7 @@ public class CBIRSession {
 
     public void startTraining(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
         Patch[] ambigousPatches = classifier.startTraining(queryImages, pm);
+        classifierStats = classifier.getClassifierStats();
         getImagesToLabel(ambigousPatches);
     }
 
@@ -308,6 +309,7 @@ public class CBIRSession {
         Patch[] labeledPatches = labeledList.toArray(new Patch[labeledList.size()]);
 
         Patch[] ambigousPatches = classifier.trainAndClassify(prePopulate, labeledPatches, pm);
+        classifierStats = classifier.getClassifierStats();
         retrievedImageList.clear();
         retrievedImageList.addAll(Arrays.asList(ambigousPatches));
 
@@ -316,6 +318,7 @@ public class CBIRSession {
 
     public void getMostAmbigousPatches(boolean prePopulate, final ProgressMonitor pm) throws IOException {
         Patch[] mostAmbigous = classifier.getMostAmbigous(prePopulate, pm);
+        classifierStats = classifier.getClassifierStats();
         getImagesToLabel(mostAmbigous);
     }
 

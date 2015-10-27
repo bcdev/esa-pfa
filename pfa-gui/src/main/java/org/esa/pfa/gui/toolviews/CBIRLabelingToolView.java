@@ -154,7 +154,8 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 final Patch[] irrelImages = session.getIrrelevantTrainingImages();
                 relavantDrawer.update(relImages);
                 irrelavantDrawer.update(irrelImages);
-                iterationsLabel.setText("Training iterations: " + session.getNumIterations());
+                int numIterations = session.getClassifierStats().getNumIterations();
+                iterationsLabel.setText("Training iterations: " + numIterations);
 
                 if (irrelImages.length > 0 || relImages.length > 0) {
                     final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
@@ -163,7 +164,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
 
                     topOptionsPanel.setInstructionTest("Click on an image to move it from the set of irrelevant images to relavant images");
                 } else {
-                    if(!session.hasQueryImages() && session.getNumIterations() == 0) {
+                    if(!session.hasQueryImages() && numIterations == 0) {
                         topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_ADD_QUERY_INSTRUCTION);
                     } else {
                         topOptionsPanel.setInstructionTest("");
