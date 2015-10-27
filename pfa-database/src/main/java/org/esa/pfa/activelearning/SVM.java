@@ -35,19 +35,23 @@ import java.util.List;
 
 public class SVM {
 
+    private static final boolean DEBUG = false;
+
+    private final int numFolds;    // number of folds for cross validation
+    private final double lower;  // training data scaling lower limit
+    private final double upper;  // training data scaling upper limit
+    private final SvmModelReference modelReference;
+
+    private final svm_problem problem;
+    private final svm_parameter modelParameters;
+
     private int numSamples = 0;  // number of samples in the training data
     private int numFeatures = 0; // number of features in each sample
-    private int numFolds = 0;    // number of folds for cross validation
-    private double lower = 0.0;  // training data scaling lower limit
-    private double upper = 1.0;  // training data scaling upper limit
     private double[] featureMin = null;
     private double[] featureMax = null;
 
-    private svm_problem problem = new svm_problem();
-    private svm_parameter modelParameters = new svm_parameter();
-    private SvmModelReference modelReference;
 
-    private static final boolean debug = false;
+
 
     public static svm_print_interface svm_print_null = new svm_print_interface() {
         public void print(String s) {
@@ -55,16 +59,18 @@ public class SVM {
     };
 
     static {
-        if(!debug) {     //disable console printing
+        if(!DEBUG) {     //disable console printing
             svm.svm_set_print_string_function(svm_print_null);
         }
     }
 
-	public SVM(final int numFolds, final double lower, final double upper, final SvmModelReference modelReference) {
+    public SVM(final int numFolds, final double lower, final double upper, final SvmModelReference modelReference) {
         this.numFolds = numFolds;
         this.lower = lower;
         this.upper = upper;
         this.modelReference = modelReference;
+        this.problem = new svm_problem();
+        this.modelParameters = new svm_parameter();
 	}
 
     /**
@@ -240,7 +246,7 @@ public class SVM {
         modelParameters.C = c[cIdx];
         modelParameters.gamma = gamma[gammaIdx];
 
-        if(debug) {
+        if(DEBUG) {
             for (int i = 0; i < c.length; i++) {
                 for (int j = 0; j < gamma.length; j++) {
                     System.out.println("C = " + c[i] + ", gamma = " + gamma[j] + ", accuracy = " + accuracyArray[i][j]);
