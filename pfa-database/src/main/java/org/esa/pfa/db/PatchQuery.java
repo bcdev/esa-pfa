@@ -140,11 +140,14 @@ public class PatchQuery implements QueryInterface {
         int numDocs = indexReader.numDocs();
 //        System.out.println("numDocs = " + numDocs);
 
-//        return getPatches1(numPatches, indexReader, numDocs);
-        return getPatches2(numPatches, indexReader, numDocs);
+//        return getPatchesFullyRandom(numPatches, indexReader, numDocs);
+        return getPatchesFromRandomPoint(numPatches, indexReader, numDocs);
     }
 
-    private Patch[] getPatches1(int numPatches, IndexReader indexReader, int numDocs) {
+    /**
+     * fully random but much slower
+     */
+    private Patch[] getPatchesFullyRandom(int numPatches, IndexReader indexReader, int numDocs) {
         final List<Patch> patchList = new ArrayList<>(numPatches);
         IntStream randomInts = new Random().ints(numPatches, 0, numDocs);
         randomInts.forEach(value -> {
@@ -167,7 +170,7 @@ public class PatchQuery implements QueryInterface {
         return patchList.toArray(new Patch[patchList.size()]);
     }
 
-    private Patch[] getPatches2(int numPatches, IndexReader indexReader, int numDocs) {
+    private Patch[] getPatchesFromRandomPoint(int numPatches, IndexReader indexReader, int numDocs) {
         int start = new Random().nextInt(numDocs-numPatches);
         Patch[] patches = new Patch[numPatches];
         for (int i = 0; i < patches.length; i++) {
