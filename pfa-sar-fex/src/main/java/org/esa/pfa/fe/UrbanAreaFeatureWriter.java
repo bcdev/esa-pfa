@@ -109,7 +109,9 @@ public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
             features.add(new Feature(featureTypes[5], maxClusterSize / patchSize));
         }
 
-        sink.writePatch(patch, features.toArray(new Feature[features.size()]));
+        Feature[] featuresArray = features.toArray(new Feature[features.size()]);
+        patch.setFeatures(featuresArray);
+        sink.writePatch(patch, featuresArray);
 
         disposeProducts(featureProduct);
 

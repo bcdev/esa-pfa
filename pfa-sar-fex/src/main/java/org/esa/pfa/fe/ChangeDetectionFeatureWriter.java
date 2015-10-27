@@ -78,8 +78,8 @@ public class ChangeDetectionFeatureWriter extends AbstractSARFeatureWriter {
         final String expression = mstBand.getName() + " / " + slvBand.getName();
         final VirtualBand virtBand = new VirtualBand("mstSlvRatio",
                                                      ProductData.TYPE_FLOAT32,
-                                                     mstBand.getSceneRasterWidth(),
-                                                     mstBand.getSceneRasterHeight(),
+                                                     mstBand.getRasterWidth(),
+                                                     mstBand.getRasterHeight(),
                                                      expression);
         virtBand.setNoDataValueUsed(true);
         virtBand.setOwner(featureProduct);
@@ -122,7 +122,9 @@ public class ChangeDetectionFeatureWriter extends AbstractSARFeatureWriter {
             features.add(new Feature(featureTypes[6], maxClusterSize / patchSize));
         }
 
-        sink.writePatch(patch, features.toArray(new Feature[features.size()]));
+        Feature[] featuresArray = features.toArray(new Feature[features.size()]);
+        patch.setFeatures(featuresArray);
+        sink.writePatch(patch, featuresArray);
 
         disposeProducts(featureProduct);
 
