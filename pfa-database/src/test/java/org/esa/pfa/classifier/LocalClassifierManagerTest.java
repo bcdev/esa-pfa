@@ -58,12 +58,17 @@ public class LocalClassifierManagerTest {
         final ResourceInstaller resourceInstaller = new ResourceInstaller(sourcePath, dbPath);
         resourceInstaller.install(".*.xml", ProgressMonitor.NULL);
 
-        localClassifierManager = new LocalClassifierManager(dbPath);
+        localClassifierManager = new LocalClassifierManager("aDatabaseName", dbPath);
     }
 
     @After
     public void tearDown() throws Exception {
         PFAApplicationRegistry.getInstance().removeDescriptor(testPFAApplicationDescriptor);
+    }
+
+    @Test
+    public void listDatabaseName() throws Exception {
+        assertEquals("aDatabaseName", localClassifierManager.getDatabaseName());
     }
 
     @Test

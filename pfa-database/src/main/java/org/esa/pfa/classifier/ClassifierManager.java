@@ -30,6 +30,8 @@ public interface ClassifierManager {
 
     String getApplicationId();
 
+    String getDatabaseName();
+
     String[] list();
 
     Classifier create(String classifierName) throws IOException;

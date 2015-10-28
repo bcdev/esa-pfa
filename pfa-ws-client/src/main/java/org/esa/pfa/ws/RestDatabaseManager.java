@@ -51,6 +51,6 @@ public class RestDatabaseManager implements DatabaseManager {
 
     @Override
     public ClassifierManager createClassifierManager(String databaseName) throws IOException {
-        return new RestClassifierManager(target.path("db").path(databaseName));
+        return new RestClassifierManager(databaseName, target.path("db").path(databaseName));
     }
 }

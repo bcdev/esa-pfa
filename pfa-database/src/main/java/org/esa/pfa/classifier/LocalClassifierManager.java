@@ -48,8 +48,10 @@ public class LocalClassifierManager implements ClassifierManager {
     private final PFAApplicationDescriptor applicationDescriptor;
     private final String applicationName;
     private final PatchQuery patchQuery;
+    private final String databaseName;
 
-    public LocalClassifierManager(Path dbPath) throws IOException {
+    LocalClassifierManager(String databaseName, Path dbPath) throws IOException {
+        this.databaseName = databaseName;
         this.classifierStoragePath = dbPath.resolve("Classifiers");
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
@@ -74,6 +76,11 @@ public class LocalClassifierManager implements ClassifierManager {
     @Override
     public String getApplicationId() {
         return applicationDescriptor.getId();
+    }
+
+    @Override
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     @Override

@@ -54,7 +54,7 @@ public class ClassifierModel {
     private ClassifierModel() {
     }
 
-    public ClassifierModel(String applicationName) {
+    ClassifierModel(String applicationName) {
         this.applicationName = applicationName;
         this.svmModelReference = new SvmModelReference();
     }

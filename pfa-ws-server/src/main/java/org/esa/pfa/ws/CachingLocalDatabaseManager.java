@@ -16,8 +16,8 @@
 
 package org.esa.pfa.ws;
 
+import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.DatabaseManager;
-import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.classifier.LocalDatabaseManager;
 
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class CachingLocalDatabaseManager implements DatabaseManager {
         return instance;
     }
 
-    private final Map<String, LocalClassifierManager> cache = new HashMap<>();
+    private final Map<String, ClassifierManager> cache = new HashMap<>();
 
     @Override
     public URI getURI() {
@@ -58,14 +58,14 @@ public class CachingLocalDatabaseManager implements DatabaseManager {
     }
 
     @Override
-    public LocalClassifierManager createClassifierManager(String databaseName) throws IOException {
+    public ClassifierManager createClassifierManager(String databaseName) throws IOException {
         synchronized (cache) {
-            LocalClassifierManager localClassifierManager = cache.get(databaseName);
-            if (localClassifierManager == null) {
-                localClassifierManager = instance.createClassifierManager(databaseName);
-                cache.put(databaseName, localClassifierManager);
+            ClassifierManager classifierManager = cache.get(databaseName);
+            if (classifierManager == null) {
+                classifierManager = instance.createClassifierManager(databaseName);
+                cache.put(databaseName, classifierManager);
             }
-            return localClassifierManager;
+            return classifierManager;
         }
     }
 }

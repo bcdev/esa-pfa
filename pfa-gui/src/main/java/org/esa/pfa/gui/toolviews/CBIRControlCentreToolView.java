@@ -449,7 +449,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private void updateControls() {
         PFAApplicationDescriptor appDescriptor = session.getApplicationDescriptor();
         if (appDescriptor != null) {
-            applicationLabel.setText("Application: " + appDescriptor.getName());
+            applicationLabel.setText("App: " + appDescriptor.getName() + " (" + session.getDatabaseName() + ")");
         } else {
             applicationLabel.setText("");
         }

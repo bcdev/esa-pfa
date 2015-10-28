@@ -40,7 +40,7 @@ public class LocalClassifier implements Classifier {
     private final String classifierName;
     private boolean aiNeedsInit;
 
-    public LocalClassifier(String name, ClassifierModel classifierModel, Path classifierPath, PatchQuery patchQuery) throws IOException {
+    LocalClassifier(String name, ClassifierModel classifierModel, Path classifierPath, PatchQuery patchQuery) throws IOException {
         this.classifierName = name;
         this.classifierModel = classifierModel;
         this.classifierPath = classifierPath;

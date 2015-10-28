@@ -54,10 +54,10 @@ public class LocalDatabaseManager implements DatabaseManager {
         Path basePath = Paths.get(uri);
         Path dbPath = basePath.resolve(databaseName);
         if (Files.isDirectory(dbPath)) {
-            return new LocalClassifierManager(dbPath);
+            return new LocalClassifierManager(databaseName, dbPath);
         }
         if (Files.exists(basePath.resolve("ds-descriptor.xml"))) {
-            return new LocalClassifierManager(basePath);
+            return new LocalClassifierManager(databaseName, basePath);
         }
         throw new IllegalArgumentException("Can not find database with name: " + databaseName);
     }

@@ -27,6 +27,7 @@ import com.bc.ceres.swing.binding.BindingContext;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.pfa.classifier.DatabaseManager;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.snap.core.util.Debug;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.preferences.DefaultConfigController;
 import org.esa.snap.rcp.preferences.Preference;
@@ -197,7 +198,7 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         Preferences preferences = SnapApp.getDefault().getPreferences();
         String dbName = preferences.get(PREFERENCE_DB_NAME, PREFERENCE_DB_NAME_DEFAULT);
         if (dbName.equals(PREFERENCE_DB_NAME_DEFAULT)) {
-            // no DB selected
+            Debug.trace("no database selected");
             return;
         }
 
@@ -212,7 +213,6 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         } catch (URISyntaxException | IOException e) {
             SnapApp.getDefault().handleError("Error reading applications:" + e.getMessage(), e);
         }
-
     }
 
     static class PfaDatabaseBean {

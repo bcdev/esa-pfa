@@ -243,6 +243,14 @@ public class CBIRSession {
         return applicationDescriptor;
     }
 
+    public String getDatabaseName() {
+        if (hasClassifierManager()) {
+            return classifierManager.getDatabaseName();
+        } else {
+            return "";
+        }
+    }
+
     public ProductOrderBasket getProductOrderBasket() {
         return productOrderBasket;
     }

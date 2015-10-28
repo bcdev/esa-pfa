@@ -31,12 +31,14 @@ import java.io.IOException;
 import java.net.URI;
 
 
-public class RestClassifierManager implements ClassifierManager {
+class RestClassifierManager implements ClassifierManager {
 
+    private final String databaseName;
     private final WebTarget target;
     private String applicationId;
 
-    public RestClassifierManager(WebTarget target) {
+    RestClassifierManager(String databaseName, WebTarget target) {
+        this.databaseName = databaseName;
         this.target = target;
     }
 
@@ -46,6 +48,11 @@ public class RestClassifierManager implements ClassifierManager {
             applicationId = target.path("applicationId").request().get().readEntity(String.class);
         }
         return applicationId;
+    }
+
+    @Override
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     @Override
