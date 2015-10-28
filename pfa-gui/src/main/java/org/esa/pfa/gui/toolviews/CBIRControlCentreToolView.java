@@ -484,6 +484,16 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
             labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);
+        } else {
+            numTrainingImages.setText("");
+            numRetrievedImages.setText("");
+            numRetrievedImagesMax.setText("");
+            numRandomImages.setText("");
+            iterationsLabel.setText("");
+            patchesInQueryLabel.setText("");
+            patchesInTestLabel.setText("");
+            patchesInTrainingLabel.setText("");
+            patchesInDBLabel.setText("");
         }
     }
 
