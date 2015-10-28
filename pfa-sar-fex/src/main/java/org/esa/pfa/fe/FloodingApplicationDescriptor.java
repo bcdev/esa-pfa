@@ -16,7 +16,6 @@
 package org.esa.pfa.fe;
 
 import org.esa.pfa.fe.op.FeatureType;
-import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
 
@@ -39,13 +38,11 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static final String NAME = "Flood Detection";
     private static final String ID = "Flood";
     private static final String propertyPrefix = "pfa.flood.";
-    private static final String DEFAULT_FEATURE_SET =   "speckle_divergence.mean," +
-                                                        "speckle_divergence.stdev," +
-                                                        "speckle_divergence.cvar," +
-                                                        "speckle_divergence.min," +
-                                                        "speckle_divergence.maxspeckle_divergence.percentOverPnt4" +
-                                                        "speckle_divergence.largestConnectedBlob";
-    private static final String DEFAULT_QL_NAME = "sigma0_ql.png";
+    private static final String DEFAULT_FEATURE_SET =   "flood.homgeneity," +
+                                                        "flood.energy," +
+                                                        "flood.percentOverThreshold," +
+                                                        "flood.largestConnectedBlob";
+    private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);
     private static Set<String> defaultFeatureSet;
@@ -80,7 +77,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/FloodingFeatureWriter.xml");
+        return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/FloodDetectionQuery.xml");
     }
 
     @Override
@@ -142,7 +139,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
 
     @Override
     public String[] getQuicklookFileNames() {
-        return new String[]{"sigma0_ql.png", "speckle_divergence_ql.png"};
+        return new String[]{"rgb_ql.png", "flood_ql.png", "mst_ql.png", "slv_ql.png"};
     }
 
     @Override
@@ -170,11 +167,14 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static FeatureType[] createFeatureTypes() {
         return new FeatureType[]{
                     /*00*/ new FeatureType("patch", "Patch product", Product.class),
-                    /*01*/ new FeatureType("sigma0_ql", "Sigma0 quicklook", RenderedImage.class),
-                    /*02*/ new FeatureType("speckle_divergence_ql", "Speckle_divergence quicklook", RenderedImage.class),
-                    /*03*/ new FeatureType("speckle_divergence", "Speckle divergence statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*04*/ new FeatureType("speckle_divergence.percentOverPnt4", "Sample percent over threshold of 0.4", Double.class),
-                    /*05*/ new FeatureType("speckle_divergence.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
+                    /*01*/ new FeatureType("rgb_ql", "RGB quicklook", RenderedImage.class),
+                    /*02*/ new FeatureType("flood_ql", "Flood mask quicklook", RenderedImage.class),
+                    /*03*/ new FeatureType("mst_ql", "Master quicklook", RenderedImage.class),
+                    /*04*/ new FeatureType("slv_ql", "Slave quicklook", RenderedImage.class),
+                    /*05*/ new FeatureType("flood.homogeneity", "GLCM Homogeneity", Double.class),
+                    /*06*/ new FeatureType("flood.energy", "GLCM Energy", Double.class),
+                    /*07*/ new FeatureType("flood.percentOverThreshold", "Sample percent over threshold", Double.class),
+                    /*08*/ new FeatureType("flood.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
         };
     }
 }
