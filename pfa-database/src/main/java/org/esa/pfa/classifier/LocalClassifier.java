@@ -19,7 +19,7 @@ package org.esa.pfa.classifier;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.pfa.activelearning.ActiveLearning;
-import org.esa.pfa.db.PatchQuery;
+import org.esa.pfa.db.QueryInterface;
 import org.esa.pfa.fe.op.Patch;
 
 import java.io.IOException;
@@ -34,17 +34,17 @@ public class LocalClassifier implements Classifier {
 
     private final Path classifierPath;
     private final ActiveLearning al;
-    private final PatchQuery patchQuery;
+    private final QueryInterface queryInterface;
 
     private final ClassifierModel classifierModel;
     private final String classifierName;
     private boolean aiNeedsInit;
 
-    LocalClassifier(String name, ClassifierModel classifierModel, Path classifierPath, PatchQuery patchQuery) throws IOException {
+    LocalClassifier(String name, ClassifierModel classifierModel, Path classifierPath, QueryInterface queryInterface) throws IOException {
         this.classifierName = name;
         this.classifierModel = classifierModel;
         this.classifierPath = classifierPath;
-        this.patchQuery = patchQuery;
+        this.queryInterface = queryInterface;
         this.al = new ActiveLearning(classifierModel);
         aiNeedsInit = true;
     }
@@ -85,7 +85,7 @@ public class LocalClassifier implements Classifier {
                 classifierModel.getTestData().size(),
                 classifierModel.getQueryData().size(),
                 classifierModel.getTrainingData().size(),
-                patchQuery.getNumPatchesInDatabase()
+                queryInterface.getNumPatchesInDatabase()
         );
     }
 
@@ -131,7 +131,7 @@ public class LocalClassifier implements Classifier {
 
             int classifiedImagesCounter = 0;
             while (relavantImages.size() < numRetrievedImages && classifiedImagesCounter < numRetrievedImagesMax) {
-                final Patch[] archivePatches = patchQuery.getRandomPatches(numRetrievedImages);
+                final Patch[] archivePatches = queryInterface.getRandomPatches(numRetrievedImages);
                 classifiedImagesCounter += archivePatches.length;
                 al.classify(archivePatches);
                 for (int i = 0; i < archivePatches.length && relavantImages.size() < numRetrievedImages; i++) {
@@ -191,8 +191,8 @@ public class LocalClassifier implements Classifier {
         }
     }
 
-    private void populateArchivePatches(final ProgressMonitor pm) {
-        final Patch[] archivePatches = patchQuery.getRandomPatches(classifierModel.getNumRandomImages());
+    private void populateArchivePatches(final ProgressMonitor pm) throws IOException {
+        final Patch[] archivePatches = queryInterface.getRandomPatches(classifierModel.getNumRandomImages());
 
         if(archivePatches.length > 0) {
             int numFeaturesQuery = classifierModel.getQueryData().get(0).getFeatureValues().length;

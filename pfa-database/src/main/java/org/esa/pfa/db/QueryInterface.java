@@ -2,10 +2,16 @@ package org.esa.pfa.db;
 
 import org.esa.pfa.fe.op.Patch;
 
+import java.io.IOException;
+
 /**
  * Created by luis on 09/02/14.
  */
 public interface QueryInterface {
 
-     Patch[] getRandomPatches(final int numPatches);
+    int getNumPatchesInDatabase();
+
+    Patch getPatch(final int patchIndex) throws IOException;
+
+    Patch[] getRandomPatches(final int numPatches) throws IOException;
 }

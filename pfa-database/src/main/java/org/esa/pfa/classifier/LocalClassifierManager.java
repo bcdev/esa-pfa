@@ -17,7 +17,8 @@
 package org.esa.pfa.classifier;
 
 import org.esa.pfa.db.DsIndexerTool;
-import org.esa.pfa.db.PatchQuery;
+import org.esa.pfa.db.LucenePatchQuery;
+import org.esa.pfa.db.QueryInterface;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -47,7 +48,7 @@ public class LocalClassifierManager implements ClassifierManager {
     private final PatchAccess patchAccess;
     private final PFAApplicationDescriptor applicationDescriptor;
     private final String applicationName;
-    private final PatchQuery patchQuery;
+    private final QueryInterface queryInterface;
     private final String databaseName;
 
     LocalClassifierManager(String databaseName, Path dbPath) throws IOException {
@@ -67,9 +68,9 @@ public class LocalClassifierManager implements ClassifierManager {
         FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
         patchAccess = new PatchAccess(dbPath, applicationDescriptor.getProductNameResolver());
         if (Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
-            patchQuery = new PatchQuery(dbPath.toFile(), datasetDescriptor, effectiveFeatureTypes);
+            queryInterface = new LucenePatchQuery(dbPath.toFile(), datasetDescriptor, effectiveFeatureTypes);
         } else {
-            patchQuery = null; // tests only
+            queryInterface = null; // tests only
         }
     }
 
@@ -103,7 +104,7 @@ public class LocalClassifierManager implements ClassifierManager {
     public Classifier create(String classifierName) throws IOException {
         Path classifierPath = getClassifierPath(classifierName);
         ClassifierModel classifierModel = new ClassifierModel(applicationName);
-        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, patchQuery);
+        LocalClassifier localClassifier = new LocalClassifier(classifierName, classifierModel, classifierPath, queryInterface);
         localClassifier.saveClassifier();
         return localClassifier;
     }
@@ -123,7 +124,7 @@ public class LocalClassifierManager implements ClassifierManager {
             throw new IllegalArgumentException("Classifier does not exist. " + classifierName);
         }
         ClassifierModel classifierModel = ClassifierModel.fromFile(classifierPath.toFile());
-        return new LocalClassifier(classifierName, classifierModel, classifierPath, patchQuery);
+        return new LocalClassifier(classifierName, classifierModel, classifierPath, queryInterface);
     }
 
     @Override
