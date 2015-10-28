@@ -26,7 +26,6 @@
     <modules>
         <module>pfa-core</module>
         <module>pfa-database</module>
-        <!--<module>pfa-ws</module>--> <!--only a testcase for a REST service-->
         <module>pfa-ws-server</module>
         <module>pfa-ws-client</module>
         <module>pfa-algalblooms</module>
