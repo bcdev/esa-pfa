@@ -477,7 +477,7 @@ public class CoastDistGen {
         System.out.println("Showing " + title + "...");
 
         LayerCanvas layerCanvas = new LayerCanvas(new ImageLayer(BandImageMultiLevelSource.create(band, ProgressMonitor.NULL)));
-        layerCanvas.setPreferredSize(new Dimension(band.getSceneRasterWidth(), band.getSceneRasterHeight()));
+        layerCanvas.setPreferredSize(new Dimension(band.getRasterWidth(), band.getRasterWidth()));
         layerCanvas.setInitiallyZoomingAll(true);
 
         JFrame frame = new JFrame(title);
@@ -515,13 +515,13 @@ public class CoastDistGen {
         symbolizer.setFill(fill);
 
         Rule rule = styleFactory.createRule();
-        rule.setSymbolizers(new Symbolizer[]{symbolizer});
+        rule.symbolizers().add(symbolizer);
 
         FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle();
-        fts.setRules(new Rule[]{rule});
+        fts.rules().add(rule);
 
         Style style = styleFactory.createStyle();
-        style.addFeatureTypeStyle(fts);
+        style.featureTypeStyles().add(fts);
 
         return style;
     }
