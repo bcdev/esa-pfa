@@ -30,6 +30,10 @@ import java.util.Arrays;
  * @author marcoz
  */
 public class QueryInterfaceBenchmark {
+
+    private static final int NUM_RETRIEVED_IMAGES = 50;
+    private static final int NUM_RETRIEVED_IMAGES_MAX = NUM_RETRIEVED_IMAGES * 100;
+
     public static void main(String[] args) throws IOException {
         Path dbPath = Paths.get(args[0]);
         System.out.println("dbPath = " + dbPath);
@@ -38,37 +42,48 @@ public class QueryInterfaceBenchmark {
         DatasetDescriptor dsDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
         FeatureType[] effectiveFeatureTypes = Lucene2Simple.getEffectiveFeatureTypes(dsDescriptor);
 
-//        QueryInterface db = new LucenePatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
-        QueryInterface db = new SimplePatchQuery(dbPath.toFile(), effectiveFeatureTypes);
-
-        System.out.println("db.class = " + db.getClass());
-        System.out.println("db.numElems = " + db.getNumPatchesInDatabase());
-
         long t2 = System.currentTimeMillis();
+        long delta1 = t2 - t1;
+        System.out.println("prepare = " + delta1);
 
-        final int numRetrievedImages = 50;
-        final int numRetrievedImagesMax = numRetrievedImages * 1000;
-
-        int patchCounter = 0;
-        while (patchCounter < numRetrievedImagesMax) {
-            final Patch[] archivePatches = db.getRandomPatches(numRetrievedImages);
-            patchCounter += archivePatches.length;
+        QueryInterface db;
+        try {
+            db = new SimplePatchQuery(dbPath.toFile(), effectiveFeatureTypes);
+            queryDB(t2, db);
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
-        System.out.println("patchCounter = " + patchCounter);
+        t2 = System.currentTimeMillis();
+        try {
+            db = new LucenePatchQuery(dbPath.toFile(), dsDescriptor, effectiveFeatureTypes);
+            queryDB(t2, db);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
 
-
-//        Patch patch42 = db.getPatch(42);
-//        System.out.println("patch42.getPatchName() = " + patch42.getPatchName());
-//        System.out.println("patch42.getPatchX() = " + patch42.getPatchX());
-//        System.out.println("patch42.getPatchY() = " + patch42.getPatchY());
-//        System.out.println("patch42.getFeatureValues() = " + Arrays.toString(patch42.getFeatureValues()));
+    private static void queryDB(long t2, QueryInterface db) throws IOException {
+        System.out.println("db.class = " + db.getClass());
 
         long t3 = System.currentTimeMillis();
+        queryDB(db);
+        long t4 = System.currentTimeMillis();
 
-        long delta1 = t2 - t1;
+
         long delta2 = t3 - t2;
-        System.out.println("open DB = " + delta1);
-        System.out.println("read  = " + delta2);
+        long delta3 = t4 - t3;
+
+        System.out.println("open DB = " + delta2);
+        System.out.println("read    = " + delta3);
+    }
+
+    private static void queryDB(QueryInterface db) throws IOException {
+
+        int patchCounter = 0;
+        while (patchCounter < NUM_RETRIEVED_IMAGES_MAX) {
+            final Patch[] archivePatches = db.getRandomPatches(NUM_RETRIEVED_IMAGES);
+            patchCounter += archivePatches.length;
+        }
     }
 
 }

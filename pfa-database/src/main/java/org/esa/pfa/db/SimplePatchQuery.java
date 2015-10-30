@@ -85,7 +85,8 @@ public class SimplePatchQuery implements QueryInterface {
 
     private Patch readPatch(int value) throws IOException {
         bb.rewind();
-        fileChannel.read(bb, 4 + value * entrySize);
+        int position = 4 + value * entrySize;
+        fileChannel.read(bb, position);
         bb.rewind();
 
         int productIndex = bb.getInt();
