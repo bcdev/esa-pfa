@@ -141,6 +141,7 @@ public class LocalClassifier implements Classifier {
                 }
             }
             long t5 = System.currentTimeMillis();
+            System.out.println("# labeled Images     = " + labeledPatches.length);
             System.out.println("# relavant Images    = " + relavantImages.size());
             System.out.println("# classified Images  = " + classifiedImagesCounter);
 
