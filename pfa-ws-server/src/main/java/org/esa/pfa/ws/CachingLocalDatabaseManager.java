@@ -16,8 +16,7 @@
 
 package org.esa.pfa.ws;
 
-import org.esa.pfa.classifier.ClassifierManager;
-import org.esa.pfa.classifier.DatabaseManager;
+import org.esa.pfa.classifier.LocalClassifierManager;
 import org.esa.pfa.classifier.LocalDatabaseManager;
 
 import java.io.IOException;
@@ -28,41 +27,37 @@ import java.util.Map;
 /**
  * @author marcoz
  */
-public class CachingLocalDatabaseManager implements DatabaseManager {
+public class CachingLocalDatabaseManager extends LocalDatabaseManager {
 
-    private static URI dbUri;
+    private static URI dbUriForDelegate;
     private static LocalDatabaseManager instance;
+
 
     public static void setDbUri(URI dbUri) {
         CachingLocalDatabaseManager.instance = null;
-        CachingLocalDatabaseManager.dbUri = dbUri;
+        CachingLocalDatabaseManager.dbUriForDelegate = dbUri;
     }
 
     public static synchronized LocalDatabaseManager getInstance() throws IOException {
         if (instance == null) {
-            instance = new LocalDatabaseManager(dbUri);
+            instance = new CachingLocalDatabaseManager(dbUriForDelegate);
         }
         return instance;
     }
 
-    private final Map<String, ClassifierManager> cache = new HashMap<>();
+    private final Map<String, LocalClassifierManager> cache;
 
-    @Override
-    public URI getURI() {
-        return instance.getURI();
+    private CachingLocalDatabaseManager(URI dbUri) throws IOException {
+        super(dbUri);
+        this.cache = new HashMap<>();
     }
 
     @Override
-    public String[] listDatabases() {
-        return instance.listDatabases();
-    }
-
-    @Override
-    public ClassifierManager createClassifierManager(String databaseName) throws IOException {
+    public LocalClassifierManager createClassifierManager(String databaseName) throws IOException {
         synchronized (cache) {
-            ClassifierManager classifierManager = cache.get(databaseName);
+            LocalClassifierManager classifierManager = cache.get(databaseName);
             if (classifierManager == null) {
-                classifierManager = instance.createClassifierManager(databaseName);
+                classifierManager = super.createClassifierManager(databaseName);
                 cache.put(databaseName, classifierManager);
             }
             return classifierManager;
