@@ -106,7 +106,7 @@ public class RestClassifierService {
     public String getClassifier(@PathParam(value = "databaseName") String databaseName,
                                 @PathParam(value = "classifierName") String classifierName) {
 
-        //System.out.println("getClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+        System.out.println("UNUSED ???? getClassifier databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
@@ -251,9 +251,7 @@ public class RestClassifierService {
             sb.append(numPatchesInTrainingData).append(" ");
             sb.append(numPatchesInDatabase);
 
-            String s = sb.toString();
-            System.out.println("getClassifierStats = " + s);
-            return s;
+            return sb.toString();
         } catch (Throwable ioe) {
             ioe.printStackTrace();
             return "";
@@ -294,7 +292,7 @@ public class RestClassifierService {
             @FormParam("labeledPatches") String labeledPatches,
             @FormParam("prePopulate") String prePopulateString) {
 
-        System.out.println("trainAndClassify databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+//        System.out.println("trainAndClassify databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
@@ -321,7 +319,7 @@ public class RestClassifierService {
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("prePopulate") String prePopulateString) {
 
-        System.out.println("getMostAmbigous databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+//        System.out.println("getMostAmbigous databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
