@@ -472,15 +472,15 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             ClassifierStats classifierStats = session.getClassifierStats();
 
             int numIterations = classifierStats.getNumIterations();
-            numTrainingImages.setText(String.valueOf(classifierStats.getNumTrainingImages()));
-            numRetrievedImages.setText(String.valueOf(classifierStats.getNumRetrievedImages()));
-            numRetrievedImagesMax.setText(String.valueOf(classifierStats.getNumRetrievedImagesMax()));
-            numRandomImages.setText(String.valueOf(classifierStats.getNumRandomImages()));
-            iterationsLabel.setText(String.valueOf(numIterations));
-            patchesInQueryLabel.setText(String.valueOf(classifierStats.getNumPatchesInQueryData()));
-            patchesInTestLabel.setText(String.valueOf(classifierStats.getNumPatchesInTestData()));
-            patchesInTrainingLabel.setText(String.valueOf(classifierStats.getNumPatchesInTrainingData()));
-            patchesInDBLabel.setText(String.valueOf(classifierStats.getNumPatchesInDatabase()));
+            numTrainingImages.setText(String.format("%,d", classifierStats.getNumTrainingImages()));
+            numRetrievedImages.setText(String.format("%,d", classifierStats.getNumRetrievedImages()));
+            numRetrievedImagesMax.setText(String.format("%,d", classifierStats.getNumRetrievedImagesMax()));
+            numRandomImages.setText(String.format("%,d", classifierStats.getNumRandomImages()));
+            iterationsLabel.setText(String.format("%,d", numIterations));
+            patchesInQueryLabel.setText(String.format("%,d", classifierStats.getNumPatchesInQueryData()));
+            patchesInTestLabel.setText(String.format("%,d", classifierStats.getNumPatchesInTestData()));
+            patchesInTrainingLabel.setText(String.format("%,d", classifierStats.getNumPatchesInTrainingData()));
+            patchesInDBLabel.setText(String.format("%,d", classifierStats.getNumPatchesInDatabase()));
 
             labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);

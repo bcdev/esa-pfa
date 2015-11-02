@@ -19,6 +19,7 @@ package org.esa.pfa.classifier;
 import org.esa.pfa.db.DsIndexerTool;
 import org.esa.pfa.db.LucenePatchQuery;
 import org.esa.pfa.db.QueryInterface;
+import org.esa.pfa.db.SimplePatchQuery;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -67,7 +68,9 @@ public class LocalClassifierManager implements ClassifierManager {
         FeatureType[] featureTypes = datasetDescriptor.getFeatureTypes();
         FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
         patchAccess = new PatchAccess(dbPath, applicationDescriptor.getProductNameResolver());
-        if (Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
+        if (Files.exists(dbPath.resolve(SimplePatchQuery.NAME_DB)) && Files.exists(dbPath.resolve(SimplePatchQuery.FEATURE_DB))) {
+            queryInterface = new SimplePatchQuery(dbPath.toFile(), effectiveFeatureTypes);
+        } else if (Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
             queryInterface = new LucenePatchQuery(dbPath.toFile(), datasetDescriptor, effectiveFeatureTypes);
         } else {
             queryInterface = null; // tests only

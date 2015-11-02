@@ -79,7 +79,6 @@ class RestClassifier implements Classifier {
     public ClassifierStats getClassifierStats() {
         Response response = target.path("getClassifierStats").request().get();
         String classifierStateValues = response.readEntity(String.class);
-        System.out.println("classifierStateValues = " + classifierStateValues);
         String[] values = classifierStateValues.split(" ");
         if (values.length != 9) {
             return new ClassifierStats(0, 0, 0, 0, 0, 0, 0, 0, 0);
