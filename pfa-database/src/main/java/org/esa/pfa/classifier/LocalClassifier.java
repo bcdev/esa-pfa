@@ -130,25 +130,31 @@ public class LocalClassifier implements Classifier {
             final List<Patch> relavantImages = new ArrayList<>(numRetrievedImages);
 
             int classifiedImagesCounter = 0;
+            long timeGetRandomPatches = 0;
+            long timeClassify = 0;
             while (relavantImages.size() < numRetrievedImages && classifiedImagesCounter < numRetrievedImagesMax) {
+                long t = System.currentTimeMillis();
                 final Patch[] archivePatches = queryInterface.getRandomPatches(numRetrievedImages);
+                timeGetRandomPatches += (System.currentTimeMillis() - t);
+                t = System.currentTimeMillis();
                 classifiedImagesCounter += archivePatches.length;
                 al.classify(archivePatches);
+                timeClassify += (System.currentTimeMillis() - t);
                 for (int i = 0; i < archivePatches.length && relavantImages.size() < numRetrievedImages; i++) {
                     if (archivePatches[i].getLabel() == Patch.Label.RELEVANT) {
                         relavantImages.add(archivePatches[i]);
                     }
                 }
             }
-            long t5 = System.currentTimeMillis();
-            System.out.println("# labeled Images     = " + labeledPatches.length);
-            System.out.println("# relavant Images    = " + relavantImages.size());
-            System.out.println("# classified Images  = " + classifiedImagesCounter);
+            System.out.println("# given labeled Images     = " + labeledPatches.length);
+            System.out.println("# found relavant Images    = " + relavantImages.size());
+            System.out.println("# classified Images        = " + classifiedImagesCounter);
 
             System.out.println("trainAndClassify.initActiveLearning = " + (t2-t1));
             System.out.println("trainAndClassify.prePopulate        = " + (t3-t2));
             System.out.println("trainAndClassify.train              = " + (t4-t3));
-            System.out.println("trainAndClassify.classify           = " + (t5-t4));
+            System.out.println("trainAndClassify.getRandomPatches   = " +timeGetRandomPatches);
+            System.out.println("trainAndClassify.classify           = " + timeClassify);
 
             return relavantImages.toArray(new Patch[relavantImages.size()]);
         } finally {
