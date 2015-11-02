@@ -121,7 +121,6 @@ public class SimplePatchQuery implements QueryInterface {
                 throw new IllegalArgumentException("valueType '" + valueType + "' not supported (yet).");
             }
         }
-        System.out.println("entrySize = " + entrySize);
         return entrySize;
     }
 
