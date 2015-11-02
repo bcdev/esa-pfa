@@ -38,7 +38,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static final String NAME = "Flood Detection";
     private static final String ID = "Flood";
     private static final String propertyPrefix = "pfa.flood.";
-    private static final String DEFAULT_FEATURE_SET =   "flood.homgeneity," +
+    private static final String DEFAULT_FEATURE_SET =   "flood.homogeneity," +
                                                         "flood.energy," +
                                                         "flood.percentOverThreshold," +
                                                         "flood.largestConnectedBlob";
