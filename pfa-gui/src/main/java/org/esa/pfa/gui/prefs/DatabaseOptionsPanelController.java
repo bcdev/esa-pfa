@@ -180,7 +180,7 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
             DatabaseManager databaseManager = session.createDatabaseManager(uri);
             String[] databases = databaseManager.listDatabases();
             propertySet.getProperty(PREFERENCE_DB_NAME).getDescriptor().setValueSet(new ValueSet(databases));
-        } catch (URISyntaxException|IOException e) {
+        } catch (URISyntaxException|IOException|IllegalArgumentException e) {
             SnapApp.getDefault().handleError("Error reading applications:" + e.getMessage(), e);
         }
     }
