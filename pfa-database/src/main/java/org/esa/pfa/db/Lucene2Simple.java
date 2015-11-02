@@ -107,20 +107,23 @@ public class Lucene2Simple {
                     }
                 }
                 if (i % 100000 == 0) {
-                    System.out.println("progress = " + (i / (double) numDocs) * 100);
+                    System.out.printf("progress = %5.2f%n", (i / (double) numDocs) * 100);
                 }
             }
+            System.out.println("converted " + numDocs + " entries form Lucene to Simple format.");
         }
         try (
                 DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(simpleDbNamesPath.toFile())))
         ) {
-            System.out.println("productNames.size = " + productNames.size());
+            System.out.println("# productNames = " + productNames.size());
 
             dos.writeInt(productNames.size());
             for (String productName : productNames) {
                 dos.writeUTF(productName);
             }
         }
+        System.out.println("Conversion completed.");
+
     }
 
     static FeatureType[] getEffectiveFeatureTypes(DatasetDescriptor dsDescriptor) {
