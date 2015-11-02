@@ -142,17 +142,11 @@ public class CBIRSession {
     }
 
     public synchronized void selectDatabase(final String databaseName) throws IOException {
-        System.out.println("CBIRSession.selectDatabase");
-        System.out.println("databaseName = [" + databaseName + "]");
         classifierManager = databaseManager.createClassifierManager(databaseName);
-        System.out.println("classifierManager = " + classifierManager);
-
         String applicationId = classifierManager.getApplicationId();
         Classifier deletedClassifier = classifier;
         classifier = null;
         classifierStats = null;
-
-        System.out.println("applicationId = " + applicationId);
 
         applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorById(applicationId);
         if(applicationDescriptor == null) {
