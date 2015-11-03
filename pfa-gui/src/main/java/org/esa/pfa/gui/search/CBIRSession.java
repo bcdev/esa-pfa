@@ -20,7 +20,6 @@ import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.ClassifierStats;
 import org.esa.pfa.classifier.DatabaseManager;
-import org.esa.pfa.classifier.LocalDatabaseManager;
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
@@ -29,7 +28,6 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.ordering.ProductOrderBasket;
 import org.esa.pfa.gui.ordering.ProductOrderService;
 import org.esa.pfa.gui.prefs.DatabaseOptionsPanelController;
-import org.esa.pfa.ws.RestDatabaseManager;
 import org.esa.snap.rcp.util.ContextGlobalExtender;
 import org.openide.util.Utilities;
 
@@ -39,7 +37,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +84,7 @@ public class CBIRSession {
     private CBIRSession() {
         productOrderBasket = new ProductOrderBasket();
         productOrderService = new ProductOrderService(productOrderBasket);
-        DatabaseOptionsPanelController.initSession(this);
+        DatabaseOptionsPanelController.initSessionFromPreferences(this);
     }
 
     public static CBIRSession getInstance() {
@@ -118,31 +115,8 @@ public class CBIRSession {
         }
     }
 
-    public synchronized DatabaseManager createDatabaseManager(final String uriString) throws URISyntaxException, IOException {
-        if (uriString.startsWith("http")) {
-            // if HTTP URL: Web Service Client
-            URI uri = new URI(uriString);
-            if (databaseManager == null || !databaseManager.getURI().equals(uri)) {
-                databaseManager = new RestDatabaseManager(uri);
-            }
-        } else {
-            // if file URL
-            URI uri;
-            if (uriString.startsWith("file:")) {
-                uri = new URI(uriString);
-            } else {
-                File file = new File(uriString);
-                uri = file.toURI();
-            }
-            if (databaseManager == null || !databaseManager.getURI().equals(uri)) {
-                databaseManager = new LocalDatabaseManager(uri);
-            }
-        }
-        return databaseManager;
-    }
-
-    public synchronized void selectDatabase(final String databaseName) throws IOException {
-        classifierManager = databaseManager.createClassifierManager(databaseName);
+    public void setClassifierManager(ClassifierManager newClassifierManager) throws IOException {
+        classifierManager = newClassifierManager;
         String applicationId = classifierManager.getApplicationId();
         Classifier deletedClassifier = classifier;
         classifier = null;
@@ -160,7 +134,6 @@ public class CBIRSession {
 
     public void createClassifier(String classifierName) throws IOException {
         try {
-
             classifier = classifierManager.create(classifierName);
             classifierStats = classifier.getClassifierStats();
             clearPatchLists();

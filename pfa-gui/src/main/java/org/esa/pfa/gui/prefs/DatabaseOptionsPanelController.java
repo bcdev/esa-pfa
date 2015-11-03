@@ -21,12 +21,18 @@
  */
 package org.esa.pfa.gui.prefs;
 
+import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.binding.ValueSet;
 import com.bc.ceres.swing.binding.BindingContext;
 import com.jidesoft.swing.FolderChooser;
+import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.DatabaseManager;
+import org.esa.pfa.classifier.LocalDatabaseManager;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.pfa.ws.RestDatabaseManager;
 import org.esa.snap.core.util.Debug;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.preferences.DefaultConfigController;
@@ -42,6 +48,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +74,7 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
     private static final String PREFERENCE_DB_NAME = "pfa.cbir.dbName";
     private static final String PREFERENCE_DB_NAME_DEFAULT = "";
 
+    private DatabaseManager databaseManager;
 
     @Override
     protected JPanel createPanel(BindingContext context) {
@@ -103,10 +111,18 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         context.addPropertyChangeListener(PREFERENCE_DB_NAME, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
+                String databaseName = (String) evt.getNewValue();
                 try {
-                    CBIRSession session = CBIRSession.getInstance();
-                    session.selectDatabase((String) evt.getNewValue());
-                    application.setText(session.getApplicationDescriptor().getName());
+                    if (databaseManager != null && databaseName != null) {
+                        ClassifierManager classifierManager = databaseManager.createClassifierManager(databaseName);
+                        String applicationId = classifierManager.getApplicationId();
+                        PFAApplicationRegistry applicationRegistry = PFAApplicationRegistry.getInstance();
+                        PFAApplicationDescriptor appDescriptor = applicationRegistry.getDescriptorById(applicationId);
+                        String appDescriptorName = appDescriptor.getName();
+                        application.setText(appDescriptorName);
+                    } else {
+                        application.setText("");
+                    }
                 } catch (IOException e) {
                     SnapApp.getDefault().handleError("Error selecting database: " + e.getMessage(), e);
                     application.setText("");
@@ -176,13 +192,27 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         String uri = DB_IS_REMOTE.equals(remoteOrLocal) ? remoteAddress: localFolder;
 
         try {
-            CBIRSession session = CBIRSession.getInstance();
-            DatabaseManager databaseManager = session.createDatabaseManager(uri);
-            String[] databases = databaseManager.listDatabases();
-            propertySet.getProperty(PREFERENCE_DB_NAME).getDescriptor().setValueSet(new ValueSet(databases));
+            URI databaseManagerURI = getDatabaseManagerURI(uri);
+            if (databaseManager == null || !databaseManager.getURI().equals(databaseManagerURI)) {
+                databaseManager = createDatabaseManager(databaseManagerURI);
+            }
+            PropertyDescriptor dbNameProperty = propertySet.getProperty(PREFERENCE_DB_NAME).getDescriptor();
+            if (databaseManager.isAlive()) {
+                String[] databases = databaseManager.listDatabases();
+                dbNameProperty.setValueSet(new ValueSet(databases));
+            } else {
+                dbNameProperty.setValueSet(new ValueSet(new String[0]));
+                SnapApp.getDefault().handleError("Failed to connect to Database.", null);
+            }
         } catch (URISyntaxException|IOException|IllegalArgumentException e) {
             SnapApp.getDefault().handleError("Error reading applications:" + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void applyChanges() {
+        super.applyChanges();
+        initSessionFromPreferences(CBIRSession.getInstance());
     }
 
     protected PropertySet createPropertySet() {
@@ -194,7 +224,36 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         return null;
     }
 
-    public static void initSession(CBIRSession session) {
+    private static DatabaseManager createDatabaseManager(URI uri) throws IOException {
+        String scheme = uri.getScheme();
+        if ("http".equals(scheme)) {
+            // if HTTP URL: Web Service Client
+            return new RestDatabaseManager(uri);
+        } else if ("file".equals(scheme)) {
+            // if file URL
+            return new LocalDatabaseManager(uri);
+        }
+        throw new IllegalArgumentException("Unsupported DatabaseManager URI: " + uri);
+    }
+
+
+    private static URI getDatabaseManagerURI(String uriString) throws URISyntaxException {
+        if (uriString.startsWith("http")) {
+            // if HTTP URL: Web Service Client
+            return new URI(uriString);
+        } else {
+            // if file URL
+            URI uri;
+            if (uriString.startsWith("file:")) {
+                return new URI(uriString);
+            } else {
+                File file = new File(uriString);
+                return file.toURI();
+            }
+        }
+    }
+
+    public static void initSessionFromPreferences(CBIRSession session) {
         Preferences preferences = SnapApp.getDefault().getPreferences();
         String dbName = preferences.get(PREFERENCE_DB_NAME, PREFERENCE_DB_NAME_DEFAULT);
         if (dbName.equals(PREFERENCE_DB_NAME_DEFAULT)) {
@@ -208,9 +267,13 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         String uri = DB_IS_REMOTE.equals(remoteOrLocal) ? remoteAddress: localFolder;
 
         try {
-            session.createDatabaseManager(uri);
-            session.selectDatabase(dbName);
-        } catch (URISyntaxException | IOException e) {
+            URI databaseManagerURI = getDatabaseManagerURI(uri);
+            DatabaseManager dbManager = createDatabaseManager(databaseManagerURI);
+            if (dbManager.isAlive()) {
+                ClassifierManager classifierManager = dbManager.createClassifierManager(dbName);
+                session.setClassifierManager(classifierManager);
+            }
+        } catch (URISyntaxException|IOException|IllegalArgumentException e) {
             SnapApp.getDefault().handleError("Error reading applications:" + e.getMessage(), e);
         }
     }

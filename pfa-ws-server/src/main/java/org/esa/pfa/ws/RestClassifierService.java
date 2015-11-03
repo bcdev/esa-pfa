@@ -56,17 +56,18 @@ public class RestClassifierService {
     ////////////////////////////////////////////////////////////////////////////////////
 
     @GET
+    @Path("/alive")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String alive() throws IOException {
+        return "true";
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    @GET
     @Path("/dbs")
     @Produces(MediaType.TEXT_PLAIN)
     public String listDatabases() throws IOException {
-
-        //System.out.println("listDatabases");
-
-        String[] databases = localDbManager.listDatabases();
-
-        //System.out.println("listDatabases = " + String.join("\n", databases));
-
-        return String.join("\n", databases);
+        return String.join("\n", localDbManager.listDatabases());
     }
 
     ////////////////////////////////////////////////////////////////////////////////////

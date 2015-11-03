@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * Created by marcoz on 29.06.15.
+ * @author marcoz
  */
 public interface DatabaseManager {
+
+    boolean isAlive();
 
     URI getURI();
 

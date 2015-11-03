@@ -18,7 +18,10 @@ package org.esa.pfa.ws;
 
 import org.esa.pfa.classifier.ClassifierManager;
 import org.esa.pfa.classifier.DatabaseManager;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -32,7 +35,25 @@ public class RestDatabaseManager implements DatabaseManager {
 
     public RestDatabaseManager(URI uri) {
         this.uri = uri;
-        this.target = ClientBuilder.newClient().target(uri).path("v1");
+        ClientConfig configuration = new ClientConfig();
+        configuration = configuration.property(ClientProperties.CONNECT_TIMEOUT, 1000); // in ms
+        configuration = configuration.property(ClientProperties.READ_TIMEOUT, 1000);    // in ms
+        Client client = ClientBuilder.newClient(configuration);
+
+        this.target = client.target(uri).path("v1");
+    }
+
+    public boolean isAlive() {
+        try {
+            Response response = target.path("alive").request().get();
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                if ("true".equals(response.readEntity(String.class))) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
     }
 
     @Override

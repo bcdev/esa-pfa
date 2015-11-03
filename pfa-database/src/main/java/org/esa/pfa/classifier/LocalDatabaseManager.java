@@ -39,10 +39,14 @@ public class LocalDatabaseManager implements DatabaseManager {
     }
 
     @Override
+    public boolean isAlive() {
+        return true;
+    }
+
+    @Override
     public URI getURI() {
         return uri;
     }
-
 
     @Override
     public String[] listDatabases() {
