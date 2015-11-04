@@ -26,6 +26,7 @@ import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.esa.snap.ui.GridBagUtils;
 import org.esa.snap.ui.ModalDialog;
+import org.netbeans.api.options.OptionsDisplayer;
 import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -98,12 +99,18 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     public JComponent createControl() {
 
-        final JPanel contentPane = new JPanel(new GridBagLayout());
 
         applicationLabel = new JLabel("");
 
+        JButton configButton = new JButton(new AbstractAction("Configure DB") {
+            public void actionPerformed(ActionEvent e) {
+                OptionsDisplayer.getDefault().open("ESA_PFA/Database");
+            }
+        });
+
         final JPanel applicationPanel = new JPanel(new BorderLayout(4, 4));
-        applicationPanel.add(applicationLabel, BorderLayout.NORTH);
+        applicationPanel.add(applicationLabel, BorderLayout.WEST);
+        applicationPanel.add(configButton, BorderLayout.EAST);
 
         final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -113,7 +120,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
 
-        contentPane.add(applicationPanel, gbc);
+        final JPanel contentPane = new JPanel(new GridBagLayout());
+//        contentPane.add(applicationPanel, gbc);
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = 1;
@@ -145,16 +153,39 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         });
         contentPane.add(new JScrollPane(classifierList), gbc);
 
-        final JPanel optionsPane = new JPanel(new GridBagLayout());
-        final GridBagConstraints gbcOpt = GridBagUtils.createDefaultConstraints();
-        gbcOpt.fill = GridBagConstraints.HORIZONTAL;
-        gbcOpt.anchor = GridBagConstraints.NORTHWEST;
-        gbcOpt.gridx = 0;
-        gbcOpt.gridy = 0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 1;
+        contentPane.add(createStatisticsPanel(), gbc);
 
-        optionsPane.add(new JLabel("# of training images:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        gbcOpt.weightx = 0.8;
+        gbc.gridx = 0;
+        gbc.gridy++;
+        contentPane.add(createClassifierButtonPanel(), gbc);
+
+        final JPanel mainPane0 = new JPanel(new BorderLayout());
+        mainPane0.add(applicationPanel, BorderLayout.NORTH);
+        mainPane0.add(contentPane, BorderLayout.CENTER);
+        mainPane0.add(createSideButtonPanel(), BorderLayout.EAST);
+
+        final JPanel mainPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mainPane.add(mainPane0);
+
+        initClassifierList();
+        updateControls();
+
+        return mainPane;
+    }
+
+    private JPanel createStatisticsPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
+        panel.add(new JLabel("# of training images:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.8;
         numTrainingImages = new JTextField();
         numTrainingImages.setColumns(3);
         numTrainingImages.setHorizontalAlignment(JTextField.RIGHT);
@@ -170,13 +201,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        optionsPane.add(numTrainingImages, gbcOpt);
+        panel.add(numTrainingImages, gbc);
 
-        gbcOpt.weightx = 1;
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of retrieved images:"), gbcOpt);
-        gbcOpt.gridx = 1;
+        gbc.weightx = 1;
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of retrieved images:"), gbc);
+        gbc.gridx = 1;
         numRetrievedImages = new JTextField();
         numRetrievedImages.setColumns(3);
         numRetrievedImages.setHorizontalAlignment(JTextField.RIGHT);
@@ -192,12 +223,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        optionsPane.add(numRetrievedImages, gbcOpt);
+        panel.add(numRetrievedImages, gbc);
 
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of retrieved images max:"), gbcOpt);
-        gbcOpt.gridx = 1;
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of retrieved images max:"), gbc);
+        gbc.gridx = 1;
         numRetrievedImagesMax = new JTextField();
         numRetrievedImagesMax.setColumns(3);
         numRetrievedImagesMax.setHorizontalAlignment(JTextField.RIGHT);
@@ -213,12 +244,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        optionsPane.add(numRetrievedImagesMax, gbcOpt);
+        panel.add(numRetrievedImagesMax, gbc);
 
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of random images:"), gbcOpt);
-        gbcOpt.gridx = 1;
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of random images:"), gbc);
+        gbc.gridx = 1;
         numRandomImages = new JTextField();
         numRandomImages.setColumns(3);
         numRandomImages.setHorizontalAlignment(JTextField.RIGHT);
@@ -234,47 +265,47 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        optionsPane.add(numRandomImages, gbcOpt);
+        panel.add(numRandomImages, gbc);
 
         iterationsLabel = new JLabel();
         iterationsLabel.setHorizontalAlignment(JLabel.RIGHT);
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of iterations:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        optionsPane.add(iterationsLabel, gbcOpt);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of iterations:"), gbc);
+        gbc.gridx = 1;
+        panel.add(iterationsLabel, gbc);
 
         patchesInTrainingLabel = new JLabel();
         patchesInTrainingLabel.setHorizontalAlignment(JLabel.RIGHT);
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of training patches:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        optionsPane.add(patchesInTrainingLabel, gbcOpt);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of training patches:"), gbc);
+        gbc.gridx = 1;
+        panel.add(patchesInTrainingLabel, gbc);
 
         patchesInQueryLabel = new JLabel();
         patchesInQueryLabel.setHorizontalAlignment(JLabel.RIGHT);
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of query patches:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        optionsPane.add(patchesInQueryLabel, gbcOpt);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of query patches:"), gbc);
+        gbc.gridx = 1;
+        panel.add(patchesInQueryLabel, gbc);
 
         patchesInTestLabel = new JLabel();
         patchesInTestLabel.setHorizontalAlignment(JLabel.RIGHT);
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of test patches:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        optionsPane.add(patchesInTestLabel, gbcOpt);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of test patches:"), gbc);
+        gbc.gridx = 1;
+        panel.add(patchesInTestLabel, gbc);
 
         patchesInDBLabel = new JLabel();
         patchesInDBLabel.setHorizontalAlignment(JLabel.RIGHT);
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 0;
-        optionsPane.add(new JLabel("# of patches in DB:"), gbcOpt);
-        gbcOpt.gridx = 1;
-        optionsPane.add(patchesInDBLabel, gbcOpt);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        panel.add(new JLabel("# of patches in DB:"), gbc);
+        gbc.gridx = 1;
+        panel.add(patchesInDBLabel, gbc);
 
         updateBtn = new JButton(new AbstractAction("Update") {
             public void actionPerformed(ActionEvent e) {
@@ -290,29 +321,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
-        gbcOpt.gridy++;
-        gbcOpt.gridx = 1;
-        optionsPane.add(updateBtn, gbcOpt);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 1;
-        contentPane.add(optionsPane, gbc);
-
-        gbc.gridx = 0;
         gbc.gridy++;
-        contentPane.add(createClassifierButtonPanel(), gbc);
-
-        final JPanel mainPane0 = new JPanel(new BorderLayout());
-        mainPane0.add(contentPane, BorderLayout.CENTER);
-        mainPane0.add(createSideButtonPanel(), BorderLayout.EAST);
-
-        final JPanel mainPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        mainPane.add(mainPane0);
-
-        initClassifierList();
-        updateControls();
-
-        return mainPane;
+        gbc.gridx = 1;
+        panel.add(updateBtn, gbc);
+        return panel;
     }
 
     private void initClassifierList() {
@@ -372,8 +384,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private JPanel createSideButtonPanel() {
-        final JPanel panel = new JPanel(new GridLayout(-1, 1, 2, 2));
-
         queryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -435,15 +445,28 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
+        JLabel logo = new JLabel(new ImageIcon(getClass().getResource("/images/pfa-logo-small.png")));
 
-        panel.add(queryBtn);
-        panel.add(labelBtn);
-        panel.add(applyBtn);
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
-        final JPanel panel2 = new JPanel(new BorderLayout(2, 2));
-        panel2.add(panel, BorderLayout.NORTH);
-        panel2.add(new JLabel(new ImageIcon(getClass().getResource("/images/pfa-logo-small.png"))), BorderLayout.SOUTH);
-        return panel2;
+        panel.add(queryBtn, gbc);
+        gbc.gridy++;
+        panel.add(labelBtn, gbc);
+        gbc.gridy++;
+        panel.add(applyBtn, gbc);
+        gbc.gridy++;
+        panel.add(logo, gbc);
+        gbc.gridy++;
+        return panel;
+//        final JPanel panel2 = new JPanel(new BorderLayout(2, 2));
+//        panel2.add(panel, BorderLayout.NORTH);
+//        panel2.add(logo, BorderLayout.SOUTH);
+//        return panel2;
     }
 
     private void updateControls() {

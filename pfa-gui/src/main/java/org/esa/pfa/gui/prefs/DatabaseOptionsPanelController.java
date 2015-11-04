@@ -58,7 +58,8 @@ import java.util.prefs.Preferences;
         location = "ESA_PFA",
         displayName = "Database",
         keywords = "pfa",
-        keywordsCategory = "ESA PFA/Database"
+        keywordsCategory = "ESA PFA/Database",
+        id = "Database"
 )
 public final class DatabaseOptionsPanelController extends DefaultConfigController {
 
