@@ -42,6 +42,8 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 @TopComponent.Description(
         preferredID = "CBIRControlCentreToolView",
@@ -73,10 +75,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
     private JButton queryBtn, labelBtn, applyBtn;
-    private JTextField numTrainingImages;
-    private JTextField numRetrievedImages;
-    private JTextField numRetrievedImagesMax;
-    private JTextField numRandomImages;
+    private JFormattedTextField numTrainingImages;
+    private JFormattedTextField numRetrievedImages;
+    private JFormattedTextField numRetrievedImagesMax;
+    private JFormattedTextField numRandomImages;
     private JButton updateBtn;
     private JLabel iterationsLabel;
     private JLabel patchesInTrainingLabel;
@@ -186,7 +188,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(new JLabel("# of training images:"), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.8;
-        numTrainingImages = new JTextField();
+        NumberFormat numberFormatter = new DecimalFormat("#,###,###");
+        numTrainingImages = new JFormattedTextField(numberFormatter);
         numTrainingImages.setColumns(3);
         numTrainingImages.setHorizontalAlignment(JTextField.RIGHT);
         numTrainingImages.addActionListener(new ActionListener() {
@@ -208,7 +211,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridx = 0;
         panel.add(new JLabel("# of retrieved images:"), gbc);
         gbc.gridx = 1;
-        numRetrievedImages = new JTextField();
+        numRetrievedImages = new JFormattedTextField(numberFormatter);
         numRetrievedImages.setColumns(3);
         numRetrievedImages.setHorizontalAlignment(JTextField.RIGHT);
         numRetrievedImages.addActionListener(new ActionListener() {
@@ -229,7 +232,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridx = 0;
         panel.add(new JLabel("# of retrieved images max:"), gbc);
         gbc.gridx = 1;
-        numRetrievedImagesMax = new JTextField();
+        numRetrievedImagesMax = new JFormattedTextField(numberFormatter);
         numRetrievedImagesMax.setColumns(3);
         numRetrievedImagesMax.setHorizontalAlignment(JTextField.RIGHT);
         numRetrievedImagesMax.addActionListener(new ActionListener() {
@@ -250,7 +253,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridx = 0;
         panel.add(new JLabel("# of random images:"), gbc);
         gbc.gridx = 1;
-        numRandomImages = new JTextField();
+        numRandomImages = new JFormattedTextField(numberFormatter);
         numRandomImages.setColumns(3);
         numRandomImages.setHorizontalAlignment(JTextField.RIGHT);
         numRandomImages.addActionListener(new ActionListener() {
@@ -311,10 +314,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             public void actionPerformed(ActionEvent e) {
                 try {
                     if (session.hasClassifier()) {
-                        session.setNumTrainingImages(Integer.parseInt(numTrainingImages.getText()));
-                        session.setNumRetrievedImages(Integer.parseInt(numRetrievedImages.getText()));
-                        session.setNumRetrievedImagesMax(Integer.parseInt(numRetrievedImagesMax.getText()));
-                        session.setNumRandomImages(Integer.parseInt(numRandomImages.getText()));
+                        session.setNumTrainingImages(getAsIntSafe(numTrainingImages.getValue()));
+                        session.setNumRetrievedImages(getAsIntSafe(numRetrievedImages.getValue()));
+                        session.setNumRetrievedImagesMax(getAsIntSafe(numRetrievedImagesMax.getValue()));
+                        session.setNumRandomImages(getAsIntSafe(numRandomImages.getValue()));
                     }
                 } catch (Throwable t) {
                     SnapApp.getDefault().handleError("Error updating retrieved images", t);
@@ -327,10 +330,18 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         return panel;
     }
 
+    private int getAsIntSafe(Object object) {
+        if (object != null && object instanceof Number) {
+            return ((Number) object).intValue();
+        } else {
+            return 0;
+        }
+    }
+
     private void initClassifierList() {
         final DefaultListModel<String> modelList = new DefaultListModel<>();
         for (String name : session.listClassifiers()) {
-            if(!name.isEmpty()) {
+            if (!name.isEmpty()) {
                 modelList.addElement(name);
             }
         }
@@ -463,10 +474,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(logo, gbc);
         gbc.gridy++;
         return panel;
-//        final JPanel panel2 = new JPanel(new BorderLayout(2, 2));
-//        panel2.add(panel, BorderLayout.NORTH);
-//        panel2.add(logo, BorderLayout.SOUTH);
-//        return panel2;
     }
 
     private void updateControls() {
@@ -495,10 +502,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             ClassifierStats classifierStats = session.getClassifierStats();
 
             int numIterations = classifierStats.getNumIterations();
-            numTrainingImages.setText(String.format("%,d", classifierStats.getNumTrainingImages()));
-            numRetrievedImages.setText(String.format("%,d", classifierStats.getNumRetrievedImages()));
-            numRetrievedImagesMax.setText(String.format("%,d", classifierStats.getNumRetrievedImagesMax()));
-            numRandomImages.setText(String.format("%,d", classifierStats.getNumRandomImages()));
+            numTrainingImages.setValue(classifierStats.getNumTrainingImages());
+            numRetrievedImages.setValue(classifierStats.getNumRetrievedImages());
+            numRetrievedImagesMax.setValue(classifierStats.getNumRetrievedImagesMax());
+            numRandomImages.setValue(classifierStats.getNumRandomImages());
             iterationsLabel.setText(String.format("%,d", numIterations));
             patchesInQueryLabel.setText(String.format("%,d", classifierStats.getNumPatchesInQueryData()));
             patchesInTestLabel.setText(String.format("%,d", classifierStats.getNumPatchesInTestData()));
@@ -508,10 +515,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             labelBtn.setEnabled(numIterations > 0);
             applyBtn.setEnabled(numIterations > 0);
         } else {
-            numTrainingImages.setText("");
-            numRetrievedImages.setText("");
-            numRetrievedImagesMax.setText("");
-            numRandomImages.setText("");
+            numTrainingImages.setValue(0);
+            numRetrievedImages.setValue(0);
+            numRetrievedImagesMax.setValue(0);
+            numRandomImages.setValue(0);
             iterationsLabel.setText("");
             patchesInQueryLabel.setText("");
             patchesInTestLabel.setText("");
