@@ -45,11 +45,11 @@ import java.nio.file.Files;
 
 
 @Path("/v1")
-public class RestClassifierService {
+public class RemoteClassifierService {
 
     private final LocalDatabaseManager localDbManager;
 
-    public RestClassifierService() throws IOException, URISyntaxException {
+    public RemoteClassifierService() throws IOException, URISyntaxException {
         localDbManager = CachingLocalDatabaseManager.getInstance();
     }
 

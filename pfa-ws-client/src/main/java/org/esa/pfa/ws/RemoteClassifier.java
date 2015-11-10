@@ -31,14 +31,14 @@ import java.io.IOException;
 /**
  * A REST based implementation
  */
-class RestClassifier implements Classifier {
+class RemoteClassifier implements Classifier {
 
 
     private final String classifierName;
     private final WebTarget target;
 
 
-    RestClassifier(String classifierName, WebTarget target) {
+    RemoteClassifier(String classifierName, WebTarget target) {
         this.classifierName = classifierName;
         this.target = target;
     }

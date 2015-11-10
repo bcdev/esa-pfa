@@ -31,13 +31,13 @@ import java.io.IOException;
 import java.net.URI;
 
 
-class RestClassifierManager implements ClassifierManager {
+class RemoteClassifierManager implements ClassifierManager {
 
     private final String databaseName;
     private final WebTarget target;
     private String applicationId;
 
-    RestClassifierManager(String databaseName, WebTarget target) {
+    RemoteClassifierManager(String databaseName, WebTarget target) {
         this.databaseName = databaseName;
         this.target = target;
     }
@@ -64,7 +64,7 @@ class RestClassifierManager implements ClassifierManager {
     public Classifier create(String classifierName) throws IOException {
         WebTarget classifierTarget = target.path("classifier").path(classifierName);
         classifierTarget.request().post(Entity.entity(new Form(), MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-        return new RestClassifier(classifierName, classifierTarget);
+        return new RemoteClassifier(classifierName, classifierTarget);
     }
 
     @Override
@@ -74,7 +74,7 @@ class RestClassifierManager implements ClassifierManager {
 
     @Override
     public Classifier get(String classifierName) throws IOException {
-        return new RestClassifier(classifierName, target.path("classifier").path(classifierName));
+        return new RemoteClassifier(classifierName, target.path("classifier").path(classifierName));
     }
 
     @Override

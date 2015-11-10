@@ -28,13 +28,13 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 
-public class RestDatabaseManager implements DatabaseManager {
+public class RemoteDatabaseManager implements DatabaseManager {
 
     private final URI uri;
     private final WebTarget aliveCheckTarget;
     private final WebTarget target;
 
-    public RestDatabaseManager(URI uri) {
+    public RemoteDatabaseManager(URI uri) {
         this.uri = uri;
 
         // for the alive check we use HTTP client that time-outs very fast
@@ -77,6 +77,6 @@ public class RestDatabaseManager implements DatabaseManager {
 
     @Override
     public ClassifierManager createClassifierManager(String databaseName) throws IOException {
-        return new RestClassifierManager(databaseName, target.path("db").path(databaseName));
+        return new RemoteClassifierManager(databaseName, target.path("db").path(databaseName));
     }
 }

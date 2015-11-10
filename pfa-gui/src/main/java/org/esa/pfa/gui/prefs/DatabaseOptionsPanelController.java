@@ -32,7 +32,7 @@ import org.esa.pfa.classifier.LocalDatabaseManager;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.pfa.gui.search.CBIRSession;
-import org.esa.pfa.ws.RestDatabaseManager;
+import org.esa.pfa.ws.RemoteDatabaseManager;
 import org.esa.snap.core.util.Debug;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.preferences.DefaultConfigController;
@@ -229,7 +229,7 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
         String scheme = uri.getScheme();
         if ("http".equals(scheme)) {
             // if HTTP URL: Web Service Client
-            return new RestDatabaseManager(uri);
+            return new RemoteDatabaseManager(uri);
         } else if ("file".equals(scheme)) {
             // if file URL
             return new LocalDatabaseManager(uri);
