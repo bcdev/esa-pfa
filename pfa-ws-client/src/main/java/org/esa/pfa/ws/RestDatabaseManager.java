@@ -31,21 +31,26 @@ import java.net.URI;
 public class RestDatabaseManager implements DatabaseManager {
 
     private final URI uri;
+    private final WebTarget aliveCheckTarget;
     private final WebTarget target;
 
     public RestDatabaseManager(URI uri) {
         this.uri = uri;
+
+        // for the alive check we use HTTP client that time-outs very fast
         ClientConfig configuration = new ClientConfig();
         configuration = configuration.property(ClientProperties.CONNECT_TIMEOUT, 1000); // in ms
         configuration = configuration.property(ClientProperties.READ_TIMEOUT, 1000);    // in ms
-        Client client = ClientBuilder.newClient(configuration);
+        Client fastTimeoutClient = ClientBuilder.newClient(configuration);
+        this.aliveCheckTarget = fastTimeoutClient.target(uri).path("v1");
 
-        this.target = client.target(uri).path("v1");
+        Client normalClient = ClientBuilder.newClient();
+        this.target = normalClient.target(uri).path("v1");
     }
 
     public boolean isAlive() {
         try {
-            Response response = target.path("alive").request().get();
+            Response response = aliveCheckTarget.path("alive").request().get();
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                 if ("true".equals(response.readEntity(String.class))) {
                     return true;
