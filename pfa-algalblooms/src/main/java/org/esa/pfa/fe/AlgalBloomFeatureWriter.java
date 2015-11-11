@@ -486,7 +486,7 @@ public class AlgalBloomFeatureWriter extends FeatureWriter {
     private void addCoastDistBand(final Product product) {
         final Band coastDistBand = product.addBand("coast_dist", ProductData.TYPE_FLOAT32);
         final DefaultMultiLevelImage coastDistImage = new DefaultMultiLevelImage(
-                new AbstractMultiLevelSource(ImageManager.getMultiLevelModel(coastDistBand)) {
+                new AbstractMultiLevelSource(coastDistBand.getMultiLevelModel()) {
                     @Override
                     protected RenderedImage createImage(int level) {
                         return new WorldDataOpImage(product.getSceneGeoCoding(), coastDistBand,
