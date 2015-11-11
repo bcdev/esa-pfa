@@ -94,8 +94,8 @@ public class FindPatchPairs {
             Mask roi1 = p1.getMaskGroup().get("ROI");
             Mask roi2 = p2.getMaskGroup().get("ROI");
 
-            Assert.state(roi1.getSceneRasterWidth() == roi2.getSceneRasterWidth());
-            Assert.state(roi1.getSceneRasterHeight() == roi2.getSceneRasterHeight());
+            Assert.state(roi1.getRasterWidth() == roi2.getRasterWidth());
+            Assert.state(roi1.getRasterHeight() == roi2.getRasterHeight());
 
             int overlap = MaskStats.countPixels(roi1, roi2);
             if (overlap > minOverlappingPixels) {
