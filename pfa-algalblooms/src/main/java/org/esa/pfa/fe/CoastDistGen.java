@@ -10,7 +10,7 @@ import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.VirtualBand;
-import org.esa.snap.core.image.BandImageMultiLevelSource;
+import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
 import org.esa.snap.core.util.io.FileUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
@@ -28,7 +28,6 @@ import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleFactory;
-import org.geotools.styling.Symbolizer;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.filter.FilterFactory;
@@ -476,7 +475,7 @@ public class CoastDistGen {
         String title = band.getProduct().getName() + " - " + band.getName();
         System.out.println("Showing " + title + "...");
 
-        LayerCanvas layerCanvas = new LayerCanvas(new ImageLayer(BandImageMultiLevelSource.create(band, ProgressMonitor.NULL)));
+        LayerCanvas layerCanvas = new LayerCanvas(new ImageLayer(ColoredBandImageMultiLevelSource.create(band, ProgressMonitor.NULL)));
         layerCanvas.setPreferredSize(new Dimension(band.getRasterWidth(), band.getRasterWidth()));
         layerCanvas.setInitiallyZoomingAll(true);
 
