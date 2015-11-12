@@ -19,8 +19,8 @@ import com.bc.ceres.swing.figure.AbstractInteractorListener;
 import com.bc.ceres.swing.figure.Interactor;
 import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.Patch;
-import org.esa.pfa.gui.toolviews.support.PatchProcessor;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.pfa.gui.toolviews.support.PatchProcessor;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.SnapDialogs;
@@ -141,7 +141,7 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
                     ProductSceneView productSceneView = getProductSceneView(inputEvent);
                     RenderedImage parentImage = productSceneView != null ? productSceneView.getBaseImageLayer().getImage() : null;
 
-                    final Product product = SnapApp.getDefault().getSelectedProduct();
+                    final Product product = SnapApp.getDefault().getSelectedProduct(SnapApp.SelectionSourceHint.AUTO);
                     addQueryImage(product, (int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
                                   (int) rect.getHeight(), parentImage, productSceneView);
 
