@@ -23,8 +23,8 @@ import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.pfa.gui.toolviews.support.PatchProcessor;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
 import org.esa.snap.rcp.actions.interactors.InsertFigureInteractorInterceptor;
+import org.esa.snap.rcp.util.Dialogs;
 import org.esa.snap.ui.product.ProductSceneView;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -167,7 +167,7 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
                 CBIRSession.getInstance().addQueryPatch(patch);
                 // session notifies listeners that a new query is added
             } else {
-                SnapDialogs.showWarning("No features found in this patch");
+                Dialogs.showWarning("No features found in this patch");
             }
         }
 

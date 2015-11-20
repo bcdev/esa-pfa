@@ -34,7 +34,7 @@ import org.esa.snap.core.util.Debug;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.core.util.io.FileUtils;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.RenderedOp;
@@ -43,7 +43,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -158,7 +157,7 @@ public class PatchProcessor extends ProgressMonitorSwingWorker<Patch, Void> {
         } catch (IOException ioe) {
             Debug.trace(ioe);
             final String msg = "Error reading features " + patch.getPatchName() + "\n" + ioe.getMessage();
-            SnapDialogs.showError(msg);
+            Dialogs.showError(msg);
         }
     }
 

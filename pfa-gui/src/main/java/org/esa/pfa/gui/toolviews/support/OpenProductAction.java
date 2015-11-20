@@ -4,7 +4,7 @@ import org.esa.pfa.gui.ordering.ProductAccessUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 import org.netbeans.api.progress.ProgressUtils;
 
 import javax.swing.AbstractAction;
@@ -44,7 +44,7 @@ public class OpenProductAction extends AbstractAction {
                 returnValue.set(ProductIO.readProduct(productFile));
             } catch (IOException e) {
                 SystemUtils.LOG.log(Level.SEVERE, "Failed to open product.", e);
-                SnapDialogs.showError("Failed to open product.");
+                Dialogs.showError("Failed to open product.");
             }
         };
         ProgressUtils.runOffEventDispatchThread(operation, "Open Product", new AtomicBoolean(), false, 100, 2000);

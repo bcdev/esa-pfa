@@ -4,7 +4,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.core.util.io.WildcardMatcher;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 import org.netbeans.api.progress.ProgressUtils;
 
 import java.io.File;
@@ -31,7 +31,7 @@ public class ProductAccessUtils {
         }
 
         if (productFile == null && showError) {
-            SnapDialogs.showError(String.format("A product named '%s'\n" +
+            Dialogs.showError(String.format("A product named '%s'\n" +
                                                         "couldn't be found in any of your local search paths.\n" +
                                                         "(See tab 'ESA PFA' in the Tools / Options dialog.)", productName));
             return null;

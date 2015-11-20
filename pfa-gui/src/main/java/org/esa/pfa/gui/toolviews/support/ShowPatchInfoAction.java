@@ -4,7 +4,7 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.core.util.Debug;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -36,7 +36,7 @@ class ShowPatchInfoAction extends AbstractAction {
             showPatchInfoDialog.show();
         } catch (IOException e) {
             Debug.trace(e);
-            SnapDialogs.showError("Failed to load features for patch.", e.getMessage());
+            Dialogs.showError("Failed to load features for patch.", e.getMessage());
         }
     }
 

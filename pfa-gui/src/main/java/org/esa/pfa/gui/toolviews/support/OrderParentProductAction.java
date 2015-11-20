@@ -10,7 +10,7 @@ import org.esa.pfa.gui.ordering.ProductOrderService;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 
 import javax.swing.AbstractAction;
 import java.awt.Desktop;
@@ -44,18 +44,18 @@ class OrderParentProductAction extends AbstractAction {
 
         Product openedProduct = ProductAccessUtils.findOpenedProduct(parentProductName);
         if (openedProduct != null) {
-            SnapDialogs.showInformation(String.format("Product '%s' is already opened.", parentProductName), null);
+            Dialogs.showInformation(String.format("Product '%s' is already opened.", parentProductName), null);
             return;
         }
 
         File productFile = ProductAccessUtils.findLocalFile(parentProductName, true, false);
         if (productFile != null) {
-            SnapDialogs.Answer answer = SnapDialogs.requestDecision("Local File Found",
+            Dialogs.Answer answer = Dialogs.requestDecision("Local File Found",
                                                                     String.format("A product named '%s' was found in your local path.\nDo you wish to open it?", parentProductName), true, null);
-            if (answer == SnapDialogs.Answer.YES) {
+            if (answer == Dialogs.Answer.YES) {
                 OpenProductAction.openProduct(productFile);
                 return;
-            } else if (answer == SnapDialogs.Answer.CANCELLED) {
+            } else if (answer == Dialogs.Answer.CANCELLED) {
                 return;
             }
         }
@@ -71,7 +71,7 @@ class OrderParentProductAction extends AbstractAction {
                 // Obviously this action succeeded
                 return;
             } catch (URISyntaxException | IOException e) {
-                SnapDialogs.showError(e.getMessage());
+                Dialogs.showError(e.getMessage());
             }
         }
 
@@ -82,24 +82,24 @@ class OrderParentProductAction extends AbstractAction {
         ProductOrder productOrder = productOrderBasket.getProductOrder(parentProductName);
         if (productOrder != null) {
             if (productOrder.getState() == ProductOrder.State.COMPLETED) {
-                SnapDialogs.Answer answer = SnapDialogs.requestDecision((String) getValue(NAME),
+                Dialogs.Answer answer = Dialogs.requestDecision((String) getValue(NAME),
                                                                       String.format("Data product\n%s\nhas already been downloaded.\nOpen it?",
                                                                                     parentProductName), true, null);
-                if (answer == SnapDialogs.Answer.YES) {
+                if (answer == Dialogs.Answer.YES) {
                     PatchContextMenuFactory.createShowPatchInParentProductAction(patch);
                 }
             } else {
-                SnapDialogs.showInformation((String) getValue(NAME),
+                Dialogs.showInformation((String) getValue(NAME),
                                             String.format("Data product\n%s\nis already in the basket.",
                                                           parentProductName), null);
             }
             return;
         }
 
-        SnapDialogs.Answer resp = SnapDialogs.requestDecision((String) getValue(NAME),
+        Dialogs.Answer resp = Dialogs.requestDecision((String) getValue(NAME),
                                                               String.format("Data product\n%s\nwill be ordered.\nProceed?",
                                                                             parentProductName), true, null);
-        if (resp == SnapDialogs.Answer.YES) {
+        if (resp == Dialogs.Answer.YES) {
             ProductOrderService productOrderService = CBIRSession.getInstance().getProductOrderService();
             productOrderService.submit(new ProductOrder(parentProductName));
         }

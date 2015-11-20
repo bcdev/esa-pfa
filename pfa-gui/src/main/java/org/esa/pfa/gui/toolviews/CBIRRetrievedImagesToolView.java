@@ -26,7 +26,7 @@ import org.esa.pfa.gui.toolviews.support.PatchContextMenuFactory;
 import org.esa.pfa.gui.toolviews.support.PatchDrawer;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.rcp.SnapApp;
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 import org.esa.snap.rcp.util.ProgressHandleMonitor;
 import org.esa.snap.rcp.windows.ToolTopComponent;
 import org.netbeans.api.progress.ProgressUtils;
@@ -286,15 +286,15 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
             }
 
             if (productNameSet.isEmpty()) {
-                SnapDialogs.showInformation(name, "All parent data products have already been ordered.", null);
+                Dialogs.showInformation(name, "All parent data products have already been ordered.", null);
                 return;
             }
 
-            SnapDialogs.Answer resp = SnapDialogs.requestDecision(name,
+            Dialogs.Answer resp = Dialogs.requestDecision(name,
                                                                   String.format("%d data product(s) will be ordered.\nProceed?",
                                                                                 productNameSet.size()),
                                                                   true, null);
-            if (resp == SnapDialogs.Answer.YES) {
+            if (resp == Dialogs.Answer.YES) {
                 for (String productName : productNameSet) {
                     productOrderService.submit(new ProductOrder(productName));
                 }

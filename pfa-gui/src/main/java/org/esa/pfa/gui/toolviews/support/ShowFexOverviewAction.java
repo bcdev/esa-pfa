@@ -1,6 +1,6 @@
 package org.esa.pfa.gui.toolviews.support;
 
-import org.esa.snap.rcp.SnapDialogs;
+import org.esa.snap.rcp.util.Dialogs;
 
 import javax.swing.AbstractAction;
 import java.awt.Desktop;
@@ -24,7 +24,7 @@ class ShowFexOverviewAction extends AbstractAction {
         try {
             Desktop.getDesktop().browse(fexOverviewUri);
         } catch (Throwable t) {
-            SnapDialogs.showError("Failed to open URL:\n" + fexOverviewUri + ":\n" + t.getMessage());
+            Dialogs.showError("Failed to open URL:\n" + fexOverviewUri + ":\n" + t.getMessage());
         }
     }
 
