@@ -19,9 +19,9 @@
         <jersey.version>2.17</jersey.version>
         
         <pfa.version>2.0.0-SNAPSHOT</pfa.version>
-        <snap.version>2.0.0-SNAPSHOT</snap.version>
-        <s1tbx.version>2.0.0</s1tbx.version>
-        <s3tbx.version>2.0.0-SNAPSHOT</s3tbx.version>
+        <snap.version>2.1.0-SNAPSHOT</snap.version>
+        <s1tbx.version>2.1.0-SNAPSHOT</s1tbx.version>
+        <s3tbx.version>2.1.0-SNAPSHOT</s3tbx.version>
     </properties>
 
     <modules>
