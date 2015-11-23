@@ -4,6 +4,8 @@ import com.bc.ceres.core.Assert;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.sun.media.jai.util.SunTileCache;
 import com.vividsolutions.jts.geom.Geometry;
+import org.esa.pfa.fe.PFAApplicationDescriptor;
+import org.esa.pfa.fe.PFAApplicationRegistry;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -39,11 +41,14 @@ import java.util.Locale;
 public class BiTempPreprocessor {
 
     public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyyMMddHHmm");
-    public static final int PATCH_SIZE = 200;
+//    public static final int PATCH_SIZE = 200;
     public static final double PIXEL_RESOLUTION = 0.009;
 
+    private final Path targetDir;
+    private final String applicationName;
+    private final PFAApplicationDescriptor applicationDescriptor;
+
     private PatchCS patchCS;
-    private Path targetDir;
 
     // Processing time stats
     private long writtenPatchCount;
@@ -54,7 +59,16 @@ public class BiTempPreprocessor {
 
     private PrintWriter printWriter;
 
-    public BiTempPreprocessor() throws IOException {
+    public BiTempPreprocessor(Path targetDir, String applicationName) throws IOException {
+        this.targetDir = targetDir;
+        this.applicationName = applicationName;
+        this.applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(applicationName);
+
+        final int patchSize = applicationDescriptor.getPatchDimension().width;
+        patchCS = new PatchCS(patchSize, PIXEL_RESOLUTION);
+        System.setProperty("snap.dataio.reader.tileWidth", (patchSize * 2) + "");
+        System.setProperty("snap.dataio.reader.tileHeight", (patchSize * 2) + "");
+
         printWriter = new PrintWriter(new FileWriter("BiTempPreprocessor.csv"));
         printWriter.printf("id\t#products\t#patches\ttime/patch(ms)\tcached(MiB)\tfree(MiB)\ttotal(MiB)\tmax(MiB)%n");
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -70,12 +84,12 @@ public class BiTempPreprocessor {
 
         Product reprojectedProduct = patchCS.getReprojectedProduct(product);
         reprojectedProduct.addMask("ROI", "!l1_flags.BRIGHT && l1_flags.LAND_OCEAN", "Region of interest", Color.GREEN, 0.7);
-        String spectralBandName = null;
+        String lastSpectralBandName = null;
         Band[] bands = reprojectedProduct.getBands();
         for (Band band : bands) {
             if (band.getSpectralWavelength() > 0) {
                 band.setValidPixelExpression("ROI");
-                spectralBandName = band.getName();
+                lastSpectralBandName = band.getName();
             }
         }
 
@@ -83,7 +97,7 @@ public class BiTempPreprocessor {
                           reprojectedProduct.getSceneRasterWidth(),
                           reprojectedProduct.getSceneRasterHeight());
 
-        if (spectralBandName == null) {
+        if (lastSpectralBandName == null) {
             throw new IOException("Invalid source product");
         }
         Geometry sourceGeometry = PatchCS.computeProductGeometry(product);
@@ -129,8 +143,8 @@ public class BiTempPreprocessor {
                             globalsAttributes.setAttributeString("sourceFile", product.getFileLocation().getPath());
                             metadataRoot.addElement(globalsAttributes);
 
-                            Band spectralBand = subsetProduct.getBand(spectralBandName);
-                            Assert.state(spectralBand != null, String.format("spectralBand != null, where is '%s'?", spectralBandName));
+                            Band spectralBand = subsetProduct.getBand(lastSpectralBandName);
+                            Assert.state(spectralBand != null, String.format("spectralBand != null, where is '%s'?", lastSpectralBandName));
                             MultiLevelImage validMaskImage = spectralBand.getValidMaskImage();
                             double validPixelRatio = 1;
                             if (validMaskImage != null) {
@@ -197,29 +211,27 @@ public class BiTempPreprocessor {
 
     public static void main(String[] args) throws IOException {
         Locale.setDefault(Locale.ENGLISH);
-        System.setProperty("snap.dataio.reader.tileWidth", (PATCH_SIZE * 2) + "");
-        System.setProperty("snap.dataio.reader.tileHeight", (PATCH_SIZE * 2) + "");
         SystemUtils.init3rdPartyLibs(BiTempPreprocessor.class);
 
-        new BiTempPreprocessor().run(args);
+        if (args.length < 3) {
+            System.out.println("Usage: " + BiTempPreprocessor.class.getSimpleName() + " <target-dir> <application> <source> [<source> ...]");
+            System.exit(1);
+        }
+        Path targetDir = Paths.get(args[0]);
+        String application = args[1];
+        new BiTempPreprocessor(targetDir, application).run(args);
     }
 
     private void run(String[] args) throws IOException {
-        if (args.length < 2) {
-            System.out.println("Usage: " + getClass().getSimpleName() + " <target-dir> <source> [<source> ...]");
-            System.exit(1);
-        }
-        patchCS = new PatchCS(PATCH_SIZE, PIXEL_RESOLUTION);
         FileFilter fileFilter = file -> {
             String name = file.getName();
             return name.startsWith("MER_RR__1P") && name.endsWith(".N1");
         };
-        targetDir = Paths.get(args[0]);
         if (!Files.exists(targetDir)) {
             Files.createDirectories(targetDir);
         }
         ArrayList<File> fileList = new ArrayList<>();
-        for (int i = 1; i < args.length; i++) {
+        for (int i = 2; i < args.length; i++) {
             String arg = args[i];
             scanFiles(new File(arg), fileFilter, fileList);
         }

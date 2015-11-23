@@ -18,6 +18,7 @@ package org.esa.pfa.fe.spectral;
 
 import com.bc.ceres.core.Assert;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.dimap.DimapProductConstants;
 import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.Product;
 
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -55,15 +57,15 @@ public class FindPatchPairs {
     private void run(File[] patchFiles, Path targetDir) throws ParseException {
         int i1 = 0;
         int i2 = 1;
-        while(i2 < patchFiles.length) {
+        while (i2 < patchFiles.length) {
             int distanceSeconds = timeDifferenceInSeconds(patchFiles[i1].getName(), patchFiles[i2].getName());
             if (distanceSeconds < minDistanceSeconds) {
                 i2++;
-            } else if ( distanceSeconds > maxDistanceSeconds) {
+            } else if (distanceSeconds > maxDistanceSeconds) {
                 i1++;
                 i2 = i1 + 1;
             } else {
-                if (findOverlappingPixels(patchFiles[i1], patchFiles[i2])) {
+                if (findOverlappingPixels(patchFiles[i1], patchFiles[i2], targetDir)) {
                     i1 = i2 + 1;
                     i2 = i1 + 1;
                 } else {
@@ -87,7 +89,10 @@ public class FindPatchPairs {
         return date.getTime();
     }
 
-    private boolean findOverlappingPixels(File file1, File file2) {
+    private boolean findOverlappingPixels(File file1, File file2, Path targetDir) {
+        System.out.println("FindPatchPairs.findOverlappingPixels");
+        System.out.println("file1 = [" + file1 + "], file2 = [" + file2 + "], targetDir = [" + targetDir + "]");
+
         try {
             Product p1 = ProductIO.readProduct(file1);
             Product p2 = ProductIO.readProduct(file2);
@@ -98,6 +103,7 @@ public class FindPatchPairs {
             Assert.state(roi1.getRasterHeight() == roi2.getRasterHeight());
 
             int overlap = MaskStats.countPixels(roi1, roi2);
+            System.out.println("overlap = " + overlap);
             if (overlap > minOverlappingPixels) {
                 // extractFeatures TODO
                 SpectralFeaturesOp op = new SpectralFeaturesOp();
@@ -106,6 +112,10 @@ public class FindPatchPairs {
                 op.setSourceProduct(p1);
                 op.setSourceProduct("sourceProduct2", p2);
                 Product tp = op.getTargetProduct();
+
+                String targetName = p1.getName() + "-" + p2.getName();
+                File targetFile = targetDir.resolve(targetName).toFile();
+                ProductIO.writeProduct(tp, targetFile, DimapProductConstants.DIMAP_FORMAT_NAME, false);
 
                 return true;
             }
@@ -131,7 +141,11 @@ public class FindPatchPairs {
         Assert.state(patchFiles.length > 2, "Less than 2 patches; can not find pairs.");
         Arrays.sort(patchFiles, (f1, f2) -> f1.getName().compareTo(f2.getName()));
 
-        FindPatchPairs findPatchPairs = new FindPatchPairs(100, 24*60*60, 7*24*60*60);
+        int minOverlappingPixels = 100;
+        int minDistance = (int) Duration.ofDays(1).getSeconds();
+        int maxDistance = (int) Duration.ofDays(7).getSeconds();
+
+        FindPatchPairs findPatchPairs = new FindPatchPairs(minOverlappingPixels, minDistance, maxDistance);
         findPatchPairs.run(patchFiles, targetDir);
     }
 }
