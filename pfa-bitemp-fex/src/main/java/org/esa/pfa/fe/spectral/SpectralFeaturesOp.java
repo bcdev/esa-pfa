@@ -1,6 +1,8 @@
 package org.esa.pfa.fe.spectral;
 
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.ColorPaletteDef;
+import org.esa.snap.core.datamodel.ImageInfo;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.OperatorException;
@@ -16,6 +18,7 @@ import org.esa.snap.core.gpf.pointop.SourceSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.TargetSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.WritableSample;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -47,10 +50,23 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "Mask expression")
     private String maskExpression;
 
-    @Parameter(label = "Logarithmize sources")
+    @Parameter(label = "Logarithmize sources", defaultValue = "false")
     private boolean logSources;
 
+    @Parameter(label = "Include differences in output", defaultValue = "false")
+    private boolean outputDiffs;
+
+    @Parameter(label = "Expected max value of differences")
+    private Double maxDiff;
+
+    @Parameter(label = "For collocated products: band name suffix for 1st product")
+    private String source1Suffix;
+
+    @Parameter(label = "For collocated products: band name suffix for 2nd product")
+    private String source2Suffix;
+
     private int validMaskIndex = -1;
+    private Band[] spectralBands2;
 
     public SpectralFeaturesOp() {
     }
@@ -65,13 +81,12 @@ public class SpectralFeaturesOp extends PixelOperator {
 
         int n = spectralBands.length - 1;
 
-        double[] values = new double[n + 1];
+        double[] diffValues = new double[spectralBands.length];
         double v;
-        for (int i = 0; i <= n; i++) {
-            if (sourceProduct2 != null) {
+        for (int i = 0; i < spectralBands.length; i++) {
+            if (spectralBands2 != null) {
                 double v1 = sourceSamples[i].getDouble();
-                double v2 = sourceSamples[n + 1 + i].getDouble();
-                v = v1 - v2;
+                double v2 = sourceSamples[spectralBands.length + i].getDouble();
                 if (logSources) {
                     v = Math.log(v1 / v2);
                 } else {
@@ -83,13 +98,13 @@ public class SpectralFeaturesOp extends PixelOperator {
                     v = Math.log(v);
                 }
             }
-            values[i] = v;
+            diffValues[i] = v;
         }
 
-        double[] valueSqSums = new double[n + 1];
+        double[] valueSqSums = new double[spectralBands.length];
         double valueSqSum = 0;
         for (int i = n; i >= 0; i--) {
-            double dv = values[i];
+            double dv = diffValues[i];
             valueSqSum += dv * dv;
             valueSqSums[i] = Math.sqrt(valueSqSum);
         }
@@ -101,7 +116,7 @@ public class SpectralFeaturesOp extends PixelOperator {
             // Set angle_<i>
             valueSqSum = valueSqSums[i - 1];
             if (valueSqSum > 0.0) {
-                angle = Math.acos(values[i - 1] / valueSqSum);
+                angle = Math.acos(diffValues[i - 1] / valueSqSum);
             } else {
                 angle = 0.0;
             }
@@ -109,9 +124,14 @@ public class SpectralFeaturesOp extends PixelOperator {
         }
 
         // Special treatment for for angle_<n>
-        if (values[n] < 0.0) {
+        if (diffValues[n] < 0.0) {
             angle = 2.0 * Math.PI - targetSamples[n].getDouble();
             targetSamples[n].set(angle);
+        }
+        if (outputDiffs) {
+            for (int i = 0; i < diffValues.length; i++) {
+                targetSamples[spectralBands.length + i].set(diffValues[i]);
+            }
         }
     }
 
@@ -130,6 +150,25 @@ public class SpectralFeaturesOp extends PixelOperator {
             band.setGeophysicalNoDataValue(Double.NaN);
             band.setNoDataValueUsed(true);
         }
+        if (outputDiffs) {
+            for (Band spectralBand : spectralBands) {
+                String bandName = "diff_" + spectralBand.getName();
+                band = p.addBand(bandName, ProductData.TYPE_FLOAT32);
+                band.setGeophysicalNoDataValue(Double.NaN);
+                band.setNoDataValueUsed(true);
+                if (maxDiff != null) {
+                    addDifferenceImageInfo(band);
+                }
+            }
+        }
+    }
+
+    private void addDifferenceImageInfo(Band band) {
+        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[3];
+        points[0] = new ColorPaletteDef.Point(-maxDiff, Color.RED);
+        points[1] = new ColorPaletteDef.Point(0, Color.WHITE);
+        points[2] = new ColorPaletteDef.Point(maxDiff, Color.BLUE);
+        band.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
     }
 
     @Override
@@ -138,9 +177,9 @@ public class SpectralFeaturesOp extends PixelOperator {
         for (int i = 0; i < n; i++) {
             sampleConfigurer.defineSample(i, spectralBands[i].getName());
         }
-        if (sourceProduct2 != null) {
+        if (spectralBands2 != null) {
             for (int i = 0; i < n; i++) {
-                sampleConfigurer.defineSample(n + i, spectralBands[i].getName(), sourceProduct2);
+                sampleConfigurer.defineSample(n + i, spectralBands2[i].getName(), spectralBands2[i].getProduct());
             }
         }
         if (maskExpression != null && !maskExpression.isEmpty()) {
@@ -150,7 +189,7 @@ public class SpectralFeaturesOp extends PixelOperator {
                 validMaskIndex = spectralBands.length * 2;
                 sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct, sourceProduct2);
             } else {
-                validMaskIndex = spectralBands.length;
+                validMaskIndex = spectralBands2 == null ? spectralBands.length : spectralBands.length * 2;
                 sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct);
             }
         }
@@ -161,6 +200,12 @@ public class SpectralFeaturesOp extends PixelOperator {
         sampleConfigurer.defineSample(0, "magnitude");
         for (int i = 1; i < spectralBands.length; i++) {
             sampleConfigurer.defineSample(i, "angle_" + i);
+        }
+        if (outputDiffs) {
+            for (int i = 0; i < spectralBands.length; i++) {
+                String bandName = "diff_" + spectralBands[i].getName();
+                sampleConfigurer.defineSample(spectralBands.length + i, bandName);
+            }
         }
     }
 
@@ -174,10 +219,26 @@ public class SpectralFeaturesOp extends PixelOperator {
             throw new OperatorException("No source bands defined.");
         }
         if (sourceProduct2 != null) {
-            for (Band sourceBand : spectralBands) {
-                Band sourceBand2 = sourceProduct2.getBand(sourceBand.getName());
-                if (sourceBand2 == null) {
-                    throw new OperatorException("Band '" + sourceBand.getName() + "' not found in 2nd source product.");
+            spectralBands2 = new Band[spectralBands.length];
+            for (int i = 0; i < spectralBands.length; i++) {
+                Band sourceBand = spectralBands[i];
+                String bandName = sourceBand.getName();
+                spectralBands2[i] = sourceProduct2.getBand(bandName);
+                if (spectralBands2[i] == null) {
+                    throw new OperatorException("Band '" + bandName + "' not found in 2nd source product.");
+                }
+            }
+        } else if (source1Suffix != null && !source1Suffix.isEmpty() &&
+                            source2Suffix != null && !source2Suffix.isEmpty()) {
+            spectralBands2 = new Band[spectralBands.length];
+            for (int i = 0; i < spectralBands.length; i++) {
+                Band sourceBand = spectralBands[i];
+                String bandName = sourceBand.getName();
+                bandName = bandName.substring(0, bandName.length() - source1Suffix.length());
+                bandName = bandName + source2Suffix;
+                spectralBands2[i] = sourceProduct.getBand(bandName);
+                if (spectralBands2[i] == null) {
+                    throw new OperatorException("Band '" + bandName + "' not found in source product.");
                 }
             }
         }
@@ -188,9 +249,22 @@ public class SpectralFeaturesOp extends PixelOperator {
         ArrayList<Band> sourceBandList = new ArrayList<>();
         if (spectralBandNamingPattern != null && !spectralBandNamingPattern.isEmpty()) {
             Pattern pattern = Pattern.compile(spectralBandNamingPattern);
-            for (Band band : bands) {
-                if (pattern.matcher(band.getName()).matches()) {
-                    sourceBandList.add(band);
+            if (source1Suffix != null && !source1Suffix.isEmpty() &&
+                    source2Suffix != null && !source2Suffix.isEmpty()) {
+                for (Band band : bands) {
+                    String bandName = band.getName();
+                    if (bandName.endsWith(source1Suffix)) {
+                        bandName = bandName.substring(0, bandName.length() - source1Suffix.length());
+                        if (pattern.matcher(bandName).matches()) {
+                            sourceBandList.add(band);
+                        }
+                    }
+                }
+            } else {
+                for (Band band : bands) {
+                    if (pattern.matcher(band.getName()).matches()) {
+                        sourceBandList.add(band);
+                    }
                 }
             }
         } else {

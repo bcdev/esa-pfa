@@ -1,0 +1,29 @@
+<filesystem>
+
+    <folder name="Actions">
+        <folder name="Operators">
+            <file name="org-esa-pfa-fe-spectral-SpectralFeaturesOpAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
+                <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
+                <attr name="displayName" stringvalue="Spectral feature Processor"/>
+                <attr name="operatorName" stringvalue="SpectralFeaturesOp"/>
+                <attr name="dialogTitle" stringvalue="Spectral Feature"/>
+                <attr name="helpId" stringvalue="SpectralFeaturesOperator"/>
+                <attr name="targetProductNameSuffix" stringvalue="_sf"/>
+                <attr name="ShortDescription" stringvalue="Generates spectral features from a source product."/>
+            </file>
+        </folder>
+    </folder>
+
+    <folder name="Menu">
+        <folder name="Optical">
+            <folder name="Preprocessing">
+                <file name="org-esa-pfa-fe-spectral-SpectralFeaturesOpAction.shadow">
+                    <attr name="originalFile" stringvalue="Actions/Operators/org-esa-pfa-fe-spectral-SpectralFeaturesOpAction.instance"/>
+                    <attr name="position" intvalue="0"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+
+</filesystem>
