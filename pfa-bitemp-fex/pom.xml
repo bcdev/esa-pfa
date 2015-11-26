@@ -23,7 +23,6 @@
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-algalblooms</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>

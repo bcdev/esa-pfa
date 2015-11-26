@@ -39,12 +39,10 @@
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-algalblooms</artifactId>
-            <version>${pfa.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-sar-fex</artifactId>
-            <version>${pfa.version}</version>
         </dependency>
 
         <!-- JAX-RS implementation -->

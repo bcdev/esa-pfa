@@ -22,6 +22,8 @@
         <snap.version>2.0.0</snap.version>
         <s1tbx.version>2.0.0</s1tbx.version>
         <s3tbx.version>2.0.0</s3tbx.version>
+
+        <pfa.nbmSpecVersion>2.0.1</pfa.nbmSpecVersion>
     </properties>
 
     <modules>
@@ -55,6 +57,26 @@
             <dependency>
                 <groupId>org.esa.pfa</groupId>
                 <artifactId>pfa-ws-client</artifactId>
+                <version>${pfa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.pfa</groupId>
+                <artifactId>pfa-gui</artifactId>
+                <version>${pfa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.pfa</groupId>
+                <artifactId>pfa-algalblooms</artifactId>
+                <version>${pfa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.pfa</groupId>
+                <artifactId>pfa-sar-fex</artifactId>
+                <version>${pfa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.pfa</groupId>
+                <artifactId>pfa-bitemp-fex</artifactId>
                 <version>${pfa.version}</version>
             </dependency>
 
@@ -208,6 +230,36 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>file-manifest</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/nbm</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/nbm</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>manifest.mf</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
@@ -231,6 +283,7 @@
                     <keystore>${project.basedir}/../keystore/s1tbx.ks</keystore>
                     <keystorealias>s1tbx</keystorealias>
                     <keystorepassword>snap-123</keystorepassword>
+                    <sourceManifestFile>target/nbm/manifest.mf</sourceManifestFile>
                 </configuration>
             </plugin>
             <plugin>

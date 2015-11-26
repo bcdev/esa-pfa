@@ -2,3 +2,5 @@ Manifest-Version: 1.0
 OpenIDE-Module-Display-Category: Product Feature Extraction and Analysis (PFA)
 AutoUpdate-Show-In-Client: false
 AutoUpdate-Essential-Module: false
+OpenIDE-Module-Specification-Version: ${pfa.nbmSpecVersion}
+

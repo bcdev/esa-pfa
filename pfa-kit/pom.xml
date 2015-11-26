@@ -43,36 +43,33 @@
     </build>
 
     <dependencies>
-
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-core</artifactId>
-            <version>${pfa.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-database</artifactId>
-            <version>${pfa.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.pfa</groupId>
-            <artifactId>pfa-gui</artifactId>
-            <version>${pfa.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.pfa</groupId>
-            <artifactId>pfa-algalblooms</artifactId>
-            <version>${pfa.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.pfa</groupId>
-            <artifactId>pfa-sar-fex</artifactId>
-            <version>${pfa.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.pfa</groupId>
             <artifactId>pfa-ws-client</artifactId>
-            <version>${pfa.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-gui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-algalblooms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-sar-fex</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-bitemp-fex</artifactId>
         </dependency>
     </dependencies>
 </project>
