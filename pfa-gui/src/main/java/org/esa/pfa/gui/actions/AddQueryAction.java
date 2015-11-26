@@ -82,7 +82,6 @@ public class AddQueryAction extends AbstractAction implements ContextAwareAction
         Lookup.Result<Classifier> lkpContextClassifier = lkp.lookupResult(Classifier.class);
         lkpContextClassifier.addLookupListener(WeakListeners.create(LookupListener.class, this, lkpContextClassifier));
 
-        setEnableState();
         putValue(Action.SHORT_DESCRIPTION, Bundle.CTL_AddQueryAction_ShortDescription());
         putValue(SMALL_ICON, ImageUtilities.loadImageIcon("images/icons/pfa-add-query-24.png", false));
     }
