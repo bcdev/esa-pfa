@@ -39,6 +39,7 @@ public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDes
     private static final String NAME = "Change Detection";
     private static final String ID = "Change";
     private static final String propertyPrefix = "pfa.change.";
+
     private static final String DEFAULT_FEATURE_SET =   "change.mean," +
                                                         "change.stdev," +
                                                         "change.cvar," +
@@ -46,6 +47,7 @@ public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDes
                                                         "change.max," +
                                                         "change.percentOverPnt4" +
                                                         "change.largestConnectedBlob";
+
     private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);

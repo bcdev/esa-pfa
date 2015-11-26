@@ -24,6 +24,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.Stx;
 import org.esa.snap.core.datamodel.VirtualBand;
+import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.Tile;
 import org.esa.snap.core.gpf.annotations.OperatorMetadata;
@@ -71,7 +72,13 @@ public class ChangeDetectionFeatureWriter extends AbstractSARFeatureWriter {
 
         final Product featureProduct = patch.getPatchProduct();
         final Band mstBand = getFeatureBand(featureProduct, "mst");
+        if(mstBand == null) {
+            throw new OperatorException("Master band not found");
+        }
         final Band slvBand = getFeatureBand(featureProduct, "slv");
+        if(slvBand == null) {
+            throw new OperatorException("Slave band not found");
+        }
         final Band targetBand = getFeatureBand(featureProduct, featureBandName);
         final Band featureMask = getFeatureMask(featureProduct, featureBandName);
 

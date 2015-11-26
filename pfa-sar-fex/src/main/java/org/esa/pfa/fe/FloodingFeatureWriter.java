@@ -23,6 +23,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.VirtualBand;
+import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.Tile;
 import org.esa.snap.core.gpf.annotations.OperatorMetadata;
@@ -70,10 +71,16 @@ public class FloodingFeatureWriter extends AbstractSARFeatureWriter {
 
         final Product featureProduct = patch.getPatchProduct();
         final Band mstBand = getFeatureBand(featureProduct, "mst");
+        if(mstBand == null) {
+            throw new OperatorException("Master band not found");
+        }
         final Band slvBand = getFeatureBand(featureProduct, "slv");
+        if(slvBand == null) {
+            throw new OperatorException("Slave band not found");
+        }
         final Band featureMask = getFeatureMask(featureProduct, featureBandName);
 
-        final Band homogeneity = featureProduct.getBand("homogeneity");
+        final Band homogeneity = getFeatureBand(featureProduct, "homogeneity");
         double floodHomogeneity = 0;
         if(homogeneity != null) {
             final String expression = featureMask.getName() + " ? " + homogeneity.getName() + " : 0";
