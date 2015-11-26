@@ -22,6 +22,9 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.util.SystemUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Base class for SAR Feature Writers
  */
@@ -43,13 +46,32 @@ public abstract class AbstractSARFeatureWriter extends FeatureWriter {
         return false;
     }
 
+    protected static Band[] getFeatureBands(final Product product, final String idStr) throws OperatorException {
+        final List<Band> bandList = new ArrayList<>();
+        for(String name : product.getBandNames()) {
+            if(name.contains(idStr)) {
+                bandList.add(product.getBand(name));
+            }
+        }
+        return bandList.toArray(new Band[bandList.size()]);
+    }
+
     protected static Band getFeatureBand(final Product product, final String idStr) throws OperatorException {
         for(String name : product.getBandNames()) {
             if(name.contains(idStr)) {
                 return product.getBand(name);
             }
         }
-        throw new OperatorException(idStr +" band not found");
+        return null;
+    }
+
+    protected static Band findBand(final Band[] bands, final String idStr) throws OperatorException {
+        for(Band band : bands) {
+            if(band.getName().contains(idStr)) {
+                return band;
+            }
+        }
+        return null;
     }
 
     protected static Band getFeatureMask(final Product product, final String idStr) throws OperatorException {
