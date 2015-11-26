@@ -43,7 +43,8 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
                                                         "speckle_divergence.stdev," +
                                                         "speckle_divergence.cvar," +
                                                         "speckle_divergence.min," +
-                                                        "speckle_divergence.maxspeckle_divergence.percentOverPnt4" +
+                                                        "speckle_divergence.max," +
+                                                        "speckle_divergence.percentOverPnt4" +
                                                         "speckle_divergence.largestConnectedBlob";
     private static final String DEFAULT_QL_NAME = "sigma0_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*";  //todo this is a bad default
