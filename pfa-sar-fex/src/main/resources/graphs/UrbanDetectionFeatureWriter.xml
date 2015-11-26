@@ -70,7 +70,7 @@
       <sourceProduct refid="Speckle-Divergence"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetDir>c:\output\</targetDir>
+      <targetDir>.</targetDir>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
