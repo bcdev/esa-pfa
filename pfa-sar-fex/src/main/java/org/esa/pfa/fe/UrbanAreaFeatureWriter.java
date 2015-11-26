@@ -22,6 +22,7 @@ import org.esa.pfa.fe.op.out.PatchSink;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.Stx;
+import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.Tile;
 import org.esa.snap.core.gpf.annotations.OperatorMetadata;
@@ -72,6 +73,9 @@ public class UrbanAreaFeatureWriter extends AbstractSARFeatureWriter {
 
         final Product featureProduct = patch.getPatchProduct();
         final Band targetBand = getFeatureBand(featureProduct, featureBandName);
+        if(targetBand == null) {
+            throw new OperatorException(featureBandName+" band not found");
+        }
 
         final int tw = targetBand.getRasterWidth();
         final int th = targetBand.getRasterHeight();
