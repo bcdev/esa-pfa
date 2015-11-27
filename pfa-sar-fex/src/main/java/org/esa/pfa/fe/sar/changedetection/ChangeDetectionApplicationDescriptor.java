@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.fe;
+package org.esa.pfa.fe.sar.changedetection;
 
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.snap.core.datamodel.Product;
@@ -34,45 +35,19 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-public class ForestChangeApplicationDescriptor extends AbstractApplicationDescriptor {
+public class ChangeDetectionApplicationDescriptor extends AbstractApplicationDescriptor {
 
-    private static final String NAME = "Forest Change";
-    private static final String ID = "Forest Change";
-    private static final String propertyPrefix = "pfa.forestchange.";
+    private static final String NAME = "Change Detection";
+    private static final String ID = "Change";
+    private static final String propertyPrefix = "pfa.change.";
 
-    private static final String DEFAULT_FEATURE_SET =
-            "forestchange.mst_month," +
-                    "forestchange.slv_month," +
-                    "forestchange.contrast.mean," +
-                    "forestchange.contrast.stdev," +
-                    "forestchange.contrast.cvar," +
-                    "forestchange.contrast.min," +
-                    "forestchange.contrast.max," +
-                    "forestchange.contrast.count," +
-                    "forestchange.homogeneity.mean," +
-                    "forestchange.homogeneity.stdev," +
-                    "forestchange.homogeneity.cvar," +
-                    "forestchange.homogeneity.min," +
-                    "forestchange.homogeneity.max," +
-                    "forestchange.homogeneity.count," +
-                    "forestchange.energy.mean," +
-                    "forestchange.energy.stdev," +
-                    "forestchange.energy.cvar," +
-                    "forestchange.energy.min," +
-                    "forestchange.energy.max," +
-                    "forestchange.energy.count," +
-                    "forestchange.entropy.mean," +
-                    "forestchange.entropy.stdev," +
-                    "forestchange.entropy.cvar," +
-                    "forestchange.entropy.min," +
-                    "forestchange.entropy.max," +
-                    "forestchange.entropy.count," +
-                    "forestchange.variance.mean," +
-                    "forestchange.variance.stdev," +
-                    "forestchange.variance.cvar," +
-                    "forestchange.variance.min," +
-                    "forestchange.variance.max," +
-                    "forestchange.variance.count,";
+    private static final String DEFAULT_FEATURE_SET =   "change.mean," +
+                                                        "change.stdev," +
+                                                        "change.cvar," +
+                                                        "change.min," +
+                                                        "change.max," +
+                                                        "change.percentOverPnt4" +
+                                                        "change.largestConnectedBlob";
 
     private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
@@ -83,7 +58,7 @@ public class ForestChangeApplicationDescriptor extends AbstractApplicationDescri
     private static Properties properties = new Properties(System.getProperties());
 
     static {
-        File file = new File(SystemUtils.getApplicationDataDir(), "pfa.forestchange.properties");
+        File file = new File(SystemUtils.getApplicationDataDir(), propertyPrefix+"properties");
         try {
             try (FileReader reader = new FileReader(file)) {
                 properties.load(reader);
@@ -93,7 +68,7 @@ public class ForestChangeApplicationDescriptor extends AbstractApplicationDescri
         }
     }
 
-    public ForestChangeApplicationDescriptor() {
+    public ChangeDetectionApplicationDescriptor() {
         super(NAME, ID);
     }
 
@@ -109,7 +84,7 @@ public class ForestChangeApplicationDescriptor extends AbstractApplicationDescri
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return ForestChangeApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/ForestChangeQuery.xml");
+        return ChangeDetectionApplicationDescriptor.class.getClassLoader().getResourceAsStream("org/esa/pfa/fe/sar/graphs/ChangeDetectionFeatureWriter.xml");
     }
 
     @Override
@@ -161,23 +136,23 @@ public class ForestChangeApplicationDescriptor extends AbstractApplicationDescri
 
     @Override
     public String getAllQueryExpr() {
-        return properties.getProperty(propertyPrefix + "allQuery", DEFAULT_ALL_QUERY);
+        return properties.getProperty(propertyPrefix+"allQuery", DEFAULT_ALL_QUERY);
     }
 
     @Override
     public String getDefaultQuicklookFileName() {
-        return properties.getProperty(propertyPrefix + "qlName", DEFAULT_QL_NAME);
+        return properties.getProperty(propertyPrefix+"qlName", DEFAULT_QL_NAME);
     }
 
     @Override
     public String[] getQuicklookFileNames() {
-        return new String[]{"rgb_ql.png", "forestchange_ql.png", "mst_ql.png", "slv_ql.png"};
+        return new String[]{"rgb_ql.png", "ratio_ql.png", "change_ql.png"};
     }
 
     @Override
     public Set<String> getDefaultFeatureSet() {
         if (defaultFeatureSet == null) {
-            String property = properties.getProperty(propertyPrefix + "featureSet", DEFAULT_FEATURE_SET);
+            String property = properties.getProperty(propertyPrefix+"featureSet", DEFAULT_FEATURE_SET);
             defaultFeatureSet = getStringSet(property);
         }
         return defaultFeatureSet;
@@ -200,16 +175,11 @@ public class ForestChangeApplicationDescriptor extends AbstractApplicationDescri
         return new FeatureType[]{
                     /*00*/ new FeatureType("patch", "Patch product", Product.class),
                     /*01*/ new FeatureType("rgb_ql", "RGB quicklook", RenderedImage.class),
-                    /*02*/ new FeatureType("forestchange_ql", "Forest change mask quicklook", RenderedImage.class),
-                    /*03*/ new FeatureType("mst_ql", "Master quicklook", RenderedImage.class),
-                    /*04*/ new FeatureType("slv_ql", "Slave quicklook", RenderedImage.class),
-                    /*05*/ new FeatureType("forestchange.mst_month", "Master acquisition month", Integer.class),
-                    /*06*/ new FeatureType("forestchange.slv_month", "Slave acquisition month", Integer.class),
-                    /*07*/ new FeatureType("forestchange.contrast", "Contrast change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*08*/ new FeatureType("forestchange.homogeneity", "Homogeneity change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*09*/ new FeatureType("forestchange.energy", "Energy change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*10*/ new FeatureType("forestchange.entropy", "Entropy change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
-                    /*11*/ new FeatureType("forestchange.variance", "Variance change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*02*/ new FeatureType("ratio_ql", "Log Ratio quicklook", RenderedImage.class),
+                    /*03*/ new FeatureType("change_ql", "Change quicklook", RenderedImage.class),
+                    /*04*/ new FeatureType("change", "Change statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*05*/ new FeatureType("change.percentOver2", "Sample percent over 2", Double.class),
+                    /*06*/ new FeatureType("change.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
         };
     }
 }

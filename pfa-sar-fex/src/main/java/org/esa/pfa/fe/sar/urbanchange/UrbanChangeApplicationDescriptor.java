@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.fe;
+package org.esa.pfa.fe.sar.urbanchange;
 
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.snap.core.datamodel.Product;
@@ -99,7 +100,7 @@ public class UrbanChangeApplicationDescriptor extends AbstractApplicationDescrip
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return UrbanChangeApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/UrbanChangeQuery.xml");
+        return UrbanChangeApplicationDescriptor.class.getClassLoader().getResourceAsStream("org/esa/pfa/fe/sar/graphs/UrbanChangeQuery.xml");
     }
 
     @Override

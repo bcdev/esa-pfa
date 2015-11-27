@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.fe;
+package org.esa.pfa.fe.sar.flood;
 
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
@@ -77,7 +78,7 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/FloodDetectionQuery.xml");
+        return FloodingApplicationDescriptor.class.getClassLoader().getResourceAsStream("org/esa/pfa/fe/sar/graphs/FloodDetectionQuery.xml");
     }
 
     @Override

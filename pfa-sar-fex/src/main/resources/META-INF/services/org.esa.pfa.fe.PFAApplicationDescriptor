@@ -1,5 +1,5 @@
-org.esa.pfa.fe.UrbanAreaApplicationDescriptor
-org.esa.pfa.fe.FloodingApplicationDescriptor
-org.esa.pfa.fe.ForestChangeApplicationDescriptor
-org.esa.pfa.fe.UrbanChangeApplicationDescriptor
-org.esa.pfa.fe.ChangeDetectionApplicationDescriptor
+org.esa.pfa.fe.sar.urbanarea.UrbanAreaApplicationDescriptor
+org.esa.pfa.fe.sar.flood.FloodingApplicationDescriptor
+org.esa.pfa.fe.sar.forestchange.ForestChangeApplicationDescriptor
+org.esa.pfa.fe.sar.urbanchange.UrbanChangeApplicationDescriptor
+org.esa.pfa.fe.sar.changedetection.ChangeDetectionApplicationDescriptor

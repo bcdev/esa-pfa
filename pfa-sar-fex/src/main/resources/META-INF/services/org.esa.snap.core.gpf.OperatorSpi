@@ -1,6 +1,6 @@
-org.esa.pfa.fe.UrbanAreaFeatureWriter$Spi
-org.esa.pfa.fe.FloodingFeatureWriter$Spi
-org.esa.pfa.fe.ForestChangeFeatureWriter$Spi
-org.esa.pfa.fe.UrbanChangeFeatureWriter$Spi
-org.esa.pfa.fe.ChangeDetectionFeatureWriter$Spi
+org.esa.pfa.fe.sar.urbanarea.UrbanAreaFeatureWriter$Spi
+org.esa.pfa.fe.sar.flood.FloodingFeatureWriter$Spi
+org.esa.pfa.fe.sar.forestchange.ForestChangeFeatureWriter$Spi
+org.esa.pfa.fe.sar.urbanchange.UrbanChangeFeatureWriter$Spi
+org.esa.pfa.fe.sar.changedetection.ChangeDetectionFeatureWriter$Spi
 

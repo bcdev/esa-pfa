@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
-package org.esa.pfa.fe;
+package org.esa.pfa.fe.sar.urbanarea;
 
+import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.snap.core.datamodel.Product;
@@ -81,7 +82,7 @@ public class UrbanAreaApplicationDescriptor extends AbstractApplicationDescripto
 
     @Override
     public InputStream getGraphFileAsStream() {
-        return UrbanAreaApplicationDescriptor.class.getClassLoader().getResourceAsStream("graphs/UrbanDetectionFeatureWriter.xml");
+        return UrbanAreaApplicationDescriptor.class.getClassLoader().getResourceAsStream("org/esa/pfa/fe/sar/graphs/UrbanDetectionFeatureWriter.xml");
     }
 
     @Override
