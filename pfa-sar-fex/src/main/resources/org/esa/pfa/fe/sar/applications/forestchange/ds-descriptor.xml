@@ -34,12 +34,12 @@
       <valueType>java.awt.image.RenderedImage</valueType>
     </FeatureType>
     <FeatureType>
-      <name>floodchange.mst_month</name>
+      <name>forestchange.mst_month</name>
       <description>Master acquisition month</description>
       <valueType>java.lang.Integer</valueType>
     </FeatureType>
     <FeatureType>
-      <name>floodchange.slv_month</name>
+      <name>forestchange.slv_month</name>
       <description>Slave acquisition month</description>
       <valueType>java.lang.Integer</valueType>
     </FeatureType>
