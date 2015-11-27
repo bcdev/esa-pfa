@@ -1,0 +1,87 @@
+<graph id="Graph">
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file></file>
+    </parameters>
+  </node>
+  <node id="Land-Sea-Mask">
+    <operator>Land-Sea-Mask</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <landMask>false</landMask>
+      <useSRTM>true</useSRTM>
+      <geometry/>
+      <invertGeometry>false</invertGeometry>
+      <byPass>false</byPass>
+    </parameters>
+  </node>
+  <node id="Terrain-Mask">
+    <operator>Terrain-Mask</operator>
+    <sources>
+      <sourceProduct refid="Land-Sea-Mask"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <demName>SRTM 3Sec</demName>
+      <demResamplingMethod>NEAREST_NEIGHBOUR</demResamplingMethod>
+      <externalDEMFile/>
+      <externalDEMNoDataValue>0.0</externalDEMNoDataValue>
+      <windowSizeStr>15x15</windowSizeStr>
+      <thresholdInMeter>40.0</thresholdInMeter>
+    </parameters>
+  </node>
+  <node id="Speckle-Divergence">
+    <operator>Speckle-Divergence</operator>
+    <sources>
+      <sourceProduct refid="Terrain-Mask"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands></sourceBands>
+      <windowSizeStr>15x15</windowSizeStr>
+    </parameters>
+  </node>
+  <node id="UrbanChangeFeatureWriter">
+    <operator>UrbanChangeFeatureWriter</operator>
+    <sources>
+      <sourceProduct refid="Speckle-Divergence"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <targetDir>.</targetDir>
+      <disposeGlobalCaches>false</disposeGlobalCaches>
+      <overwriteMode>true</overwriteMode>
+      <skipFeaturesOutput>false</skipFeaturesOutput>
+      <skipQuicklookOutput>false</skipQuicklookOutput>
+      <skipProductOutput>true</skipProductOutput>
+      <zipAllOutput>false</zipAllOutput>
+      <patchWriterConfigExtra/>
+      <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.DefaultPatchWriterFactory</patchWriterFactoryClassName>
+      <patchSizeKm>12.0</patchSizeKm>
+      <patchWidth>200</patchWidth>
+      <patchHeight>200</patchHeight>
+      <minValidPixels>0.1</minValidPixels>
+    </parameters>
+  </node>
+  <applicationData id="Presentation">
+    <Description/>
+    <node id="Read">
+      <displayPosition x="211.0" y="77.0"/>
+    </node>
+    <node id="Land-Sea-Mask">
+      <displayPosition x="197.0" y="129.0"/>
+    </node>
+    <node id="Terrain-Mask">
+      <displayPosition x="205.0" y="171.0"/>
+    </node>
+    <node id="UrbanChangeFeatureWriter">
+      <displayPosition x="314.0" y="223.0"/>
+    </node>
+    <node id="Speckle-Divergence">
+      <displayPosition x="179.0" y="222.0"/>
+    </node>
+  </applicationData>
+</graph>

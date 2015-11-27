@@ -1,0 +1,47 @@
+<org.esa.pfa.fe.op.DatasetDescriptor>
+  <name>Flood Detection</name>
+  <version>1.0</version>
+  <description>Flood detection from SAR</description>
+  <featureTypes>
+    <!--FeatureType>
+      <name>patch</name>
+      <description>Patch product</description>
+      <valueType>org.esa.snap.framework.datamodel.Product</valueType>
+    </FeatureType-->
+    <FeatureType>
+      <name>rnd</name>
+      <description>Random number for selecting random subsets</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>flood_ql</name>
+      <description>Flood quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>rgb_ql</name>
+      <description>RGB quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>mst_ql</name>
+      <description>Master quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>slv_ql</name>
+      <description>Slave quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>flood.percentOverThreshold</name>
+      <description>Sample percent over threshold</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>flood.largestConnectedBlob</name>
+      <description>Largest connected cluster size as a percent of patch</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+  </featureTypes>
+</org.esa.pfa.fe.op.DatasetDescriptor>

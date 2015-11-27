@@ -1,0 +1,332 @@
+<org.esa.pfa.fe.op.DatasetDescriptor>
+  <name>Forest Change</name>
+  <version>1.0</version>
+  <description>Forest change detection from SAR</description>
+  <featureTypes>
+    <!--FeatureType>
+      <name>patch</name>
+      <description>Patch product</description>
+      <valueType>org.esa.snap.framework.datamodel.Product</valueType>
+    </FeatureType-->
+    <FeatureType>
+      <name>rnd</name>
+      <description>Random number for selecting random subsets</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>rgb_ql</name>
+      <description>Urband change quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange_ql</name>
+      <description>Forest change quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>mst_ql</name>
+      <description>Master quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>slv_ql</name>
+      <description>Slave quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>floodchange.mst_month</name>
+      <description>Master acquisition month</description>
+      <valueType>java.lang.Integer</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>floodchange.slv_month</name>
+      <description>Slave acquisition month</description>
+      <valueType>java.lang.Integer</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange.contrast</name>
+      <description>Contrast change statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange.homogeneity</name>
+      <description>Homogeneity change statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange.energy</name>
+      <description>Energy change statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange.entropy</name>
+      <description>Entropy change statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>forestchange.variance</name>
+      <description>Variance change statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+  </featureTypes>
+</org.esa.pfa.fe.op.DatasetDescriptor>

@@ -1,0 +1,93 @@
+<graph id="Graph">
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
+  </node>
+  <node id="GLCM">
+    <operator>GLCM</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <windowSizeStr>9x9</windowSizeStr>
+      <angleStr>ALL</angleStr>
+      <quantizerStr>Probabilistic Quantizer</quantizerStr>
+      <quantizationLevelsStr>64</quantizationLevelsStr>
+      <displacement>1</displacement>
+      <outputContrast>true</outputContrast>
+      <outputDissimilarity>false</outputDissimilarity>
+      <outputHomogeneity>true</outputHomogeneity>
+      <outputASM>false</outputASM>
+      <outputEnergy>true</outputEnergy>
+      <outputMAX>false</outputMAX>
+      <outputEntropy>true</outputEntropy>
+      <outputMean>false</outputMean>
+      <outputVariance>true</outputVariance>
+      <outputCorrelation>false</outputCorrelation>
+    </parameters>
+  </node>
+  <node id="AddLandCover">
+    <operator>AddLandCover</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <landCoverNames>MODIS 2010 Tree Cover Percentage</landCoverNames>
+      <externalFile/>
+      <resamplingMethod>BILINEAR_INTERPOLATION</resamplingMethod>
+    </parameters>
+  </node>
+  <node id="BandMerge">
+    <operator>BandMerge</operator>
+    <sources>
+      <sourceProduct refid="GLCM"/>
+      <sourceProduct.1 refid="AddLandCover"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <geographicError>1.0E-5</geographicError>
+    </parameters>
+  </node>
+  <node id="ForestChangeFeatureWriter">
+    <operator>ForestChangeFeatureWriter</operator>
+    <sources>
+      <sourceProduct refid="BandMerge"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <targetDir>e:\out\pfa-forest</targetDir>
+      <disposeGlobalCaches>false</disposeGlobalCaches>
+      <overwriteMode>true</overwriteMode>
+      <skipFeaturesOutput>false</skipFeaturesOutput>
+      <skipQuicklookOutput>false</skipQuicklookOutput>
+      <skipProductOutput>true</skipProductOutput>
+      <zipAllOutput>false</zipAllOutput>
+      <patchWriterConfigExtra/>
+      <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.DefaultPatchWriterFactory</patchWriterFactoryClassName>
+      <patchSizeKm>12.0</patchSizeKm>
+      <patchWidth>200</patchWidth>
+      <patchHeight>200</patchHeight>
+      <minValidPixels>0.1</minValidPixels>
+    </parameters>
+  </node>
+  <applicationData id="Presentation">
+    <Description/>
+    <node id="Read">
+      <displayPosition x="337.0" y="97.0"/>
+    </node>
+    <node id="GLCM">
+      <displayPosition x="399.0" y="161.0"/>
+    </node>
+    <node id="AddLandCover">
+      <displayPosition x="241.0" y="161.0"/>
+    </node>
+    <node id="BandMerge">
+      <displayPosition x="323.0" y="200.0"/>
+    </node>
+    <node id="ForestChangeFeatureWriter">
+      <displayPosition x="285.0" y="242.0"/>
+    </node>
+  </applicationData>
+</graph>

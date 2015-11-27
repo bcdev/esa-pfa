@@ -1,0 +1,94 @@
+<org.esa.pfa.fe.op.DatasetDescriptor>
+  <name>Urban Area Detection</name>
+  <version>1.0</version>
+  <description>Urban area detection from SAR</description>
+  <featureTypes>
+    <FeatureType>
+      <name>patch</name>
+      <description>Patch product</description>
+      <valueType>org.esa.snap.framework.datamodel.Product</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>rnd</name>
+      <description>Random number for selecting random subsets</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>sigma0_ql</name>
+      <description>Sigma0 quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>speckle_divergence_ql</name>
+      <description>Speckle_divergence quicklook</description>
+      <valueType>java.awt.image.RenderedImage</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>speckle_divergence</name>
+      <description>Speckle divergence statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>speckle_divergence.percentOverPnt4</name>
+      <description>Sample percent over threshold of 0.4</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+    <FeatureType>
+      <name>speckle_divergence.largestConnectedBlob</name>
+      <description>Largest connected cluster size as a percent of patch</description>
+      <valueType>java.lang.Double</valueType>
+    </FeatureType>
+  </featureTypes>
+</org.esa.pfa.fe.op.DatasetDescriptor>

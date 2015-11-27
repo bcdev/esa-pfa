@@ -1,0 +1,239 @@
+<graph id="Graph">
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file></file>
+    </parameters>
+  </node>
+  <node id="Calibration">
+    <operator>Calibration</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <auxFile>Product Auxiliary File</auxFile>
+      <externalAuxFile/>
+      <outputImageInComplex>false</outputImageInComplex>
+      <outputImageScaleInDb>false</outputImageScaleInDb>
+      <createGammaBand>false</createGammaBand>
+      <createBetaBand>false</createBetaBand>
+      <selectedPolarisations/>
+      <outputSigmaBand>false</outputSigmaBand>
+      <outputGammaBand>false</outputGammaBand>
+      <outputBetaBand>false</outputBetaBand>
+      <outputDNBand>false</outputDNBand>
+    </parameters>
+  </node>
+  <node id="Calibration(2)">
+    <operator>Calibration</operator>
+    <sources>
+      <sourceProduct refid="Find-Image-Pair"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <auxFile>Product Auxiliary File</auxFile>
+      <externalAuxFile/>
+      <outputImageInComplex>false</outputImageInComplex>
+      <outputImageScaleInDb>false</outputImageScaleInDb>
+      <createGammaBand>false</createGammaBand>
+      <createBetaBand>false</createBetaBand>
+      <selectedPolarisations/>
+      <outputSigmaBand>false</outputSigmaBand>
+      <outputGammaBand>false</outputGammaBand>
+      <outputBetaBand>false</outputBetaBand>
+      <outputDNBand>false</outputDNBand>
+    </parameters>
+  </node>
+  <node id="CreateStack">
+    <operator>CreateStack</operator>
+    <sources>
+      <sourceProduct refid="Apply-Orbit-File"/>
+      <sourceProduct.1 refid="Apply-Orbit-File(2)"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <masterBands/>
+      <sourceBands/>
+      <resamplingType>BILINEAR_INTERPOLATION</resamplingType>
+      <extent>Master</extent>
+      <initialOffsetMethod>Orbit</initialOffsetMethod>
+    </parameters>
+  </node>
+  <node id="GCP-Selection">
+    <operator>GCP-Selection</operator>
+    <sources>
+      <sourceProduct refid="CreateStack"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <numGCPtoGenerate>4000</numGCPtoGenerate>
+      <coarseRegistrationWindowWidth>256</coarseRegistrationWindowWidth>
+      <coarseRegistrationWindowHeight>256</coarseRegistrationWindowHeight>
+      <rowInterpFactor>2</rowInterpFactor>
+      <columnInterpFactor>2</columnInterpFactor>
+      <maxIteration>2</maxIteration>
+      <gcpTolerance>0.5</gcpTolerance>
+      <applyFineRegistration>true</applyFineRegistration>
+      <fineRegistrationWindowWidth>32</fineRegistrationWindowWidth>
+      <fineRegistrationWindowHeight>32</fineRegistrationWindowHeight>
+      <coherenceWindowSize>3</coherenceWindowSize>
+      <coherenceThreshold>0.6</coherenceThreshold>
+      <useSlidingWindow>false</useSlidingWindow>
+      <computeOffset>false</computeOffset>
+      <onlyGCPsOnLand>true</onlyGCPsOnLand>
+    </parameters>
+  </node>
+  <node id="Warp">
+    <operator>Warp</operator>
+    <sources>
+      <sourceProduct refid="GCP-Selection"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <rmsThreshold>0.2</rmsThreshold>
+      <warpPolynomialOrder>1</warpPolynomialOrder>
+      <interpolationMethod>Bilinear interpolation</interpolationMethod>
+      <excludeMaster>false</excludeMaster>
+      <openResidualsFile>false</openResidualsFile>
+    </parameters>
+  </node>
+  <node id="Find-Image-Pair">
+    <operator>Find-Image-Pair</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
+  </node>
+  <node id="GLCM">
+    <operator>GLCM</operator>
+    <sources>
+      <sourceProduct refid="Warp"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands></sourceBands>
+      <windowSizeStr>9x9</windowSizeStr>
+      <angleStr>ALL</angleStr>
+      <quantizerStr>Probabilistic Quantizer</quantizerStr>
+      <quantizationLevelsStr>64</quantizationLevelsStr>
+      <displacement>1</displacement>
+      <outputContrast>true</outputContrast>
+      <outputDissimilarity>false</outputDissimilarity>
+      <outputHomogeneity>true</outputHomogeneity>
+      <outputASM>false</outputASM>
+      <outputEnergy>true</outputEnergy>
+      <outputMAX>false</outputMAX>
+      <outputEntropy>true</outputEntropy>
+      <outputMean>false</outputMean>
+      <outputVariance>true</outputVariance>
+      <outputCorrelation>false</outputCorrelation>
+    </parameters>
+  </node>
+  <node id="Apply-Orbit-File">
+    <operator>Apply-Orbit-File</operator>
+    <sources>
+      <sourceProduct refid="Calibration"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <orbitType>Sentinel Precise (Auto Download)</orbitType>
+      <polyDegree>3</polyDegree>
+      <continueOnFail>true</continueOnFail>
+    </parameters>
+  </node>
+  <node id="Apply-Orbit-File(2)">
+    <operator>Apply-Orbit-File</operator>
+    <sources>
+      <sourceProduct refid="Calibration(2)"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <orbitType>Sentinel Precise (Auto Download)</orbitType>
+      <polyDegree>3</polyDegree>
+      <continueOnFail>true</continueOnFail>
+    </parameters>
+  </node>
+  <node id="AddLandCover">
+    <operator>AddLandCover</operator>
+    <sources>
+      <sourceProduct refid="Warp"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <landCoverNames>MODIS 2010 Tree Cover Percentage</landCoverNames>
+      <externalFile/>
+      <resamplingMethod>BILINEAR_INTERPOLATION</resamplingMethod>
+    </parameters>
+  </node>
+  <node id="BandMerge">
+    <operator>BandMerge</operator>
+    <sources>
+      <sourceProduct refid="GLCM"/>
+      <sourceProduct.1 refid="AddLandCover"/>
+      <sourceProduct.2 refid="Warp"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands/>
+      <geographicError>1.0E-5</geographicError>
+    </parameters>
+  </node>
+  <node id="ForestChangeFeatureWriter">
+    <operator>ForestChangeFeatureWriter</operator>
+    <sources>
+      <sourceProduct refid="BandMerge"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <targetDir>e:\out\pfa-forest</targetDir>
+      <disposeGlobalCaches>false</disposeGlobalCaches>
+      <overwriteMode>true</overwriteMode>
+      <skipFeaturesOutput>false</skipFeaturesOutput>
+      <skipQuicklookOutput>false</skipQuicklookOutput>
+      <skipProductOutput>true</skipProductOutput>
+      <zipAllOutput>false</zipAllOutput>
+      <patchWriterConfigExtra/>
+      <patchWriterFactoryClassName>org.esa.pfa.fe.op.out.DefaultPatchWriterFactory</patchWriterFactoryClassName>
+      <patchSizeKm>12.0</patchSizeKm>
+      <patchWidth>200</patchWidth>
+      <patchHeight>200</patchHeight>
+      <minValidPixels>0.1</minValidPixels>
+    </parameters>
+  </node>
+  <applicationData id="Presentation">
+    <Description/>
+    <node id="Read">
+      <displayPosition x="32.0" y="20.0"/>
+    </node>
+    <node id="Calibration">
+      <displayPosition x="114.0" y="22.0"/>
+    </node>
+    <node id="Calibration(2)">
+      <displayPosition x="114.0" y="65.0"/>
+    </node>
+    <node id="CreateStack">
+      <displayPosition x="321.0" y="35.0"/>
+    </node>
+    <node id="GCP-Selection">
+      <displayPosition x="324.0" y="84.0"/>
+    </node>
+    <node id="Warp">
+      <displayPosition x="334.0" y="123.0"/>
+    </node>
+    <node id="Find-Image-Pair">
+      <displayPosition x="6.0" y="68.0"/>
+    </node>
+    <node id="GLCM">
+      <displayPosition x="399.0" y="161.0"/>
+    </node>
+    <node id="Apply-Orbit-File">
+      <displayPosition x="196.0" y="21.0"/>
+    </node>
+    <node id="Apply-Orbit-File(2)">
+      <displayPosition x="206.0" y="63.0"/>
+    </node>
+    <node id="AddLandCover">
+      <displayPosition x="241.0" y="161.0"/>
+    </node>
+    <node id="BandMerge">
+      <displayPosition x="323.0" y="200.0"/>
+    </node>
+    <node id="ForestChangeFeatureWriter">
+      <displayPosition x="285.0" y="242.0"/>
+    </node>
+  </applicationData>
+</graph>

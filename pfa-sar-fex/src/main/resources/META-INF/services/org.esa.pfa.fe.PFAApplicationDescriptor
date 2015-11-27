@@ -1,3 +1,5 @@
 org.esa.pfa.fe.UrbanAreaApplicationDescriptor
 org.esa.pfa.fe.FloodingApplicationDescriptor
+org.esa.pfa.fe.ForestChangeApplicationDescriptor
+org.esa.pfa.fe.UrbanChangeApplicationDescriptor
 org.esa.pfa.fe.ChangeDetectionApplicationDescriptor
