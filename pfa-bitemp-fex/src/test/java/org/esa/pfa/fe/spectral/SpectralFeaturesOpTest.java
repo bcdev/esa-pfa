@@ -96,7 +96,7 @@ public class SpectralFeaturesOpTest {
         SpectralFeaturesOp op = new SpectralFeaturesOp();
         op.setParameterDefaultValues();
         op.setParameter("spectralBandNamingPattern", "reflec_.");
-        op.setParameter("maskExpression", "X < 1 && Y < 1");
+        op.setParameter("maskExpression", "$1.X < 1 && $2.Y < 1");
         op.setSourceProduct("sourceProduct", sp1);
         op.setSourceProduct("sourceProduct2", sp2);
         Product tp = op.getTargetProduct();

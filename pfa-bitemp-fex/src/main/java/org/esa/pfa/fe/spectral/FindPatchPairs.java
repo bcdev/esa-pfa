@@ -107,24 +107,12 @@ public class FindPatchPairs {
             int overlap = MaskStats.countPixels(roi1, roi2);
             System.out.println("overlap = " + overlap);
             if (overlap > minOverlappingPixels) {
-                CollocateOp collocateOp = new CollocateOp();
-                collocateOp.setParameterDefaultValues();
-                collocateOp.setMasterProduct(p1);
-                collocateOp.setSlaveProduct(p2);
-                collocateOp.setRenameMasterComponents(true);
-                collocateOp.setRenameSlaveComponents(true);
-                collocateOp.setMasterComponentPattern("${ORIGINAL_NAME}_M");
-                collocateOp.setSlaveComponentPattern("${ORIGINAL_NAME}_S");
-                collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
-                Product collocatedProduct = collocateOp.getTargetProduct();
-
                 SpectralFeaturesOp sfOp = new SpectralFeaturesOp();
                 sfOp.setParameterDefaultValues();
                 sfOp.setParameter("spectralBandNamingPattern", "reflec_."); // TODO  process before reprojection or after ?
-                sfOp.setParameter("maskExpression", "ROI_M AND ROI_S");
-                sfOp.setParameter("source1Suffix", "_M");
-                sfOp.setParameter("source2Suffix", "_S");
-                sfOp.setSourceProduct(collocatedProduct);
+                sfOp.setParameter("maskExpression", "$1.ROI AND $2.ROI");
+                sfOp.setSourceProduct(p1);
+                sfOp.setSourceProduct("sourceProduct2", p2);
                 Product tp = sfOp.getTargetProduct();
 
 
