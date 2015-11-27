@@ -17,8 +17,6 @@
 package org.esa.pfa.fe.spectral;
 
 import com.bc.ceres.core.Assert;
-import org.esa.snap.collocation.CollocateOp;
-import org.esa.snap.collocation.ResamplingType;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.dimap.DimapProductConstants;
 import org.esa.snap.core.datamodel.Mask;
@@ -46,12 +44,12 @@ public class FindPatchPairs {
 
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile("X\\d+_Y\\d+_T(\\d+).dim");
 
-    private final int minOverlappingPixels;
+    private final double minValidPixelRatio;
     private final int minDistanceSeconds;
     private final int maxDistanceSeconds;
 
-    public FindPatchPairs(int minOverlappingPixels, int minDistanceSeconds, int maxDistanceSeconds) {
-        this.minOverlappingPixels = minOverlappingPixels;
+    public FindPatchPairs(double minValidPixelRatio, int minDistanceSeconds, int maxDistanceSeconds) {
+        this.minValidPixelRatio = minValidPixelRatio;
         this.minDistanceSeconds = minDistanceSeconds;
         this.maxDistanceSeconds = maxDistanceSeconds;
     }
@@ -86,6 +84,7 @@ public class FindPatchPairs {
 
     static long extractTime(String fileName) throws ParseException {
         Matcher matcher = FILE_NAME_PATTERN.matcher(fileName);
+        // Must match at least once i.o.t. get the group
         matcher.matches();
         Date date = BiTempPreprocessor.DATE_FORMAT.parse(matcher.group(1));
         return date.getTime();
@@ -104,9 +103,11 @@ public class FindPatchPairs {
             Assert.state(roi1.getRasterWidth() == roi2.getRasterWidth());
             Assert.state(roi1.getRasterHeight() == roi2.getRasterHeight());
 
-            int overlap = MaskStats.countPixels(roi1, roi2);
-            System.out.println("overlap = " + overlap);
-            if (overlap > minOverlappingPixels) {
+            int numPixels = roi1.getRasterWidth() * roi2.getRasterHeight();
+
+            double overlapRatio = MaskStats.countPixels(roi1, roi2) / (double) numPixels;
+            System.out.printf("overlapRatio = %.2f%%%n", 100 * overlapRatio);
+            if (overlapRatio >= minValidPixelRatio) {
                 SpectralFeaturesOp sfOp = new SpectralFeaturesOp();
                 sfOp.setParameterDefaultValues();
                 sfOp.setParameter("spectralBandNamingPattern", "reflec_."); // TODO  process before reprojection or after ?
@@ -144,11 +145,11 @@ public class FindPatchPairs {
         Assert.state(patchFiles.length > 2, "Less than 2 patches; can not find pairs.");
         Arrays.sort(patchFiles, (f1, f2) -> f1.getName().compareTo(f2.getName()));
 
-        int minOverlappingPixels = 100;
+        double minValidPixelRatio = 0.2; // 20%
         int minDistance = (int) Duration.ofDays(1).getSeconds();
         int maxDistance = (int) Duration.ofDays(7).getSeconds();
 
-        FindPatchPairs findPatchPairs = new FindPatchPairs(minOverlappingPixels, minDistance, maxDistance);
+        FindPatchPairs findPatchPairs = new FindPatchPairs(minValidPixelRatio, minDistance, maxDistance);
         findPatchPairs.run(patchFiles, targetDir);
     }
 }
