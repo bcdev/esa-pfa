@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 @OperatorMetadata(
         alias = "SpectralFeaturesOp",
         version = "0.5",
-        authors = "Norman Fomferra"
+        authors = "Norman Fomferra, Marco Zühlke"
 )
 public class SpectralFeaturesOp extends PixelOperator {
 
@@ -65,10 +65,11 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "For collocated products: band name suffix for 2nd product")
     private String source2Suffix;
 
-    private int validMaskIndex = -1;
+    private int validMaskIndex;
     private Band[] spectralBands2;
 
     public SpectralFeaturesOp() {
+        validMaskIndex = -1;
     }
 
     @Override
@@ -163,14 +164,6 @@ public class SpectralFeaturesOp extends PixelOperator {
         }
     }
 
-    private void addDifferenceImageInfo(Band band) {
-        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[3];
-        points[0] = new ColorPaletteDef.Point(-maxDiff, Color.RED);
-        points[1] = new ColorPaletteDef.Point(0, Color.WHITE);
-        points[2] = new ColorPaletteDef.Point(maxDiff, Color.BLUE);
-        band.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
-    }
-
     @Override
     protected void configureSourceSamples(SourceSampleConfigurer sampleConfigurer) throws OperatorException {
         int n = spectralBands.length;
@@ -225,20 +218,22 @@ public class SpectralFeaturesOp extends PixelOperator {
                 String bandName = sourceBand.getName();
                 spectralBands2[i] = sourceProduct2.getBand(bandName);
                 if (spectralBands2[i] == null) {
-                    throw new OperatorException("Band '" + bandName + "' not found in 2nd source product.");
+                    throw new OperatorException(String.format("Band '%s' not found in 2nd source product.", bandName));
                 }
             }
-        } else if (source1Suffix != null && !source1Suffix.isEmpty() &&
-                            source2Suffix != null && !source2Suffix.isEmpty()) {
+        } else if (expectsCollocatedSourceProduct()) {
             spectralBands2 = new Band[spectralBands.length];
             for (int i = 0; i < spectralBands.length; i++) {
                 Band sourceBand = spectralBands[i];
-                String bandName = sourceBand.getName();
-                bandName = bandName.substring(0, bandName.length() - source1Suffix.length());
-                bandName = bandName + source2Suffix;
-                spectralBands2[i] = sourceProduct.getBand(bandName);
+                String bandName1 = sourceBand.getName();
+                int endIndex = bandName1.length() - source1Suffix.length();
+                if (endIndex <= 0) {
+                    throw new OperatorException(String.format("No counterpart for band '%s' found in source product.", bandName1));
+                }
+                String bandName2 = bandName1.substring(0, endIndex) + source2Suffix;
+                spectralBands2[i] = sourceProduct.getBand(bandName2);
                 if (spectralBands2[i] == null) {
-                    throw new OperatorException("Band '" + bandName + "' not found in source product.");
+                    throw new OperatorException(String.format("Band '%s' not found in source product.", bandName2));
                 }
             }
         }
@@ -249,11 +244,10 @@ public class SpectralFeaturesOp extends PixelOperator {
         ArrayList<Band> sourceBandList = new ArrayList<>();
         if (spectralBandNamingPattern != null && !spectralBandNamingPattern.isEmpty()) {
             Pattern pattern = Pattern.compile(spectralBandNamingPattern);
-            if (source1Suffix != null && !source1Suffix.isEmpty() &&
-                    source2Suffix != null && !source2Suffix.isEmpty()) {
+            if (expectsCollocatedSourceProduct()) {
                 for (Band band : bands) {
                     String bandName = band.getName();
-                    if (bandName.endsWith(source1Suffix)) {
+                    if (bandName.length() > source1Suffix.length() && bandName.endsWith(source1Suffix)) {
                         bandName = bandName.substring(0, bandName.length() - source1Suffix.length());
                         if (pattern.matcher(bandName).matches()) {
                             sourceBandList.add(band);
@@ -280,6 +274,19 @@ public class SpectralFeaturesOp extends PixelOperator {
             return d < 0F ? -1 : d > 0F ? 1 : 0;
         });
         return sourceBandList.toArray(new Band[sourceBandList.size()]);
+    }
+
+    private void addDifferenceImageInfo(Band band) {
+        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[3];
+        points[0] = new ColorPaletteDef.Point(-maxDiff, Color.RED);
+        points[1] = new ColorPaletteDef.Point(0, Color.WHITE);
+        points[2] = new ColorPaletteDef.Point(maxDiff, Color.BLUE);
+        band.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
+    }
+
+    private boolean expectsCollocatedSourceProduct() {
+        return source1Suffix != null && !source1Suffix.isEmpty() &&
+                source2Suffix != null && !source2Suffix.isEmpty();
     }
 
     public static class Spi extends OperatorSpi {
