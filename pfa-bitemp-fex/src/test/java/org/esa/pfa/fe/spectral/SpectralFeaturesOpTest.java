@@ -142,7 +142,7 @@ public class SpectralFeaturesOpTest {
         op.setParameter("maskExpression", "X < 1 && Y < 1");
         op.setParameter("source1Suffix", "_M");
         op.setParameter("source2Suffix", "_S");
-        op.setSourceProduct("sourceProduct", collocated);
+        op.setSourceProduct(collocated);
         Product tp = op.getTargetProduct();
 
         testTargetProductLayout(tp);

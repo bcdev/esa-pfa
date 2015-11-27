@@ -17,6 +17,8 @@
 package org.esa.pfa.fe.spectral;
 
 import com.bc.ceres.core.Assert;
+import org.esa.snap.collocation.CollocateOp;
+import org.esa.snap.collocation.ResamplingType;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.dimap.DimapProductConstants;
 import org.esa.snap.core.datamodel.Mask;
@@ -105,13 +107,26 @@ public class FindPatchPairs {
             int overlap = MaskStats.countPixels(roi1, roi2);
             System.out.println("overlap = " + overlap);
             if (overlap > minOverlappingPixels) {
-                // extractFeatures TODO
-                SpectralFeaturesOp op = new SpectralFeaturesOp();
-                op.setParameterDefaultValues();
-                op.setParameter("maskExpression", "$1.ROI AND $2.ROI");
-                op.setSourceProduct(p1);
-                op.setSourceProduct("sourceProduct2", p2);
-                Product tp = op.getTargetProduct();
+                CollocateOp collocateOp = new CollocateOp();
+                collocateOp.setParameterDefaultValues();
+                collocateOp.setMasterProduct(p1);
+                collocateOp.setSlaveProduct(p2);
+                collocateOp.setRenameMasterComponents(true);
+                collocateOp.setRenameSlaveComponents(true);
+                collocateOp.setMasterComponentPattern("${ORIGINAL_NAME}_M");
+                collocateOp.setSlaveComponentPattern("${ORIGINAL_NAME}_S");
+                collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
+                Product collocatedProduct = collocateOp.getTargetProduct();
+
+                SpectralFeaturesOp sfOp = new SpectralFeaturesOp();
+                sfOp.setParameterDefaultValues();
+                sfOp.setParameter("spectralBandNamingPattern", "reflec_."); // TODO  process before reprojection or after ?
+                sfOp.setParameter("maskExpression", "ROI_M AND ROI_S");
+                sfOp.setParameter("source1Suffix", "_M");
+                sfOp.setParameter("source2Suffix", "_S");
+                sfOp.setSourceProduct(collocatedProduct);
+                Product tp = sfOp.getTargetProduct();
+
 
                 String targetName = p1.getName() + "-" + p2.getName();
                 File targetFile = targetDir.resolve(targetName).toFile();

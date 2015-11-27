@@ -47,6 +47,12 @@
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
+            <artifactId>snap-collocation</artifactId>
+			<version>${snap.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.snap</groupId>
             <artifactId>snap-envisat-reader</artifactId>
         </dependency>
 
