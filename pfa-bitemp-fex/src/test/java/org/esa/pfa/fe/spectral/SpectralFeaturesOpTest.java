@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -159,6 +160,21 @@ public class SpectralFeaturesOpTest {
         assertEquals((float) Math.acos((0.1 - 0.01) / Math.sqrt(sum4321)), angle_1[0], 1e-5F);
         assertEquals((float) Math.acos((0.2 - 0.02) / Math.sqrt(sum432)), angle_2[0], 1e-5F);
         assertEquals((float) Math.acos((0.3 - 0.03) / Math.sqrt(sum43)), angle_3[0], 1e-5F);
+    }
+
+    @Test
+    public void testNominalCase_CollocatedNameLookup_withSpectralBands() throws Exception {
+        SpectralFeaturesOp op = new SpectralFeaturesOp();
+        op.setSourceProduct("sourceProduct", collocated);
+        op.setParameterDefaultValues();
+        op.setParameter("spectralBandNamingPattern", "reflec_.");
+        op.setParameter("maskExpression", "X < 1 && Y < 1");
+        op.setParameter("source1Suffix", "_M");
+        op.setParameter("source2Suffix", "_S");
+        op.setParameter("spectralBands", new String[]{"reflec_1_M", "reflec_2_M", "reflec_3_M"});
+        Product tp = op.getTargetProduct();
+
+        assertArrayEquals(new String[]{"magnitude", "angle_1", "angle_2"}, tp.getBandNames());
     }
 
     @Test
