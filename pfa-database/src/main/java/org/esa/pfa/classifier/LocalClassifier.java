@@ -215,4 +215,7 @@ public class LocalClassifier implements Classifier {
         }
     }
 
+    public Patch[] queryDatabase(String queryExpr, ProgressMonitor pm) throws IOException {
+        return queryInterface.query(queryExpr, 1000);
+    }
 }

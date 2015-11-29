@@ -142,4 +142,17 @@ class RemoteClassifier implements Classifier {
         RestTransferValue response = RestTransferValue.fromXML(resultXML);
         return response.getPatches();
     }
+
+    public Patch[] queryDatabase(String queryExpr, ProgressMonitor pm) throws IOException {
+        Form form = new Form();
+        form.param("queryExpr", queryExpr);
+
+        String resultXML = target.path("queryDatabase").
+                request().
+                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
+                readEntity(String.class);
+
+        RestTransferValue response = RestTransferValue.fromXML(resultXML);
+        return response.getPatches();
+    }
 }

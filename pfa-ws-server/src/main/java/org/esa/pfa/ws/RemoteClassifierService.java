@@ -339,6 +339,31 @@ public class RemoteClassifierService {
         }
     }
 
+    @POST
+    @Path("/db/{databaseName}/classifier/{classifierName}/queryDatabase")
+    public String queryDatabase(
+            @PathParam(value = "databaseName") String databaseName,
+            @PathParam(value = "classifierName") String classifierName,
+            @FormParam("queryExpr") String queryExprString) {
+
+//        System.out.println("queryDatabase databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+
+        try {
+            LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
+            LocalClassifier classifier = classifierManager.get(classifierName);
+
+            Patch[] rPatches = classifier.queryDatabase(queryExprString, ProgressMonitor.NULL);
+            classifier.saveClassifier();
+
+            RestTransferValue response = new RestTransferValue();
+            response.setPatches(rPatches);
+            return response.toXML();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////
 
     @GET

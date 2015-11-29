@@ -346,6 +346,15 @@ public class CBIRSession {
         return irrelevantImageList.toArray(new Patch[irrelevantImageList.size()]);
     }
 
+    public void queryDatabase(final String queryExpr, final ProgressMonitor pm) throws IOException {
+        final Patch[] retrievedPatches = classifier.queryDatabase(queryExpr, pm);
+        classifierStats = classifier.getClassifierStats();
+        retrievedImageList.clear();
+        retrievedImageList.addAll(Arrays.asList(retrievedPatches));
+
+        fireNotification(Notification.ModelTrained, classifier);
+    }
+
     /**
      * Not all patches need quicklooks. This function returns a URI to retrive a patch quicklook
      *

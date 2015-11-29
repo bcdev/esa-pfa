@@ -43,4 +43,6 @@ public interface Classifier {
     Patch[] trainAndClassify(boolean prePopulate, Patch[] labeledPatches, ProgressMonitor pm) throws IOException;
 
     Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException;
+
+    Patch[] queryDatabase(String queryExpr, ProgressMonitor pm) throws IOException;
 }

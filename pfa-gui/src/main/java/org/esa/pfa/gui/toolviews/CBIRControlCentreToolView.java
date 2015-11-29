@@ -74,7 +74,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     private JList<String> classifierList;
     private JButton newBtn, deleteBtn;
-    private JButton queryBtn, labelBtn, applyBtn;
+    private JButton imageQueryBtn, dbQueryBtn, labelBtn, applyBtn;
     private JFormattedTextField numTrainingImages;
     private JFormattedTextField numRetrievedImages;
     private JFormattedTextField numRetrievedImagesMax;
@@ -100,7 +100,6 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     public JComponent createControl() {
-
 
         applicationLabel = new JLabel("");
 
@@ -395,12 +394,21 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
     }
 
     private JPanel createSideButtonPanel() {
-        queryBtn = new JButton(new AbstractAction("Query") {
+        imageQueryBtn = new JButton(new AbstractAction("Query") {
             public void actionPerformed(ActionEvent e) {
                 try {
                     showWindow("CBIRQueryToolView");
                 } catch (Throwable t) {
-                    SnapApp.getDefault().handleError("Error calling Query", t);
+                    SnapApp.getDefault().handleError("Error calling Image Query", t);
+                }
+            }
+        });
+        dbQueryBtn = new JButton(new AbstractAction("DB Search") {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    showWindow("DBSearchToolView");
+                } catch (Throwable t) {
+                    SnapApp.getDefault().handleError("Error calling DB Search", t);
                 }
             }
         });
@@ -465,7 +473,9 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        panel.add(queryBtn, gbc);
+        panel.add(imageQueryBtn, gbc);
+        gbc.gridy++;
+        panel.add(dbQueryBtn, gbc);
         gbc.gridy++;
         panel.add(labelBtn, gbc);
         gbc.gridy++;
@@ -494,7 +504,8 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         numRandomImages.setEnabled(hasActiveClassifier);
         updateBtn.setEnabled(hasActiveClassifier);
 
-        queryBtn.setEnabled(hasActiveClassifier);
+        imageQueryBtn.setEnabled(hasActiveClassifier);
+        dbQueryBtn.setEnabled(hasActiveClassifier);
         labelBtn.setEnabled(hasActiveClassifier);
         applyBtn.setEnabled(hasActiveClassifier);
 

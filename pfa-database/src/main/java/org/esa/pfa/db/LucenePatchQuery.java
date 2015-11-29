@@ -3,6 +3,11 @@ package org.esa.pfa.db;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.NumericUtils;
@@ -16,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 /**
@@ -29,29 +35,28 @@ public class LucenePatchQuery implements QueryInterface {
     private static final int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
     private static final String indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
 
-//    private final StandardQueryParser parser;
-//    private final IndexSearcher indexSearcher;
+    private final StandardQueryParser parser;
+    private final IndexSearcher indexSearcher;
     private final FeatureType[] effectiveFeatureTypes;
     private final IndexReader indexReader;
 
     public LucenePatchQuery(final File datasetDir, DatasetDescriptor dsDescriptor, FeatureType[] effectiveFeatureTypes) throws IOException {
         this.effectiveFeatureTypes = effectiveFeatureTypes;
 
-//        parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
-//        NumericConfiguration numConf = new NumericConfiguration(precisionStep);
-//        parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
+        parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
+        NumericConfiguration numConf = new NumericConfiguration(precisionStep);
+        parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
 
         //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, indexName))) {
         //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
         try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, indexName))) {
             indexReader = DirectoryReader.open(indexDirectory);
-//            indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
+            indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
         }
     }
-    /* currently unused, maybe neede later
-    public Patch[] query(String queryExpr, int hitCount) {
-        final List<Patch> patchList = new ArrayList<>(100);
 
+    public Patch[] query(String queryExpr, int hitCount) throws IOException {
+        final List<Patch> patchList = new ArrayList<>(100);
 
         queryExpr = queryExpr.trim();
 
@@ -80,7 +85,6 @@ public class LucenePatchQuery implements QueryInterface {
 
         return patchList.toArray(new Patch[patchList.size()]);
     }
-    */
 
     private void getFeatures(final Document doc, final Patch patch) {
         for (FeatureType feaType : effectiveFeatureTypes) {

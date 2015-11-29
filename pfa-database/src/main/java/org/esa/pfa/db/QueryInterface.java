@@ -14,4 +14,6 @@ public interface QueryInterface {
     Patch getPatch(final int patchIndex) throws IOException;
 
     Patch[] getRandomPatches(final int numPatches) throws IOException;
+
+    Patch[] query(String queryExpr, int hitCount) throws IOException;
 }

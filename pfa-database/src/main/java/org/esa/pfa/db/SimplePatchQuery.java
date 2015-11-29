@@ -67,6 +67,10 @@ public class SimplePatchQuery implements QueryInterface {
         return readPatch(patchIndex);
     }
 
+    public Patch[] query(String queryExpr, int hitCount) throws IOException {
+        throw new IOException("SimplePatchQuery: query() not implemented");
+    }
+
     @Override
     public Patch[] getRandomPatches(int numPatches) throws IOException {
 
