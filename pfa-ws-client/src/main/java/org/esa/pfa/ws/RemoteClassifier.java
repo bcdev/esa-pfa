@@ -130,11 +130,11 @@ class RemoteClassifier implements Classifier {
     }
 
     @Override
-    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+    public Patch[] getMostAmbiguous(boolean prePopulate, ProgressMonitor pm) throws IOException {
         Form form = new Form();
         form.param("prePopulate", Boolean.toString(prePopulate));
 
-        String resultXML = target.path("getMostAmbigous").
+        String resultXML = target.path("getMostAmbiguous").
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)).
                 readEntity(String.class);

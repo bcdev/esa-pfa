@@ -314,20 +314,20 @@ public class RemoteClassifierService {
     }
 
     @POST
-    @Path("/db/{databaseName}/classifier/{classifierName}/getMostAmbigous")
-    public String getMostAmbigous(
+    @Path("/db/{databaseName}/classifier/{classifierName}/getMostAmbiguous")
+    public String getMostAmbiguous(
             @PathParam(value = "databaseName") String databaseName,
             @PathParam(value = "classifierName") String classifierName,
             @FormParam("prePopulate") String prePopulateString) {
 
-//        System.out.println("getMostAmbigous databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
+//        System.out.println("getMostAmbiguous databaseName = [" + databaseName + "], classifierName = [" + classifierName + "]");
 
         try {
             LocalClassifierManager classifierManager = localDbManager.createClassifierManager(databaseName);
             LocalClassifier classifier = classifierManager.get(classifierName);
 
             boolean prePopulate = Boolean.parseBoolean(prePopulateString);
-            Patch[] rPatches = classifier.getMostAmbigous(prePopulate, ProgressMonitor.NULL);
+            Patch[] rPatches = classifier.getMostAmbiguous(prePopulate, ProgressMonitor.NULL);
             classifier.saveClassifier();
 
             RestTransferValue response = new RestTransferValue();

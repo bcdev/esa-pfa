@@ -422,7 +422,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                     Runnable operation = () -> {
                         pm.beginTask("Getting images to label...", 100);
                         try {
-                            session.getMostAmbigousPatches(true, pm);
+                            session.getMostAmbiguousPatches(true, pm);
                         } catch (Exception ex) {
                             SnapApp.getDefault().handleError("Failed to get images", ex);
                         } finally {

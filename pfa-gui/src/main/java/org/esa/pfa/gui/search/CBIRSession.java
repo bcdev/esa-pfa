@@ -282,9 +282,9 @@ public class CBIRSession {
     }
 
     public void startTraining(final Patch[] queryImages, final ProgressMonitor pm) throws Exception {
-        Patch[] ambigousPatches = classifier.startTraining(queryImages, pm);
+        Patch[] ambiguousPatches = classifier.startTraining(queryImages, pm);
         classifierStats = classifier.getClassifierStats();
-        getImagesToLabel(ambigousPatches);
+        getImagesToLabel(ambiguousPatches);
     }
 
     public void trainAndClassify(boolean prePopulate, final ProgressMonitor pm) throws IOException {
@@ -293,24 +293,24 @@ public class CBIRSession {
         labeledList.addAll(irrelevantImageList);
         Patch[] labeledPatches = labeledList.toArray(new Patch[labeledList.size()]);
 
-        Patch[] ambigousPatches = classifier.trainAndClassify(prePopulate, labeledPatches, pm);
+        Patch[] ambiguousPatches = classifier.trainAndClassify(prePopulate, labeledPatches, pm);
         classifierStats = classifier.getClassifierStats();
         retrievedImageList.clear();
-        retrievedImageList.addAll(Arrays.asList(ambigousPatches));
+        retrievedImageList.addAll(Arrays.asList(ambiguousPatches));
 
         fireNotification(Notification.ModelTrained, classifier);
     }
 
-    public void getMostAmbigousPatches(boolean prePopulate, final ProgressMonitor pm) throws IOException {
-        Patch[] mostAmbigous = classifier.getMostAmbigous(prePopulate, pm);
+    public void getMostAmbiguousPatches(boolean prePopulate, final ProgressMonitor pm) throws IOException {
+        Patch[] mostAmbiguous = classifier.getMostAmbiguous(prePopulate, pm);
         classifierStats = classifier.getClassifierStats();
-        getImagesToLabel(mostAmbigous);
+        getImagesToLabel(mostAmbiguous);
     }
 
-    private void getImagesToLabel(Patch[] ambigousPatches) throws IOException {
+    private void getImagesToLabel(Patch[] ambiguousPatches) throws IOException {
         relevantImageList.clear();
         irrelevantImageList.clear();
-        for (Patch patch : ambigousPatches) {
+        for (Patch patch : ambiguousPatches) {
             if (patch.getLabel() == Patch.Label.RELEVANT) {
                 relevantImageList.add(patch);
             } else {

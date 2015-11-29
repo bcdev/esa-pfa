@@ -171,7 +171,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 Runnable operation = () -> {
                     pm.beginTask("Getting images to label...", 100);
                     try {
-                        session.getMostAmbigousPatches(false, pm);
+                        session.getMostAmbiguousPatches(false, pm);
                     } catch (Exception e) {
                         SnapApp.getDefault().handleError("Failed to get images", e);
                     } finally {

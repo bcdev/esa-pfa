@@ -164,8 +164,8 @@ public class LocalClassifier implements Classifier {
     }
 
     @Override
-    public Patch[] getMostAmbigous(boolean prePopulate, ProgressMonitor pm) throws IOException {
-        pm.beginTask("get most ambigous", 100);
+    public Patch[] getMostAmbiguous(boolean prePopulate, ProgressMonitor pm) throws IOException {
+        pm.beginTask("get most ambiguous", 100);
         try {
             long t1 = System.currentTimeMillis();
             initActiveLearningWithTrainingData();
@@ -180,9 +180,9 @@ public class LocalClassifier implements Classifier {
 
             System.out.println("# most Ambiguous Patches = " + mostAmbiguousPatches.length);
 
-            System.out.println("getMostAmbigous.initActiveLearning      = " + (t2-t1));
-            System.out.println("getMostAmbigous.prePopulate             = " + (t3-t2));
-            System.out.println("getMostAmbigous.getMostAmbiguousPatches = " + (t4-t3));
+            System.out.println("getMostAmbiguous.initActiveLearning      = " + (t2-t1));
+            System.out.println("getMostAmbiguous.prePopulate             = " + (t3-t2));
+            System.out.println("getMostAmbiguous.getMostAmbiguousPatches = " + (t4-t3));
 
             return mostAmbiguousPatches;
         } finally {
