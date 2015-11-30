@@ -21,6 +21,7 @@ import org.esa.snap.core.util.converters.BooleanExpressionConverter;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 /**
@@ -66,9 +67,10 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "For collocated products: band name suffix for 2nd product")
     private String source2Suffix;
 
-    private int validMaskIndex;
-    private Band[] spectralBands1;
-    private Band[] spectralBands2;
+    private transient String effectiveValidMaskExpr;
+    private transient int validMaskIndex;
+    private transient Band[] spectralBands1;
+    private transient Band[] spectralBands2;
 
     public SpectralFeaturesOp() {
         validMaskIndex = -1;
@@ -164,6 +166,8 @@ public class SpectralFeaturesOp extends PixelOperator {
                 }
             }
         }
+
+        initEffectiveValidMaskExpr();
     }
 
     @Override
@@ -177,15 +181,15 @@ public class SpectralFeaturesOp extends PixelOperator {
                 sampleConfigurer.defineSample(n + i, spectralBands2[i].getName(), spectralBands2[i].getProduct());
             }
         }
-        if (maskExpression != null && !maskExpression.isEmpty()) {
+        if (!effectiveValidMaskExpr.isEmpty()) {
             if (sourceProduct2 != null) {
                 sourceProduct.setRefNo(1);
                 sourceProduct2.setRefNo(2);
                 validMaskIndex = spectralBands1.length * 2;
-                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct, sourceProduct2);
+                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, effectiveValidMaskExpr, sourceProduct, sourceProduct2);
             } else {
                 validMaskIndex = spectralBands2 == null ? spectralBands1.length : spectralBands1.length * 2;
-                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, maskExpression, sourceProduct);
+                sampleConfigurer.defineComputedSample(validMaskIndex, ProductData.TYPE_UINT8, effectiveValidMaskExpr, sourceProduct);
             }
         }
     }
@@ -298,6 +302,34 @@ public class SpectralFeaturesOp extends PixelOperator {
     private boolean expectsCollocatedSourceProduct() {
         return source1Suffix != null && !source1Suffix.isEmpty() &&
                 source2Suffix != null && !source2Suffix.isEmpty();
+    }
+
+    private void initEffectiveValidMaskExpr() {
+        HashSet<String> validExpressions = new HashSet<>();
+        collectValidMaskExpressions(this.spectralBands1, validExpressions);
+        if (spectralBands2 != null) {
+            collectValidMaskExpressions(this.spectralBands2, validExpressions);
+        }
+        if (maskExpression != null) {
+            validExpressions.add(maskExpression);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String validExpression : validExpressions) {
+            if (sb.length() > 0) {
+                sb.append("&&");
+            }
+            sb.append(String.format("(%s)", validExpression));
+        }
+        effectiveValidMaskExpr = sb.toString();
+    }
+
+    private void collectValidMaskExpressions(Band[] bands, HashSet<String> validExpressions) {
+        for (Band spectralBand : bands) {
+            String expression = spectralBand.getValidMaskExpression();
+            if (expression != null && !expression.trim().isEmpty()) {
+                validExpressions.add(expression);
+            }
+        }
     }
 
     public static class Spi extends OperatorSpi {
