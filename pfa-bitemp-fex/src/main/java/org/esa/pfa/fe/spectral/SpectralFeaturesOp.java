@@ -17,6 +17,7 @@ import org.esa.snap.core.gpf.pointop.Sample;
 import org.esa.snap.core.gpf.pointop.SourceSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.TargetSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.WritableSample;
+import org.esa.snap.core.util.converters.BooleanExpressionConverter;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class SpectralFeaturesOp extends PixelOperator {
     @Parameter(label = "Spectral band naming pattern (regex)", defaultValue = "")
     private String spectralBandNamingPattern;
 
-    @Parameter(label = "Mask expression")
+    @Parameter(label = "Mask expression", converter = BooleanExpressionConverter.class)
     private String maskExpression;
 
     @Parameter(label = "Logarithmize sources", defaultValue = "false")
