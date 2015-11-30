@@ -3,9 +3,7 @@
   <node id="Read">
     <operator>Read</operator>
     <sources/>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <file></file>
-    </parameters>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
   </node>
   <node id="Calibration">
     <operator>Calibration</operator>
@@ -102,7 +100,10 @@
     <sources>
       <sourceProduct refid="Read"/>
     </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <minMJD>365.0</minMJD>
+      <maxMJD>99999.0</maxMJD>
+    </parameters>
   </node>
   <node id="Land-Sea-Mask">
     <operator>Land-Sea-Mask</operator>
@@ -138,7 +139,7 @@
       <sourceProduct refid="Speckle-Divergence"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetDir>e:\urbanchange</targetDir>
+      <targetDir>e:\urbanchange2</targetDir>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
@@ -159,7 +160,7 @@
       <sourceProduct refid="Terrain-Mask"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands></sourceBands>
+      <sourceBands/>
       <windowSizeStr>15x15</windowSizeStr>
     </parameters>
   </node>
