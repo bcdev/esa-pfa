@@ -34,6 +34,234 @@
       <valueType>java.awt.image.RenderedImage</valueType>
     </FeatureType>
     <FeatureType>
+      <name>flood.mst_sigma0</name>
+      <description>Master sigma0 statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>flood.slv_sigma0</name>
+      <description>Slave sigma0 statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>flood.homogeneity</name>
+      <description>GLCM Homogeneity statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
+      <name>flood.energy</name>
+      <description>GLCM Energy statistics</description>
+      <valueType>void</valueType>
+      <attributeTypes>
+        <AttributeType>
+          <name>mean</name>
+          <description>Mean value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>stdev</name>
+          <description>Standard deviation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>cvar</name>
+          <description>Coefficient of variation of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>min</name>
+          <description>Minimim value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>max</name>
+          <description>Maximum value of valid feature pixels</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p10</name>
+          <description>The threshold such that 10% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p50</name>
+          <description>The threshold such that 50% of the sample values are below the threshold (=median)</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>p90</name>
+          <description>The threshold such that 90% of the sample values are below the threshold</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>skewness</name>
+          <description>A measure of the extent to which the histogram &quot;leans&quot; to one side of the mean. The skewness value can be positive or negative, or even undefined.</description>
+          <valueType>java.lang.Double</valueType>
+        </AttributeType>
+        <AttributeType>
+          <name>count</name>
+          <description>Sample count (number of valid feature pixels)</description>
+          <valueType>java.lang.Integer</valueType>
+        </AttributeType>
+      </attributeTypes>
+    </FeatureType>
+    <FeatureType>
       <name>flood.percentOverThreshold</name>
       <description>Sample percent over threshold</description>
       <valueType>java.lang.Double</valueType>

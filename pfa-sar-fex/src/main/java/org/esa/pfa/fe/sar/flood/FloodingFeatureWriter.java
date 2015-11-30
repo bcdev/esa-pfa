@@ -23,8 +23,6 @@ import org.esa.pfa.fe.sar.AbstractSARFeatureWriter;
 import org.esa.pfa.fe.sar.RegionGrower;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.datamodel.VirtualBand;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.Tile;
@@ -82,36 +80,14 @@ public class FloodingFeatureWriter extends AbstractSARFeatureWriter {
         }
         final Band featureMask = getFeatureMask(featureProduct, featureBandName);
 
-        final Band homogeneity = getFeatureBand(featureProduct, "homogeneity");
-        double floodHomogeneity = 0;
+        final Band homogeneity = getFeatureBand(featureProduct, "Homogeneity");
         if(homogeneity != null) {
-            final String expression = featureMask.getName() + " ? " + homogeneity.getName() + " : 0";
-            final VirtualBand virtBand = new VirtualBand("floodHomogeneity",
-                                                         ProductData.TYPE_FLOAT32,
-                                                         mstBand.getRasterWidth(),
-                                                         mstBand.getRasterHeight(),
-                                                         expression);
-            virtBand.setNoDataValueUsed(true);
-            virtBand.setOwner(featureProduct);
-            featureProduct.addBand(virtBand);
-
-            floodHomogeneity = virtBand.getStx().getMean();
+            homogeneity.setValidPixelExpression(featureMask.getName());
         }
 
-        final Band energy = featureProduct.getBand("energy");
-        double floodEnergy = 0;
-        if(homogeneity != null) {
-            final String expression = featureMask.getName() + " ? " + energy.getName() + " : 0";
-            final VirtualBand virtBand = new VirtualBand("floodEnergy",
-                                               ProductData.TYPE_FLOAT32,
-                                               mstBand.getRasterWidth(),
-                                               mstBand.getRasterHeight(),
-                                               expression);
-            virtBand.setNoDataValueUsed(true);
-            virtBand.setOwner(featureProduct);
-            featureProduct.addBand(virtBand);
-
-            floodEnergy = virtBand.getStx().getMean();
+        final Band energy = getFeatureBand(featureProduct, "Energy");
+        if(energy != null) {
+            energy.setValidPixelExpression(featureMask.getName());
         }
 
         final int tw = featureMask.getRasterWidth();
@@ -138,14 +114,20 @@ public class FloodingFeatureWriter extends AbstractSARFeatureWriter {
         if(!skipQuicklookOutput) {
             features.add(new Feature(featureTypes[1], createRgbImage(new Band[]{slvBand, mstBand, featureMask})));
             features.add(new Feature(featureTypes[2], createColoredBandImage(featureMask, 0, 1)));
-            features.add(new Feature(featureTypes[3], createColoredBandImage(mstBand, mstBand.getStx().getMinimum(), mstBand.getStx().getMaximum())));
-            features.add(new Feature(featureTypes[4], createColoredBandImage(slvBand, slvBand.getStx().getMinimum(), slvBand.getStx().getMaximum())));
+            features.add(new Feature(featureTypes[3], createColoredBandImage(mstBand, 0, 1)));
+            features.add(new Feature(featureTypes[4], createColoredBandImage(slvBand, 0, 1)));
         }
         if(!skipFeaturesOutput) {
-            features.add(new Feature(featureTypes[5], floodHomogeneity));
-            features.add(new Feature(featureTypes[6], floodEnergy));
-            features.add(new Feature(featureTypes[7], pctOverThreshold));
-            features.add(new Feature(featureTypes[8], maxClusterSize / patchSize));
+            features.add(createStxFeature(featureTypes[5], mstBand));
+            features.add(createStxFeature(featureTypes[6], slvBand));
+            if(homogeneity != null) {
+                features.add(createStxFeature(featureTypes[7], homogeneity));
+            }
+            if(energy != null) {
+                features.add(createStxFeature(featureTypes[8], energy));
+            }
+            features.add(new Feature(featureTypes[9], pctOverThreshold));
+            features.add(new Feature(featureTypes[10], maxClusterSize / patchSize));
         }
 
         Feature[] featuresArray = features.toArray(new Feature[features.size()]);

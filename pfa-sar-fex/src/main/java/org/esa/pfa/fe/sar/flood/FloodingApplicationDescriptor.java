@@ -17,6 +17,7 @@ package org.esa.pfa.fe.sar.flood;
 
 import org.esa.pfa.fe.AbstractApplicationDescriptor;
 import org.esa.pfa.fe.op.FeatureType;
+import org.esa.pfa.fe.op.FeatureWriter;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
 
@@ -39,10 +40,33 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
     private static final String NAME = "Flood Detection";
     private static final String ID = "Flood";
     private static final String propertyPrefix = "pfa.flood.";
-    private static final String DEFAULT_FEATURE_SET =   "flood.homogeneity," +
-                                                        "flood.energy," +
-                                                        "flood.percentOverThreshold," +
-                                                        "flood.largestConnectedBlob";
+    private static final String DEFAULT_FEATURE_SET =
+            "flood.mst_sigma0.mean," +
+                    "flood.mst_sigma0.stdev," +
+                    "flood.mst_sigma0.cvar," +
+                    "flood.mst_sigma0.min," +
+                    "flood.mst_sigma0.max," +
+                    "flood.mst_sigma0.count," +
+                    "flood.slv_sigma0.mean," +
+                    "flood.slv_sigma0.stdev," +
+                    "flood.slv_sigma0.cvar," +
+                    "flood.slv_sigma0.min," +
+                    "flood.slv_sigma0.max," +
+                    "flood.slv_sigma0.count," +
+                    "flood.homogeneity.mean," +
+                    "flood.homogeneity.stdev," +
+                    "flood.homogeneity.cvar," +
+                    "flood.homogeneity.min," +
+                    "flood.homogeneity.max," +
+                    "flood.homogeneity.count," +
+                    "flood.energy.mean," +
+                    "flood.energy.stdev," +
+                    "flood.energy.cvar," +
+                    "flood.energy.min," +
+                    "flood.energy.max," +
+                    "flood.energy.count," +
+                            "flood.percentOverThreshold," +
+                            "flood.largestConnectedBlob";
     private static final String DEFAULT_QL_NAME = "rgb_ql.png";
     private static final String DEFAULT_ALL_QUERY = "product:ASA* OR S1*"; //todo this is a bad default
     private static Dimension patchDimension = new Dimension(200, 200);
@@ -172,10 +196,12 @@ public class FloodingApplicationDescriptor extends AbstractApplicationDescriptor
                     /*02*/ new FeatureType("flood_ql", "Flood mask quicklook", RenderedImage.class),
                     /*03*/ new FeatureType("mst_ql", "Master quicklook", RenderedImage.class),
                     /*04*/ new FeatureType("slv_ql", "Slave quicklook", RenderedImage.class),
-                    /*05*/ new FeatureType("flood.homogeneity", "GLCM Homogeneity", Double.class),
-                    /*06*/ new FeatureType("flood.energy", "GLCM Energy", Double.class),
-                    /*07*/ new FeatureType("flood.percentOverThreshold", "Sample percent over threshold", Double.class),
-                    /*08*/ new FeatureType("flood.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
+                    /*05*/ new FeatureType("flood.mst_sigma0", "Master sigma0 statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*06*/ new FeatureType("flood.slv_sigma0", "Slave sigma0 statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*07*/ new FeatureType("flood.homogeneity", "GLCM Homogeneity statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*08*/ new FeatureType("flood.energy", "GLCM Energy statistics", FeatureWriter.STX_ATTRIBUTE_TYPES),
+                    /*09*/ new FeatureType("flood.percentOverThreshold", "Sample percent over threshold", Double.class),
+                    /*10*/ new FeatureType("flood.largestConnectedBlob", "Largest connected cluster size as a percent of patch", Double.class),
         };
     }
 }

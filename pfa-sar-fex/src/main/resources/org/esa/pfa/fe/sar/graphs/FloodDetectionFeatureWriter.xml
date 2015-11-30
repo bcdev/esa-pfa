@@ -38,7 +38,9 @@
   <node id="Read">
     <operator>Read</operator>
     <sources/>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file></file>
+    </parameters>
   </node>
   <node id="Calibration">
     <operator>Calibration</operator>
@@ -50,7 +52,7 @@
       <auxFile>Product Auxiliary File</auxFile>
       <externalAuxFile/>
       <outputImageInComplex>false</outputImageInComplex>
-      <outputImageScaleInDb>true</outputImageScaleInDb>
+      <outputImageScaleInDb>false</outputImageScaleInDb>
       <createGammaBand>false</createGammaBand>
       <createBetaBand>false</createBetaBand>
       <selectedPolarisations/>
@@ -70,7 +72,7 @@
       <auxFile>Product Auxiliary File</auxFile>
       <externalAuxFile/>
       <outputImageInComplex>false</outputImageInComplex>
-      <outputImageScaleInDb>true</outputImageScaleInDb>
+      <outputImageScaleInDb>false</outputImageScaleInDb>
       <createGammaBand>false</createGammaBand>
       <createBetaBand>false</createBetaBand>
       <selectedPolarisations/>
@@ -91,7 +93,7 @@
       <sourceBands/>
       <resamplingType>BILINEAR_INTERPOLATION</resamplingType>
       <extent>Master</extent>
-      <initialOffsetMethod/>
+      <initialOffsetMethod>Orbit</initialOffsetMethod>
     </parameters>
   </node>
   <node id="GCP-Selection">
@@ -123,7 +125,7 @@
       <sourceProduct refid="GCP-Selection"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <rmsThreshold>1.0</rmsThreshold>
+      <rmsThreshold>0.2</rmsThreshold>
       <warpPolynomialOrder>1</warpPolynomialOrder>
       <interpolationMethod>Bilinear interpolation</interpolationMethod>
       <excludeMaster>false</excludeMaster>
@@ -200,7 +202,7 @@
       <sourceProduct refid="Flood-Detection"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetDir>.</targetDir>
+      <targetDir>e:\out2</targetDir>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
@@ -212,7 +214,7 @@
       <patchSizeKm>12.0</patchSizeKm>
       <patchWidth>200</patchWidth>
       <patchHeight>200</patchHeight>
-      <minValidPixels>0.1</minValidPixels>
+      <minValidPixels>0.05</minValidPixels>
     </parameters>
   </node>
   <applicationData id="Presentation">
