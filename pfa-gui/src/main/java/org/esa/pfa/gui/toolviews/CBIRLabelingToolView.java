@@ -145,9 +145,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
     private void updateControls() {
         try {
             boolean hasClassifier = session.hasClassifier();
-
             applyBtn.setEnabled(hasClassifier);
-            topOptionsPanel.setEnabled(hasClassifier);
 
             if (hasClassifier) {
                 final Patch[] relImages = session.getRelevantTrainingImages();
@@ -158,9 +156,6 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 iterationsLabel.setText("Training iterations: " + numIterations);
 
                 if (irrelImages.length > 0 || relImages.length > 0) {
-                    final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
-                    final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
-                    topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
 
                     topOptionsPanel.setInstructionTest("Click on an image to move it from the set of irrelevant images to relavant images");
                 } else {
@@ -171,8 +166,6 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                     }
                 }
             } else {
-                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
-
                 final Patch[] noPatches = new Patch[0];
                 relavantDrawer.update(noPatches);
                 irrelavantDrawer.update(noPatches);

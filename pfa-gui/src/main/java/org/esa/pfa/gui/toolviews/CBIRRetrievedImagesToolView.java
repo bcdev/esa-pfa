@@ -130,13 +130,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
     private void updateControls() {
         try {
             boolean hasClassifier = session.hasClassifier();
-            topOptionsPanel.setEnabled(hasClassifier);
-
-            if (!hasClassifier) {
-                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
-            } else {
-                topOptionsPanel.setInstructionTest("");
-            }
 
             final boolean haveRetrievedImages = hasClassifier && retrievedPatches != null && retrievedPatches.length > 0;
             improveBtn.setEnabled(haveRetrievedImages);
@@ -145,9 +138,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
             if (haveRetrievedImages) {
                 float pct = accuracy / (float) retrievedPatches.length * 100;
                 accuracyLabel.setText("Accuracy: " + accuracy + '/' + retrievedPatches.length + " (" + (int) pct + "%)");
-
-                topOptionsPanel.populateQuicklookList(session.getApplicationDescriptor().getQuicklookFileNames(),
-                        session.getApplicationDescriptor().getDefaultQuicklookFileName());
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error updating controls", e);

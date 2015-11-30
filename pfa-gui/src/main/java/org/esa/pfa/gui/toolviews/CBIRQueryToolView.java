@@ -143,18 +143,11 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
                 hasQueryImages = queryPatches.length > 0;
 
                 if (hasQueryImages) {
-                    final String[] bandNames = session.getApplicationDescriptor().getQuicklookFileNames();
-                    final String defaultBandName = session.getApplicationDescriptor().getDefaultQuicklookFileName();
-                    topOptionsPanel.populateQuicklookList(bandNames, defaultBandName);
-
                     topOptionsPanel.setInstructionTest("");
                 } else {
                     topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_ADD_QUERY_INSTRUCTION);
                 }
-            } else {
-                topOptionsPanel.setInstructionTest(OptionsControlPanel.USE_CONTROL_CENTRE_INSTRUCTION);
             }
-            topOptionsPanel.setEnabled(hasClassifier);
             startTrainingBtn.setEnabled(hasQueryImages);
             editBtn.setEnabled(false); //todo //hasQueryImages);
         } catch (Exception e) {

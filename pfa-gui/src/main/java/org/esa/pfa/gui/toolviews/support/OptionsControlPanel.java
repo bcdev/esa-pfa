@@ -1,6 +1,8 @@
 package org.esa.pfa.gui.toolviews.support;
 
+import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.snap.rcp.SnapApp;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
@@ -9,13 +11,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Common controls for patch presentation
  */
-public class OptionsControlPanel extends JPanel {
+public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
 
     private JLabel instructionLabel;
     private JButton allRelevantBtn, allIrrelevantBtn;
@@ -45,9 +47,11 @@ public class OptionsControlPanel extends JPanel {
     public OptionsControlPanel(final CBIRSession session) {
         super(new BorderLayout());
         this.session = session;
+        this.session.addListener(this);
 
         createControl();
         showSetAllButtons(false);
+        updateControls();
     }
 
     private void createControl() {
@@ -236,5 +240,33 @@ public class OptionsControlPanel extends JPanel {
             }
             return this;
         }
+    }
+
+    private void updateControls() {
+        try {
+            boolean hasClassifier = session.hasClassifier();
+            setEnabled(hasClassifier);
+
+            if (!hasClassifier) {
+                setInstructionTest(USE_CONTROL_CENTRE_INSTRUCTION);
+
+                clearData();
+            } else {
+                if(instructionLabel.getText().equals(USE_CONTROL_CENTRE_INSTRUCTION)) {
+                    setInstructionTest("");
+                }
+
+                clearData();
+                populateQuicklookList(session.getApplicationDescriptor().getQuicklookFileNames(),
+                                      session.getApplicationDescriptor().getDefaultQuicklookFileName());
+            }
+        } catch (Exception e) {
+            SnapApp.getDefault().handleError("Error updating controls", e);
+        }
+    }
+
+    @Override
+    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
+        updateControls();
     }
 }
