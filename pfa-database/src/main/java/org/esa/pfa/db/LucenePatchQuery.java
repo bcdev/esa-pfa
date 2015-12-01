@@ -79,7 +79,7 @@ public class LucenePatchQuery implements QueryInterface {
                 System.out.println("found " + topDocs.totalHits + " documents(s) within " + (t2 - t1) + " ms:");
                 for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                     final Document doc = indexSearcher.doc(scoreDoc.doc);
-                    Patch patch = converDocumentToPatch(doc);
+                    Patch patch = convertDocumentToPatch(doc);
                     patchList.add(patch);
                 }
             }
@@ -126,7 +126,7 @@ public class LucenePatchQuery implements QueryInterface {
 
     @Override
     public Patch getPatch(int patchIndex) throws IOException {
-        return converDocumentToPatch(indexReader.document(patchIndex));
+        return convertDocumentToPatch(indexReader.document(patchIndex));
     }
 
     public Patch[] getRandomPatches(final int numPatches) {
@@ -143,7 +143,7 @@ public class LucenePatchQuery implements QueryInterface {
         IntStream randomInts = new Random().ints(numPatches, 0, numDocs);
         randomInts.forEach(value -> {
             try {
-                patchList.add(converDocumentToPatch(indexReader.document(value)));
+                patchList.add(convertDocumentToPatch(indexReader.document(value)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -156,7 +156,7 @@ public class LucenePatchQuery implements QueryInterface {
         Patch[] patches = new Patch[numPatches];
         for (int i = 0; i < patches.length; i++) {
             try {
-                patches[i] = converDocumentToPatch(indexReader.document(start + i));
+                patches[i] = convertDocumentToPatch(indexReader.document(start + i));
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);
             }
@@ -164,7 +164,7 @@ public class LucenePatchQuery implements QueryInterface {
         return patches;
     }
 
-    private Patch converDocumentToPatch(Document doc) {
+    private Patch convertDocumentToPatch(Document doc) {
         String productName = doc.getValues("product")[0];
         if (productName.endsWith(".fex")) {
             productName = productName.substring(0, productName.length() - 4);
