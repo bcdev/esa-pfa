@@ -62,7 +62,7 @@ public class Lucene2Simple {
 
     private void run() throws IOException {
         ArrayList<String> productNames = new ArrayList<>();
-        Map<String, Integer> productNamesIndex = new HashMap<>();
+        Map<String, Integer> allProductNameIndices = new HashMap<>();
 
         try (
                 Directory indexDirectory = new SimpleFSDirectory(lucenePath.toFile());
@@ -80,13 +80,13 @@ public class Lucene2Simple {
                     productName = productName.substring(0, productName.length() - 4);
                 }
 
-                Integer index = productNamesIndex.get(productName);
-                if (index == null) {
-                    index = productNames.size();
+                Integer productNameIndex = allProductNameIndices.get(productName);
+                if (productNameIndex == null) {
+                    productNameIndex = productNames.size();
                     productNames.add(productName);
-                    productNamesIndex.put(productName, index);
+                    allProductNameIndices.put(productName, productNameIndex);
                 }
-                dos.writeInt(index.intValue());
+                dos.writeInt(productNameIndex.intValue());
                 dos.writeInt(Integer.parseInt(doc.getValues("px")[0]));
                 dos.writeInt(Integer.parseInt(doc.getValues("py")[0]));
 

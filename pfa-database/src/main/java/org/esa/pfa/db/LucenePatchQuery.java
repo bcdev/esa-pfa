@@ -18,6 +18,8 @@ import org.esa.pfa.fe.op.Patch;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -53,6 +55,10 @@ public class LucenePatchQuery implements QueryInterface {
             indexReader = DirectoryReader.open(indexDirectory);
             indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
         }
+    }
+
+    public static boolean isAvailable(Path dbPath) {
+        return Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME));
     }
 
     public Patch[] query(String queryExpr, int hitCount) throws IOException {

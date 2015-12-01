@@ -27,6 +27,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -55,6 +57,10 @@ public class SimplePatchQuery implements QueryInterface {
         numElems = new DataInputStream(fileInputStream).readInt();
         entrySize = Integer.BYTES + Integer.BYTES + Integer.BYTES + getFeatureSize();
         bb = ByteBuffer.allocateDirect(entrySize);
+    }
+
+    public static boolean isAvailable(Path dbPath) {
+        return Files.exists(dbPath.resolve(NAME_DB)) && Files.exists(dbPath.resolve(FEATURE_DB));
     }
 
     @Override
@@ -93,8 +99,8 @@ public class SimplePatchQuery implements QueryInterface {
         fileChannel.read(bb, position);
         bb.rewind();
 
-        int productIndex = bb.getInt();
-        String productName = productNames[productIndex];
+        int productNameIndex = bb.getInt();
+        String productName = productNames[productNameIndex];
 
         int patchX = bb.getInt();
         int patchY = bb.getInt();

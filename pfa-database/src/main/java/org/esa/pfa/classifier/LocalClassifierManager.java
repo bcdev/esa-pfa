@@ -16,7 +16,7 @@
 
 package org.esa.pfa.classifier;
 
-import org.esa.pfa.db.DsIndexerTool;
+import org.esa.pfa.db.CombinedQuery;
 import org.esa.pfa.db.LucenePatchQuery;
 import org.esa.pfa.db.QueryInterface;
 import org.esa.pfa.db.SimplePatchQuery;
@@ -58,7 +58,8 @@ public class LocalClassifierManager implements ClassifierManager {
         if (!Files.exists(classifierStoragePath)) {
             Files.createDirectories(classifierStoragePath);
         }
-        DatasetDescriptor datasetDescriptor = DatasetDescriptor.read(new File(dbPath.toFile(), "ds-descriptor.xml"));
+        File datasetDir = dbPath.toFile();
+        DatasetDescriptor datasetDescriptor = DatasetDescriptor.read(new File(datasetDir, "ds-descriptor.xml"));
         applicationName = datasetDescriptor.getName();
         this.applicationDescriptor = PFAApplicationRegistry.getInstance().getDescriptorByName(applicationName);
         if (applicationDescriptor == null) {
@@ -68,10 +69,15 @@ public class LocalClassifierManager implements ClassifierManager {
         FeatureType[] featureTypes = datasetDescriptor.getFeatureTypes();
         FeatureType[] effectiveFeatureTypes = AbstractApplicationDescriptor.getEffectiveFeatureTypes(featureTypes, defaultFeatureSet);
         patchAccess = new PatchAccess(dbPath, applicationDescriptor.getProductNameResolver());
-        if (Files.exists(dbPath.resolve(SimplePatchQuery.NAME_DB)) && Files.exists(dbPath.resolve(SimplePatchQuery.FEATURE_DB))) {
-            queryInterface = new SimplePatchQuery(dbPath.toFile(), effectiveFeatureTypes);
-        } else if (Files.exists(dbPath.resolve(DsIndexerTool.DEFAULT_INDEX_NAME))) {
-            queryInterface = new LucenePatchQuery(dbPath.toFile(), datasetDescriptor, effectiveFeatureTypes);
+
+        if (SimplePatchQuery.isAvailable(dbPath) && LucenePatchQuery.isAvailable(dbPath)) {
+            QueryInterface lucenQuery = new LucenePatchQuery(datasetDir, datasetDescriptor, effectiveFeatureTypes);
+            QueryInterface randomQuery = new SimplePatchQuery(datasetDir, effectiveFeatureTypes);
+            queryInterface = new CombinedQuery(lucenQuery, randomQuery);
+        } else if (LucenePatchQuery.isAvailable(dbPath)) {
+            queryInterface = new LucenePatchQuery(datasetDir, datasetDescriptor, effectiveFeatureTypes);
+        } else if (SimplePatchQuery.isAvailable(dbPath)) {
+            queryInterface = new SimplePatchQuery(datasetDir, effectiveFeatureTypes);
         } else {
             queryInterface = null; // tests only
         }
