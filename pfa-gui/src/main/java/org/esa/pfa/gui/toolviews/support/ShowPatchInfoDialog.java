@@ -5,19 +5,10 @@ import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.ui.ModelessDialog;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -33,18 +24,20 @@ class ShowPatchInfoDialog extends ModelessDialog {
         JTable table = new JTable(new DefaultTableModel(array, new Object[]{"Name", "Value"}));
 
         JPanel contentPanel = new JPanel(new BorderLayout(2, 2));
-        final String ql = session.getQuicklookBandName1();
-        BufferedImage QlImage = patch.getImage(ql);
-        if (QlImage != null) {
+        JPanel compRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        contentPanel.add(compRow, BorderLayout.NORTH);
 
-            JLabel imageCanvas = new JLabel(new ImageIcon(QlImage));
-            imageCanvas.setBorder(new LineBorder(Color.DARK_GRAY));
+        String[] qlNames = session.getApplicationDescriptor().getQuicklookFileNames();
+        for(String ql : qlNames) {
+            BufferedImage QlImage = patch.getImage(ql);
+            if (QlImage != null) {
 
-            JPanel compRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            compRow.add(imageCanvas);
-            compRow.setPreferredSize(imageCanvas.getPreferredSize());
+                JLabel imageCanvas = new JLabel(new ImageIcon(QlImage));
+                imageCanvas.setBorder(new LineBorder(Color.DARK_GRAY));
 
-            contentPanel.add(compRow, BorderLayout.NORTH);
+                compRow.add(imageCanvas);
+                compRow.setPreferredSize(imageCanvas.getPreferredSize());
+            }
         }
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(200, 80));
@@ -54,6 +47,7 @@ class ShowPatchInfoDialog extends ModelessDialog {
 
     private Object[][] getFeatureTableData(Patch patch) {
         ArrayList<Object[]> data = new ArrayList<>();
+        data.add(new Object[]{"Product", patch.getParentProductName()});
         for (Feature feature : patch.getFeatures()) {
             data.add(new Object[]{feature.getName(), feature.getValue()});
         }
