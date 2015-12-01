@@ -353,7 +353,6 @@ public class RemoteClassifierService {
             LocalClassifier classifier = classifierManager.get(classifierName);
 
             Patch[] rPatches = classifier.queryDatabase(queryExprString, ProgressMonitor.NULL);
-            classifier.saveClassifier();
 
             RestTransferValue response = new RestTransferValue();
             response.setPatches(rPatches);

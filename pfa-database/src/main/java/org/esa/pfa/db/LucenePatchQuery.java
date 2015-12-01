@@ -174,6 +174,8 @@ public class LucenePatchQuery implements QueryInterface {
 
         Patch patch = new Patch(productName, patchX, patchY);
         getFeatures(doc, patch);
+        // trigger featureValues creation, featureList is not transfered, see org.esa.pfa.ws.RestTransferValue
+        patch.getFeatureValues();
         return patch;
     }
 }
