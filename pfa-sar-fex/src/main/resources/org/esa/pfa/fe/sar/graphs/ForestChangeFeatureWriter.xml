@@ -102,7 +102,10 @@
     <sources>
       <sourceProduct refid="Read"/>
     </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement"/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <minMJD>365.0</minMJD>
+      <maxMJD>99999.0</maxMJD>
+    </parameters>
   </node>
   <node id="GLCM">
     <operator>GLCM</operator>
@@ -166,7 +169,6 @@
     <sources>
       <sourceProduct refid="GLCM"/>
       <sourceProduct.1 refid="AddLandCover"/>
-      <sourceProduct.2 refid="Warp"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
       <sourceBands/>
@@ -179,7 +181,7 @@
       <sourceProduct refid="BandMerge"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetDir>e:\out\pfa-forest</targetDir>
+      <targetDir>e:\forestchange</targetDir>
       <disposeGlobalCaches>false</disposeGlobalCaches>
       <overwriteMode>true</overwriteMode>
       <skipFeaturesOutput>false</skipFeaturesOutput>
@@ -233,7 +235,7 @@
       <displayPosition x="323.0" y="200.0"/>
     </node>
     <node id="ForestChangeFeatureWriter">
-      <displayPosition x="285.0" y="242.0"/>
+      <displayPosition x="285.0" y="241.0"/>
     </node>
   </applicationData>
 </graph>
