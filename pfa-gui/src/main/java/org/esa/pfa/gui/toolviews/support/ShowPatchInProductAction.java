@@ -1,6 +1,5 @@
 package org.esa.pfa.gui.toolviews.support;
 
-import com.bc.ceres.core.Assert;
 import org.esa.pfa.fe.PFAApplicationDescriptor;
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.ordering.ProductAccessUtils;
@@ -59,12 +58,14 @@ public class ShowPatchInProductAction extends AbstractAction {
                 productFile = ProductAccessUtils.findLocalFile(productName, true, true);
                 if (productFile == null) {
                     return;
+                } else {
+                    product = OpenProductAction.openProduct(productFile);
                 }
             }
+        } else {
+            product = OpenProductAction.openProduct(productFile);
         }
 
-        Assert.state(productFile != null, "productFile != null");
-        product = OpenProductAction.openProduct(productFile);
         if (product == null) {
             return;
         }
