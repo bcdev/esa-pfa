@@ -45,11 +45,6 @@
             <artifactId>s3tbx-meris-radiometry</artifactId>
 			<version>${s3tbx.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-collocation</artifactId>
-			<version>${snap.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.esa.snap</groupId>
