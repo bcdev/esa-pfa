@@ -6,7 +6,7 @@
     <FeatureType>
       <name>patch</name>
       <description>Patch product</description>
-      <valueType>org.esa.snap.framework.datamodel.Product</valueType>
+      <valueType>org.esa.snap.core.datamodel.Product</valueType>
     </FeatureType>
     <FeatureType>
       <name>rnd</name>

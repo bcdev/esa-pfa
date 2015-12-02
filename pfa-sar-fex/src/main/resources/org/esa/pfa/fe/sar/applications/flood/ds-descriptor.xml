@@ -3,11 +3,11 @@
   <version>1.0</version>
   <description>Flood detection from SAR</description>
   <featureTypes>
-    <!--FeatureType>
+    <FeatureType>
       <name>patch</name>
       <description>Patch product</description>
-      <valueType>org.esa.snap.framework.datamodel.Product</valueType>
-    </FeatureType-->
+      <valueType>org.esa.snap.core.datamodel.Product</valueType>
+    </FeatureType>
     <FeatureType>
       <name>rnd</name>
       <description>Random number for selecting random subsets</description>
