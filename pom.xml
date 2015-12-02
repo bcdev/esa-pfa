@@ -23,7 +23,7 @@
         <s1tbx.version>2.0.0</s1tbx.version>
         <s3tbx.version>2.0.0</s3tbx.version>
 
-        <pfa.nbmSpecVersion>2.0.2</pfa.nbmSpecVersion>
+        <pfa.nbmSpecVersion>2.0.3</pfa.nbmSpecVersion>
     </properties>
 
     <modules>

@@ -88,11 +88,13 @@ public class PatchDrawer extends JPanel {
             this.add(label);
         } else {
             if (multiRow) {
-                int numCol = Math.max(width / (imgWidth + margin), 1);
-                int numRow = (int)Math.ceil(patches.length / (double)numCol);
                 int numImages = session.getImageMode().equals(CBIRSession.ImageMode.DUAL) ? 2 : 1;
+                int effecitveImageWidth = imgWidth * numImages + margin;
 
-                int preferedWidth = (imgWidth * numImages + margin) * numCol + margin;
+                int numCol = Math.max(width / effecitveImageWidth, 1);
+                int numRow = (int)Math.ceil(patches.length / (double)numCol);
+
+                int preferedWidth = effecitveImageWidth * numCol + margin;
                 int preferedHeight = (imgHeight + margin) * numRow + margin;
                 setPreferredSize(new Dimension(preferedWidth, preferedHeight));
             }
