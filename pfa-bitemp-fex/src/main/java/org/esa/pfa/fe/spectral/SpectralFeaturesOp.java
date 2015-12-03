@@ -30,7 +30,8 @@ import java.util.regex.Pattern;
 @OperatorMetadata(
         alias = "SpectralFeaturesOp",
         version = "0.5",
-        authors = "Norman Fomferra, Marco Zühlke"
+        authors = "Norman Fomferra, Marco Zühlke",
+        category = "Optical"
 )
 public class SpectralFeaturesOp extends PixelOperator {
 
