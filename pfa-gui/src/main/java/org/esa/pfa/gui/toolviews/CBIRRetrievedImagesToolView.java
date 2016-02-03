@@ -206,8 +206,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 drawer.update(retrievedPatches);
                 updateControls();
                 break;
-            case NewTrainingImages:
-                break;
             case NewQueryPatch:
                 updateControls();
                 break;
