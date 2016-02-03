@@ -607,6 +607,10 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
             case ModelTrained:
                 updateControls();
                 break;
+            case NewTrainingImages:
+                updateControls();
+                break;
+
         }
     }
 }

@@ -227,6 +227,10 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                     SnapApp.getDefault().handleError("Error training model", e);
                 }
                 break;
+            case PatchDisplay:
+                updateControls();
+                drawer.repaint();
+                break;
         }
     }
 

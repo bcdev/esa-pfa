@@ -109,8 +109,8 @@ public class PatchDrawer extends JPanel {
                 this.add(label);
             }
         }
-
-        updateUI();
+        revalidate();
+        repaint();
     }
 
     @Override

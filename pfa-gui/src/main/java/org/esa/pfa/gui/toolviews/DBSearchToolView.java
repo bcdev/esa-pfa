@@ -220,7 +220,8 @@ public class DBSearchToolView extends ToolTopComponent implements ActionListener
     @Override
     public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
         switch (msg) {
-            default:
+            case NewClassifier:
+            case DeleteClassifier:
                 updateControls();
                 break;
         }

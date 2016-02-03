@@ -13,6 +13,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Common controls for patch presentation
@@ -155,10 +156,8 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     if(imageModeCombo.getSelectedItem().equals(iconSingle)) {
                         session.setImageMode(CBIRSession.ImageMode.SINGLE);
-                        quickLookCombo2.setEnabled(false);
                     } else if(imageModeCombo.getSelectedItem().equals(iconDual)) {
                         session.setImageMode(CBIRSession.ImageMode.DUAL);
-                        quickLookCombo2.setEnabled(true);
                     }
 
                     fireNotification(Notification.QUICKLOOK_CHANGED);
@@ -197,7 +196,7 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
      * @param bandNames quicklook band names
      * @param defaultBandName default name
      */
-    public void populateQuicklookList(final String[] bandNames, final String defaultBandName) {
+    private void populateQuicklookList(final String[] bandNames, final String defaultBandName) {
         if (quickLookCombo1.getItemCount() == 0) {
             this.bandNames = bandNames;
             for (String bandName : bandNames) {
@@ -246,13 +245,6 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
 
     private void updateControls() {
         try {
-            CBIRSession.ImageMode imageMode = session.getImageMode();
-            if (CBIRSession.ImageMode.SINGLE == imageMode) {
-                imageModeCombo.setSelectedIndex(0);
-            } else {
-                imageModeCombo.setSelectedIndex(1);
-            }
-
             boolean hasClassifier = session.hasClassifier();
             setComponentEnabled(hasClassifier);
 
@@ -265,9 +257,22 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
                     setInstructionTest("");
                 }
 
-                clearData();
-                populateQuicklookList(session.getApplicationDescriptor().getQuicklookFileNames(),
-                                      session.getApplicationDescriptor().getDefaultQuicklookFileName());
+                CBIRSession.ImageMode imageMode = session.getImageMode();
+                if (CBIRSession.ImageMode.SINGLE == imageMode) {
+                    imageModeCombo.setSelectedIndex(0);
+                } else {
+                    imageModeCombo.setSelectedIndex(1);
+                }
+
+                String[] quicklookFileNames = session.getApplicationDescriptor().getQuicklookFileNames();
+                if (!Objects.deepEquals(bandNames, quicklookFileNames)) {
+                    clearData();
+                    populateQuicklookList(quicklookFileNames,
+                                          session.getApplicationDescriptor().getDefaultQuicklookFileName());
+                } else {
+                    quickLookCombo1.setSelectedItem(session.getQuicklookBandName1());
+                    quickLookCombo2.setSelectedItem(session.getQuicklookBandName2());
+                }
             }
         } catch (Exception e) {
             SnapApp.getDefault().handleError("Error updating controls", e);
