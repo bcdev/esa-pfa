@@ -115,8 +115,13 @@ public class CBIRSession {
         }
     }
 
-    public void setClassifierManager(ClassifierManager newClassifierManager) throws IOException {
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    public void setClassifierManager(DatabaseManager dbManager, ClassifierManager newClassifierManager) throws IOException {
         classifierManager = newClassifierManager;
+        databaseManager = dbManager;
         String applicationId = classifierManager.getApplicationId();
         Classifier deletedClassifier = classifier;
         classifier = null;

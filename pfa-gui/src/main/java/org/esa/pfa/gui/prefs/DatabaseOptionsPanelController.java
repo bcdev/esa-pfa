@@ -269,10 +269,17 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
 
         try {
             URI databaseManagerURI = getDatabaseManagerURI(uri);
-            DatabaseManager dbManager = createDatabaseManager(databaseManagerURI);
+
+            DatabaseManager dbManager = session.getDatabaseManager();
+            if (dbManager == null || !dbManager.getURI().equals(databaseManagerURI)) {
+                dbManager = createDatabaseManager(databaseManagerURI);
+            }
             if (dbManager.isAlive()) {
-                ClassifierManager classifierManager = dbManager.createClassifierManager(dbName);
-                session.setClassifierManager(classifierManager);
+                String currentDbName = session.getDatabaseName();
+                if (currentDbName == null || !currentDbName.equals(dbName)) {
+                    ClassifierManager classifierManager = dbManager.createClassifierManager(dbName);
+                    session.setClassifierManager(dbManager, classifierManager);
+                }
             }
         } catch (URISyntaxException|IOException|IllegalArgumentException e) {
             SnapApp.getDefault().handleError("Error reading applications:" + e.getMessage(), e);
