@@ -15,8 +15,6 @@
  */
 package org.esa.pfa.gui.toolviews;
 
-import org.esa.pfa.classifier.Classifier;
-import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.ordering.ProductOrder;
 import org.esa.pfa.gui.ordering.ProductOrderBasket;
 import org.esa.pfa.gui.toolviews.support.OpenProductAction;
@@ -64,18 +62,13 @@ import java.io.File;
 /**
  * Product Ordering Toolview
  */
-public class CBIROrderingToolView extends ToolTopComponent implements Patch.PatchListener, CBIRSession.Listener {
-
-    private final CBIRSession session;
+public class CBIROrderingToolView extends ToolTopComponent {
 
     private ProductOrderTableModel productListModel;
     private JTable table;
     private File localProductDir;
 
     public CBIROrderingToolView() {
-        session = CBIRSession.getInstance();
-        session.addListener(this);
-
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
         setDisplayName("CBIR Ordering");
@@ -113,7 +106,7 @@ public class CBIROrderingToolView extends ToolTopComponent implements Patch.Patc
         control.add(new JScrollPane(table), BorderLayout.CENTER);
         control.add(actionPanel, BorderLayout.SOUTH);
 
-        setProductOrderBasket(session.getProductOrderBasket());
+        setProductOrderBasket(CBIRSession.getInstance().getProductOrderBasket());
 
         return control;
     }
@@ -149,24 +142,6 @@ public class CBIROrderingToolView extends ToolTopComponent implements Patch.Patc
             } catch (Exception e1) {
                 SnapApp.getDefault().handleError("Error opening product", e1);
             }
-        }
-    }
-
-    @Override
-    public void notifyStateChanged(final Patch patch) {
-    }
-
-    @Override
-    public void notifySessionMsg(final CBIRSession.Notification msg, final Classifier classifier) {
-        switch (msg) {
-            case NewClassifier:
-                break;
-            case DeleteClassifier:
-                break;
-            case NewTrainingImages:
-                break;
-            case ModelTrained:
-                break;
         }
     }
 
