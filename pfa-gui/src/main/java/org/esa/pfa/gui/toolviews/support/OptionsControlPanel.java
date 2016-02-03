@@ -155,8 +155,10 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     if(imageModeCombo.getSelectedItem().equals(iconSingle)) {
                         session.setImageMode(CBIRSession.ImageMode.SINGLE);
+                        quickLookCombo2.setEnabled(false);
                     } else if(imageModeCombo.getSelectedItem().equals(iconDual)) {
                         session.setImageMode(CBIRSession.ImageMode.DUAL);
+                        quickLookCombo2.setEnabled(true);
                     }
 
                     fireNotification(Notification.QUICKLOOK_CHANGED);
@@ -170,10 +172,10 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
      * Enable or disable controls
      * @param flag true or false
      */
-    public void setEnabled(final boolean flag) {
+    private void setComponentEnabled(boolean flag) {
         cycleButton.setEnabled(flag);
         quickLookCombo1.setEnabled(flag);
-        quickLookCombo2.setEnabled(flag);
+        quickLookCombo2.setEnabled(flag && session.getImageMode() == CBIRSession.ImageMode.DUAL);
         imageModeCombo.setEnabled(flag);
     }
 
@@ -244,8 +246,15 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
 
     private void updateControls() {
         try {
+            CBIRSession.ImageMode imageMode = session.getImageMode();
+            if (CBIRSession.ImageMode.SINGLE == imageMode) {
+                imageModeCombo.setSelectedIndex(0);
+            } else {
+                imageModeCombo.setSelectedIndex(1);
+            }
+
             boolean hasClassifier = session.hasClassifier();
-            setEnabled(hasClassifier);
+            setComponentEnabled(hasClassifier);
 
             if (!hasClassifier) {
                 setInstructionTest(USE_CONTROL_CENTRE_INSTRUCTION);
