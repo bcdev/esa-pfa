@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -200,6 +201,7 @@ public final class DatabaseOptionsPanelController extends DefaultConfigControlle
             PropertyDescriptor dbNameProperty = propertySet.getProperty(PREFERENCE_DB_NAME).getDescriptor();
             if (databaseManager.isAlive()) {
                 String[] databases = databaseManager.listDatabases();
+                Arrays.sort(databases);
                 dbNameProperty.setValueSet(new ValueSet(databases));
             } else {
                 dbNameProperty.setValueSet(new ValueSet(new String[0]));
