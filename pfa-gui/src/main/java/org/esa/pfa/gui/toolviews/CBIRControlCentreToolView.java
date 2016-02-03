@@ -604,11 +604,13 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 initClassifierList();
                 updateControls();
                 break;
-            case NewTrainingImages:
-                break;
             case ModelTrained:
                 updateControls();
                 break;
+            case NewTrainingImages:
+                updateControls();
+                break;
+
         }
     }
 }

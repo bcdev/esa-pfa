@@ -215,14 +215,16 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
                 drawer.update(new Patch[0]);
                 break;
-            case NewTrainingImages:
-                break;
             case ModelTrained:
                 updateControls();
                 break;
             case NewQueryPatch:
                 drawer.update(CBIRSession.getInstance().getQueryPatches());
                 updateControls();
+                break;
+            case PatchDisplay:
+                updateControls();
+                drawer.repaint();
                 break;
         }
     }

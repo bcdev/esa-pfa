@@ -40,6 +40,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -52,7 +53,8 @@ public class CBIRSession {
         DeleteClassifier,
         NewTrainingImages,
         ModelTrained,
-        NewQueryPatch
+        NewQueryPatch,
+        PatchDisplay
     }
 
     private static final CBIRSession instance = new CBIRSession();
@@ -115,8 +117,13 @@ public class CBIRSession {
         }
     }
 
-    public void setClassifierManager(ClassifierManager newClassifierManager) throws IOException {
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    public void setClassifierManager(DatabaseManager dbManager, ClassifierManager newClassifierManager) throws IOException {
         classifierManager = newClassifierManager;
+        databaseManager = dbManager;
         String applicationId = classifierManager.getApplicationId();
         Classifier deletedClassifier = classifier;
         classifier = null;
@@ -199,7 +206,10 @@ public class CBIRSession {
     }
 
     public void setImageMode(final ImageMode mode) {
-        imageMode = mode;
+        if (!Objects.equals(imageMode, mode)) {
+            imageMode = mode;
+            fireNotification(Notification.PatchDisplay, classifier);
+        }
     }
 
     public ImageMode getImageMode() {
@@ -261,7 +271,10 @@ public class CBIRSession {
     }
 
     public void setQuicklookBandName1(final String quicklookBandName) {
-        this.quicklookBandName1 = quicklookBandName;
+        if (!Objects.equals(quicklookBandName1, quicklookBandName)) {
+            quicklookBandName1 = quicklookBandName;
+            fireNotification(Notification.PatchDisplay, classifier);
+        }
     }
 
     public String getQuicklookBandName2() {
@@ -269,7 +282,10 @@ public class CBIRSession {
     }
 
     public void setQuicklookBandName2(final String quicklookBandName) {
-        this.quicklookBandName2 = quicklookBandName;
+        if (!Objects.equals(quicklookBandName2, quicklookBandName)) {
+            quicklookBandName2 = quicklookBandName;
+            fireNotification(Notification.PatchDisplay, classifier);
+        }
     }
 
     public void addQueryPatch(final Patch patch) {

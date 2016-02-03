@@ -206,8 +206,6 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 drawer.update(retrievedPatches);
                 updateControls();
                 break;
-            case NewTrainingImages:
-                break;
             case NewQueryPatch:
                 updateControls();
                 break;
@@ -228,6 +226,10 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
                 } catch (Exception e) {
                     SnapApp.getDefault().handleError("Error training model", e);
                 }
+                break;
+            case PatchDisplay:
+                updateControls();
+                drawer.repaint();
                 break;
         }
     }

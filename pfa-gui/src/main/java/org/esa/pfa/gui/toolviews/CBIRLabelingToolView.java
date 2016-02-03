@@ -244,9 +244,10 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
                 listenToPatches();
                 updateControls();
                 break;
-            case ModelTrained:
-                break;
             case NewQueryPatch:
+                updateControls();
+                break;
+            case PatchDisplay:
                 updateControls();
                 break;
         }
