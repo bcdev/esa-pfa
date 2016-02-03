@@ -17,6 +17,8 @@ package org.esa.pfa.gui.toolviews.support;
 
 import org.esa.pfa.fe.op.Patch;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.snap.core.util.StringUtils;
+import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.ui.UIUtils;
 
 import javax.swing.*;
@@ -26,6 +28,9 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
+import java.util.prefs.Preferences;
+
+import static org.esa.pfa.gui.prefs.PfaColorController.*;
 
 /**
  * Displays a patch
@@ -104,8 +109,35 @@ public class PatchDrawer extends JPanel {
                 this.add(label);
             }
         }
+
         updateUI();
     }
+
+    @Override
+    public void paintComponent(Graphics graphics) {
+        setBackground(getBackgroundColor());
+        super.paintComponent(graphics);
+    }
+
+
+    private static Color getBorderColor() {
+        return getColor(PREFERENCE_KEY_PATCH_BORDER_COLOR, DEFAULT_PATCH_BORDER_COLOR);
+    }
+
+    private static Color getBackgroundColor() {
+        return getColor(PREFERENCE_KEY_PATCH_BACKGROUND_COLOR, DEFAULT_PATCH_BACKGROUND_COLOR);
+    }
+
+    private static Color getColor(String key, Color defaultColor) {
+        Preferences preferences = SnapApp.getDefault().getPreferences();
+        String value = preferences.get(key, null);
+        if (value != null) {
+            return StringUtils.parseColor(value);
+        } else {
+            return defaultColor;
+        }
+    }
+
 
     public class PatchDrawing extends JLabel implements MouseListener {
         private final Patch patch;
@@ -156,13 +188,17 @@ public class PatchDrawer extends JPanel {
             final Graphics2D g = (Graphics2D) graphics;
 
             if (isDual) {
+                Color borderColor = getBorderColor();
                 drawIcon(g, icon1, 0);
                 drawIcon(g, icon2, imgWidth);
-                g.setColor(Color.BLUE);
+                g.setColor(borderColor);
                 g.setStroke(new BasicStroke(2));
                 g.drawLine(imgWidth, 0, imgWidth, imgHeight);
+                g.setStroke(new BasicStroke(8));
+                g.drawRect(0, 0, imgWidth * 2, imgHeight);
             } else {
                 drawIcon(g, icon1, 0);
+                g.drawRect(0, 0, imgWidth, imgHeight);
             }
 
             if (DEBUG) {
