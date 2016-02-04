@@ -23,12 +23,13 @@ Web information page: http://wiki.services.eoportal.org/tiki-index.php?page=PFA
 - Maven >= 3
 - Git
 
-## Checkout
+## On the command line
+
+### Checkout
 Clone the source code into a directory (called $PFA in this guide)
 
 	git clone https://github.com/bcdev/esa-pfa.git
 	
-## On the command line
 
 ### Build
 
@@ -36,11 +37,11 @@ To build the whole project:
 
     mvn install
     
-The *.nbm files that are need for the usage in SNAP can be found in the following directory: 
+The *.nbm module files which are needed for the use in SNAP can be found in the following directory: 
     
-    pfa-kit/target/netbeans_site
+    $PFA/pfa-kit/target/netbeans_site
     
-To the modules to SNAP use the Plugins dialog.
+These modules can be installed into SNAP use the Plugins dialog ( Tools / Plugins).
  
 ### Javadoc
     
@@ -48,14 +49,14 @@ The generation of Javadoc for the core modules is done with the following comman
 
     mvn javadoc:aggregate -pl ".,pfa-core,pfa-database"
     
-To view the HTML Javadoc open thw following file in a webbroswer:
+To view the HTML Javadoc open the following file in a webbroswer:
 
-    target/site/apidocs/index.html
+    $PFA/target/site/apidocs/index.html
     
     
 ### IDE Setup (IntelliJ IDEA)
 
-1. Install SNAP including the Sentinel-1 and Sentinel 3 Toolbox. (The installation directory is called $SNAP in this guide).
+1. Install SNAP including the Sentinel-1 and Sentinel-3 Toolbox. (The installation directory is called $SNAP in this guide).
  
 2. Open (File -> Open...) the top level pom.xml file.
 
@@ -73,7 +74,7 @@ To view the HTML Javadoc open thw following file in a webbroswer:
                               --patches
                               "$PFA/esa-pfa/$/target/classes"
 	* **Working directory:** $SNAP
- 
+
 
 Contact information
 ===================
