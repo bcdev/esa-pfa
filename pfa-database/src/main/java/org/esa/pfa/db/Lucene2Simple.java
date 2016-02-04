@@ -40,9 +40,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Converts a Lucene index into a very tiny data file for the {@link SimplePatchQuery}.
  *
- * Converts a Lucene index into a very tiny data file.
- * @author marcoz
+ * @author Marco Zühlke
  */
 public class Lucene2Simple {
 

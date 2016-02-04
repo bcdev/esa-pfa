@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author marcoz
+ * An implementation of a {@link DatabaseManager} that work on the local filesystem.
  */
 public class LocalDatabaseManager implements DatabaseManager {
 

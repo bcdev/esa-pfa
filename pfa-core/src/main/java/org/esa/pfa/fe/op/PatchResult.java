@@ -3,6 +3,8 @@ package org.esa.pfa.fe.op;
 import java.io.Serializable;
 
 /**
+ * The result of a {@code FeatureWriter} operator for a single patch.
+ *
  * @author Ralf Quast
  */
 public class PatchResult implements Serializable {

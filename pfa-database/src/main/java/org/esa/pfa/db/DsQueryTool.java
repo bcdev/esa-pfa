@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
  *
  * @author Norman
  */
-public class DsQuery {
+public class DsQueryTool {
     static final PrintWriter PW = new PrintWriter(new OutputStreamWriter(System.out), true);
 
     DatasetDescriptor dsDescriptor;
@@ -53,7 +53,7 @@ public class DsQuery {
     private File datasetDir;
     // </arguments>
 
-    public DsQuery() {
+    public DsQueryTool() {
         indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
         precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
         maxThreadCount = 1;
@@ -75,7 +75,7 @@ public class DsQuery {
     public static void main(String[] args) {
         Locale.setDefault(Locale.ENGLISH);
         try {
-            System.exit(new DsQuery().run(args));
+            System.exit(new DsQueryTool().run(args));
         } catch (Exception e) {
             commonOptions.printError(e);
             System.exit(1);
@@ -119,13 +119,13 @@ public class DsQuery {
         commonOptions.configure(commandLine);
         if (commandLine.hasOption("help")) {
             new HelpFormatter().printHelp(PW, 80,
-                                          DsQuery.class.getSimpleName() + " [OPTIONS] <index-dir>",
+                                          DsQueryTool.class.getSimpleName() + " [OPTIONS] <index-dir>",
                                           "Interactive query tool for a lucene index. [OPTIONS] are:",
                                           options, 2, 2, "\n");
             return false;
         }
         if (commandLine.getArgList().size() != 1) {
-            new HelpFormatter().printUsage(PW, 80, DsQuery.class.getSimpleName(), options);
+            new HelpFormatter().printUsage(PW, 80, DsQueryTool.class.getSimpleName(), options);
             return false;
         }
 

@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
+ * Writes the given {@link Feature}s to a target {@link Path}.
+ *
  * @author Norman Fomferra
  */
 public interface FeatureSink {

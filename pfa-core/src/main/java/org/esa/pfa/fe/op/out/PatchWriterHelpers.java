@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * tility mehtods for {@link PatchWriter}.
+ *
  * @author Norman Fomferra
  */
 class PatchWriterHelpers {

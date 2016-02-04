@@ -27,7 +27,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
- * @author marcoz
+ * A benchmark for differebnt {@link QueryInterface QueryInterfaces}.
+ *
+ * @author Marco Zuehlke
  */
 public class QueryInterfaceBenchmark {
 

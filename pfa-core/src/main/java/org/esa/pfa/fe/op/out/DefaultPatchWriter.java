@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
+ * A {@link PatchWriter} that combines the work of multiple other {@link PatchWriter}s together.
+ *
  * @author Norman Fomferra
  */
 public class DefaultPatchWriter implements PatchWriter {

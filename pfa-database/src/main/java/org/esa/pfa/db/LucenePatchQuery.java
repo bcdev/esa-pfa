@@ -27,15 +27,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 /**
- * The PFA Dataset Query Tool.
+ * Query the Lucene index for {@link Patch Patches}.
  */
 public class LucenePatchQuery implements QueryInterface {
 
-    private static final int maxThreadCount = 1;
-    private static final int maxHitCount = 20;
-    private static final String defaultField = "product";
-    private static final int precisionStep = NumericUtils.PRECISION_STEP_DEFAULT;
-    private static final String indexName = DsIndexerTool.DEFAULT_INDEX_NAME;
+    private static final int MAX_THREAD_COUNT = 1;
+    private static final int MAX_HIT_COUNT = 20;
+    private static final String DEFAULT_FIELD = "product";
+    private static final int PRECISION_STEP = NumericUtils.PRECISION_STEP_DEFAULT;
+    private static final String INDEX_NAME = DsIndexerTool.DEFAULT_INDEX_NAME;
 
     private final StandardQueryParser parser;
     private final IndexSearcher indexSearcher;
@@ -46,14 +46,14 @@ public class LucenePatchQuery implements QueryInterface {
         this.effectiveFeatureTypes = effectiveFeatureTypes;
 
         parser = new StandardQueryParser(DsIndexer.LUCENE_ANALYZER);
-        NumericConfiguration numConf = new NumericConfiguration(precisionStep);
+        NumericConfiguration numConf = new NumericConfiguration(PRECISION_STEP);
         parser.setNumericConfigMap(numConf.getNumericConfigMap(dsDescriptor));
 
-        //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, indexName))) {
-        //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, indexName))) {
-        try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, indexName))) {
+        //try (Directory indexDirectory = new MMapDirectory(new File(datasetDir, INDEX_NAME))) {
+        //try (Directory indexDirectory = new NIOFSDirectory(new File(datasetDir, INDEX_NAME))) {
+        try (Directory indexDirectory = new SimpleFSDirectory(new File(datasetDir, INDEX_NAME))) {
             indexReader = DirectoryReader.open(indexDirectory);
-            indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(this.maxThreadCount));
+            indexSearcher = new IndexSearcher(indexReader, Executors.newFixedThreadPool(MAX_THREAD_COUNT));
         }
     }
 
@@ -67,7 +67,7 @@ public class LucenePatchQuery implements QueryInterface {
         queryExpr = queryExpr.trim();
 
         try {
-            final Query query = parser.parse(queryExpr, defaultField);
+            final Query query = parser.parse(queryExpr, DEFAULT_FIELD);
 
             long t1 = System.currentTimeMillis();
             TopDocs topDocs = indexSearcher.search(query, hitCount);

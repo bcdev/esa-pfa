@@ -28,12 +28,13 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Active learning class.
+ * The active learning 'engine'.
+ * <p>
+ * The implementation is based on the following publication:
  * <p>
  * [1] Begum Demir and Lorenzo Bruzzone, "An effective active learning method for interactive content-based retrieval
  * in remote sensing images", Geoscience and Remote Sensing Symposium (IGARSS), 2013 IEEE International.
  */
-
 public class ActiveLearning {
 
     private static final int FMIN = 0;
@@ -450,7 +451,7 @@ public class ActiveLearning {
      * Compute functional distance of a given sample to the SVM hyperplane.
      *
      * @return The functional distance.
-     * @param featureValues
+     * @param featureValues the values fo the features
      */
     private double computeFunctionalDistance(double[] featureValues) {
         final double[] decValues = new double[1];

@@ -21,7 +21,9 @@ import org.esa.pfa.fe.op.Patch;
 import java.io.IOException;
 
 /**
- * @author marcoz
+ * Uses the {@link QueryInterface} that delivers the best performance for the specific request.
+ *
+ * @author Marco Zuehlke
  */
 public class CombinedQuery implements QueryInterface {
 

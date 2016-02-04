@@ -17,7 +17,7 @@
 package org.esa.pfa.classifier;
 
 /**
- * @author marcoz
+ * The statistics of a {@link Classifier}.
  */
 public class ClassifierStats {
 
@@ -83,7 +83,6 @@ public class ClassifierStats {
     public int getNumPatchesInTrainingData() {
         return numPatchesInTrainingData;
     }
-
 
     public int getNumPatchesInDatabase() {
         return numPatchesInDatabase;

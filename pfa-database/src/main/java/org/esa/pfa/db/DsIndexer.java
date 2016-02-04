@@ -48,7 +48,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Create a Lucene index
+ * Creates a Lucene index for {@link org.esa.pfa.fe.op.Feature Features}.
  */
 public class DsIndexer implements AutoCloseable {
 

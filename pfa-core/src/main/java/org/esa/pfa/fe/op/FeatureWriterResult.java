@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The result of a {@code FeatureWriter} operator.
+ * The result of a {@link FeatureWriter} operator for all {@link Patch}es of a {@link org.esa.snap.core.datamodel.Product}.
  *
  * @author Ralf Quast
  */

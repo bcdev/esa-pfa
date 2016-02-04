@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A local implementation for the classifier
+ * An implementation of a {@link ClassifierManager} that work on the local filesystem.
  */
 public class LocalClassifierManager implements ClassifierManager {
 

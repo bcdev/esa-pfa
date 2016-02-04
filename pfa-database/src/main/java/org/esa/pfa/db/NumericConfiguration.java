@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Created by luis on 09/02/14.
+ * Configures Lucene to parse numeric values in {@link org.esa.pfa.fe.op.Patch Patches}.
  */
 public class NumericConfiguration {
 

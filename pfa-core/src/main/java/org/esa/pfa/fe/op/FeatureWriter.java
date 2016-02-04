@@ -54,7 +54,7 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Output features into patches
+ * A special {@link Operator} that has as it's result writes features into a patch.
  */
 @OperatorMetadata(alias = "FeatureWriter",
                   authors = "Jun Lu, Luis Veci",

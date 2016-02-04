@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 /**
-
+ A base implementation for feature extraction application.
  */
 public abstract class AbstractApplicationDescriptor implements PFAApplicationDescriptor {
 
