@@ -117,7 +117,7 @@ public class UrbanChangeApplicationDescriptor extends AbstractApplicationDescrip
 
     /**
      * @return The product name resolver, or {@code null}.
-     * @see ProductNameResolver
+     * @see org.esa.pfa.fe.PFAApplicationDescriptor.ProductNameResolver
      * @see #getDefaultDataAccessPattern
      */
     @Override
@@ -128,7 +128,7 @@ public class UrbanChangeApplicationDescriptor extends AbstractApplicationDescrip
 
     /**
      * @return The default data access pattern used to download a data product, or {@code null}.
-     * Must be resolvable by the {@link ProductNameResolver product name resolver}.
+     * Must be resolvable by the {@link org.esa.pfa.fe.PFAApplicationDescriptor.ProductNameResolver product name resolver}.
      */
     @Override
     public String getDefaultDataAccessPattern() {

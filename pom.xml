@@ -17,9 +17,9 @@
         <javahelp.version>2.0.05</javahelp.version>
         <brandingToken>esa-pfa</brandingToken>
         <jersey.version>2.17</jersey.version>
-        
+
         <pfa.version>2.0.0-SNAPSHOT</pfa.version>
-        <snap.version>[2.0.0, 2.1.0-SNAPSHOT)</snap.version>
+        <snap.version>2.0.2</snap.version>
         <s1tbx.version>2.0.0</s1tbx.version>
         <s3tbx.version>2.0.0</s3tbx.version>
 
@@ -295,15 +295,19 @@
                     <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <subpackages>org.esa.pfa.fe:org.esa.pfa.activelearning:org.esa.pfa.classifier:org.esa.pfa.db</subpackages>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <reporting>
         <plugins>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
         </plugins>
     </reporting>
 

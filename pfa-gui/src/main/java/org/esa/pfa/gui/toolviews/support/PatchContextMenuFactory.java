@@ -6,7 +6,6 @@ import org.esa.pfa.gui.search.CBIRSession;
 import org.esa.snap.core.util.Debug;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -77,12 +76,7 @@ public class PatchContextMenuFactory {
     }
 
     private Action createShowFexOverviewAction(Patch patch) {
-
-        final String parentProductName = patch.getParentProductName();
-        final boolean desktopSupported = Desktop.isDesktopSupported();
-        final boolean browseSupported = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
-
-        if (parentProductName == null || !desktopSupported || !browseSupported) {
+        if (patch.getParentProductName() == null) {
             return null;
         }
 
@@ -95,23 +89,18 @@ public class PatchContextMenuFactory {
     }
 
     public Action createOrderParentProductAction(final Patch patch) {
-        final String parentProductName = patch.getParentProductName();
-        if (parentProductName == null) {
+        if (patch.getParentProductName() == null) {
             return null;
         }
-
         return new OrderParentProductAction(patch);
     }
 
 
     public static Action createShowPatchInParentProductAction(final Patch patch) {
-
-        String parentProductName = patch.getParentProductName();
-        if (parentProductName == null) {
+        if (patch.getParentProductName() == null) {
             return null;
         }
 
-        // O-oh, no good design here...
         CBIRSession session = CBIRSession.getInstance();
         PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
         if (applicationDescriptor == null) {
