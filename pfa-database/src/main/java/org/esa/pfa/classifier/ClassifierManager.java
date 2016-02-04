@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * CRUD interface for the Classifier
+ * Create, Read, Update, Delete methods for the {@link Classifier}.
  */
 public interface ClassifierManager {
 

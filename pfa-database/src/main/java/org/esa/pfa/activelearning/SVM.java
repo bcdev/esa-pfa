@@ -23,16 +23,17 @@ import java.util.List;
 
 /**
  * SVM based classification operator.
- *
+ * <p>
  * The following steps are followed:
- * 1. Transform data to the format of an SVM package
- * 2. Conduct simple scaling on the data
- * 3. Consider the RBF kernel
- * 4. Use cross-validation to find the best parameter C and gamma
- * 5. Use the best parameter C and gamma to train the whole training set
- * 6. Test
+ * <ol>
+ * <li>Transform data to the format of an SVM package</li>
+ * <li>Conduct simple scaling on the data</li>
+ * <li>Consider the RBF kernel</li>
+ * <li>Use cross-validation to find the best parameter C and gamma</li>
+ * <li>Use the best parameter C and gamma to train the whole training set</li>
+ * <li>Test</li>
+ * </ol>
  */
-
 public class SVM {
 
     private static final boolean DEBUG = false;
@@ -51,15 +52,13 @@ public class SVM {
     private double[] featureMax = null;
 
 
-
-
     public static svm_print_interface svm_print_null = new svm_print_interface() {
         public void print(String s) {
         }
     };
 
     static {
-        if(!DEBUG) {     //disable console printing
+        if (!DEBUG) {     //disable console printing
             svm.svm_set_print_string_function(svm_print_null);
         }
     }
@@ -71,13 +70,14 @@ public class SVM {
         this.modelReference = modelReference;
         this.problem = new svm_problem();
         this.modelParameters = new svm_parameter();
-	}
+    }
 
     /**
-	 * Train SVM model with given training data.
+     * Train SVM model with given training data.
+     *
      * @param trainingPatches The training patches.
-	 */
-	public void train(final List<Patch> trainingPatches, final ProgressMonitor pm) {
+     */
+    public void train(final List<Patch> trainingPatches, final ProgressMonitor pm) {
 
         setProblem(trainingPatches);
 
@@ -93,6 +93,7 @@ public class SVM {
 
     /**
      * Compute kernel function value for a given pair of samples.
+     *
      * @param x1 The first sample.
      * @param x2 The second sample.
      * @return The kernel function value.
@@ -106,15 +107,16 @@ public class SVM {
         double sum = 0.0;
         for (int i = 0; i < x1.length; i++) {
             final double d = scale(i, x1[i]) - scale(i, x2[i]);
-            sum += d*d;
+            sum += d * d;
         }
-        return Math.exp(-modelParameters.gamma*sum);
+        return Math.exp(-modelParameters.gamma * sum);
     }
 
     /**
      * Classify given test data using the trained SVM model.
+     *
      * @param featureValues A samples values to be classified.
-     * @param decValues Decision values.
+     * @param decValues     Decision values.
      * @return The predicted class label.
      */
     public double classify(double[] featureValues, double[] decValues) {
@@ -131,12 +133,13 @@ public class SVM {
 
     /**
      * Define SVM problem.
+     *
      * @param trainingPatches The training data set.
      */
-	private void setProblem(List<Patch> trainingPatches) {
+    private void setProblem(List<Patch> trainingPatches) {
 
-		numSamples = trainingPatches.size();
-		numFeatures = trainingPatches.get(0).getFeatureValues().length;
+        numSamples = trainingPatches.size();
+        numFeatures = trainingPatches.get(0).getFeatureValues().length;
 
         featureMin = new double[numFeatures];
         featureMax = new double[numFeatures];
@@ -145,7 +148,7 @@ public class SVM {
             featureMax[i] = -Double.MAX_VALUE;
         }
 
-		problem.l = numSamples;
+        problem.l = numSamples;
         problem.y = new double[numSamples];
         problem.x = new svm_node[numSamples][numFeatures];
         for (int i = 0; i < numSamples; i++) {
@@ -154,23 +157,23 @@ public class SVM {
             }
         }
 
-		for (int i = 0; i < numSamples; i++) {
+        for (int i = 0; i < numSamples; i++) {
             Patch patch = trainingPatches.get(i);
             problem.y[i] = patch.getLabel().getValue();
             double[] featureValues = patch.getFeatureValues();
             for (int j = 0; j < numFeatures; j++) {
-				problem.x[i][j].index = j+1;
-				problem.x[i][j].value = featureValues[j];
-				if (problem.x[i][j].value < featureMin[j]) {
-					featureMin[j] = problem.x[i][j].value;
-				}
+                problem.x[i][j].index = j + 1;
+                problem.x[i][j].value = featureValues[j];
+                if (problem.x[i][j].value < featureMin[j]) {
+                    featureMin[j] = problem.x[i][j].value;
+                }
 
-				if (problem.x[i][j].value > featureMax[j]) {
-					featureMax[j] = problem.x[i][j].value;
-				}
-			}
-		}
-	}
+                if (problem.x[i][j].value > featureMax[j]) {
+                    featureMax[j] = problem.x[i][j].value;
+                }
+            }
+        }
+    }
 
     /**
      * Scale training data to user specified range [lower, upper].
@@ -187,7 +190,7 @@ public class SVM {
 
         if (featureMin[featureIdx] < featureMax[featureIdx]) {
             double lambda = (featureValue - featureMin[featureIdx]) / (featureMax[featureIdx] - featureMin[featureIdx]);
-            return lower + lambda*(upper - lower);
+            return lower + lambda * (upper - lower);
         } else {
             return lower;
         }
@@ -246,7 +249,7 @@ public class SVM {
         modelParameters.C = c[cIdx];
         modelParameters.gamma = gamma[gammaIdx];
 
-        if(DEBUG) {
+        if (DEBUG) {
             for (int i = 0; i < c.length; i++) {
                 for (int j = 0; j < gamma.length; j++) {
                     System.out.println("C = " + c[i] + ", gamma = " + gamma[j] + ", accuracy = " + accuracyArray[i][j]);
@@ -258,7 +261,8 @@ public class SVM {
 
     /**
      * Perform  cross-validation to find the best parameter C and gamma for RBF model.
-     * @param C C parameter for RBF model.
+     *
+     * @param C     C parameter for RBF model.
      * @param gamma Gamma parameter for RBF model.
      * @return The model accuracy.
      */

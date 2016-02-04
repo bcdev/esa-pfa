@@ -170,7 +170,7 @@ public final class Patch {
     }
 
     /**
-     * This listener is notified when that state of patch changes,
+     * This listener is notified when the state of {@link Patch} changes,
      */
     public interface PatchListener {
         void notifyStateChanged(final Patch patch);

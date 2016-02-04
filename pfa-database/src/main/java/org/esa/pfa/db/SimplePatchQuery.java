@@ -35,7 +35,7 @@ import java.util.Random;
 import java.util.stream.IntStream;
 
 /**
- * @author marcoz
+ * Query the index for {@link Patch Patches}.
  */
 public class SimplePatchQuery implements QueryInterface {
 

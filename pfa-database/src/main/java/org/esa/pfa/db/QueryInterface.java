@@ -5,7 +5,7 @@ import org.esa.pfa.fe.op.Patch;
 import java.io.IOException;
 
 /**
- * Created by luis on 09/02/14.
+ * Query the index for {@link Patch Patches}.
  */
 public interface QueryInterface {
 

@@ -30,7 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The model for the Classifier, can be serializes o XML ,and restore from XML
+ * The data model for the {@link Classifier}.
+ * It can be serializes to XML, and restore from XML.
  */
 public class ClassifierModel {
 

@@ -6,12 +6,13 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 /**
+ * Common command line options.
+ *
  * @author Norman Fomferra
  */
 public class CommonOptions {
     boolean printStackTrace;
     boolean verbose;
-
 
     public static void addOptions(Options options) {
         options.addOption(opt('e', "error-info", "Print detailed error information (Java stack traces)."));

@@ -22,7 +22,7 @@ import org.esa.pfa.fe.op.Patch;
 import java.io.IOException;
 
 /**
- * The part of the classifier that does the "real" work.
+ * The interface to the user driven classification of {@link Patch Patches}.
  */
 public interface Classifier {
 

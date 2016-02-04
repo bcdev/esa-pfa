@@ -20,7 +20,10 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * @author marcoz
+ * Access to all databases that are served from a single {@link URI}.
+ * This can be either local or remote.
+ *
+ * @author Marco
  */
 public interface DatabaseManager {
 

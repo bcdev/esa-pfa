@@ -23,13 +23,14 @@ import java.util.List;
 
 
 /**
- * Kernel K-means clustering algorithm [1].
- *
- * [1]. B. Demir, C. Persello, and L. Bruzzone, Batch mode active learning methods for the interactive
- *      classification of remote sensing images, IEEE Transactions on Geoscience and Remote Sensing,
- *      vol. 49, no.3, pp. 1014-1031, 2011.
+ * Kernel K-means clustering algorithm.
+ * <p>
+ * The implementation is based on the following publication:
+ * <p>
+ * [1] B. Demir, C. Persello, and L. Bruzzone, Batch mode active learning methods for the interactive
+ * classification of remote sensing images, IEEE Transactions on Geoscience and Remote Sensing,
+ * vol. 49, no.3, pp. 1014-1031, 2011.
  */
-
 public class KernelKmeansClusterer {
 
     private int maxIterations = 0;
@@ -40,16 +41,17 @@ public class KernelKmeansClusterer {
     private SVM svmClassifier = null;
     private boolean debug = false;
 
-	public KernelKmeansClusterer(final int maxIterations, final int numClusters, final SVM svmClassifier) {
+    public KernelKmeansClusterer(final int maxIterations, final int numClusters, final SVM svmClassifier) {
 
         this.maxIterations = maxIterations;
         this.numClusters = numClusters;
         this.clusters = new Cluster[numClusters];
         this.svmClassifier = svmClassifier;
-	}
+    }
 
     /**
      * Set samples for clustering.
+     *
      * @param uncertainSamples List of m most uncertain samples.
      */
     public void setData(final List<Patch> uncertainSamples) {
@@ -59,7 +61,8 @@ public class KernelKmeansClusterer {
 
     /**
      * Perform clustering using Kernel K-means clustering algorithm.
-     * @param pm
+     *
+     * @param pm a progress monitor
      */
     public void clustering(ProgressMonitor pm) {
 
@@ -110,7 +113,7 @@ public class KernelKmeansClusterer {
         ArrayList<Integer> randomNumbers = new ArrayList<>();
         int k = 0;
         while (k < numClusters) {
-            final int idx = (int)(Math.random()*numSamples);
+            final int idx = (int) (Math.random() * numSamples);
             if (!randomNumbers.contains(idx)) {
                 randomNumbers.add(idx);
                 clusters[k] = new Cluster();
@@ -143,6 +146,7 @@ public class KernelKmeansClusterer {
 
     /**
      * Determine if a given sample is the center of any cluster.
+     *
      * @param sampleIdx Index of the given sample.
      * @return True if the given sample is the center of some cluster, false otherwise.
      */
@@ -158,6 +162,7 @@ public class KernelKmeansClusterer {
 
     /**
      * Find the nearest cluster for each given sample.
+     *
      * @param sampleIdx Index of the given sample.
      * @return Cluster index.
      */
@@ -182,6 +187,7 @@ public class KernelKmeansClusterer {
 
     /**
      * Compute kernel space distance between two given samples.
+     *
      * @param sampleIdx1 Index of the first sample.
      * @param sampleIdx2 Index of the second sample.
      * @return The kernel space distance.
@@ -191,7 +197,7 @@ public class KernelKmeansClusterer {
         final double[] x1 = samples.get(sampleIdx1).getFeatureValues();
         final double[] x2 = samples.get(sampleIdx2).getFeatureValues();
 
-        return svmClassifier.kernel(x1,x1) - 2*svmClassifier.kernel(x1,x2) + svmClassifier.kernel(x2,x2);
+        return svmClassifier.kernel(x1, x1) - 2 * svmClassifier.kernel(x1, x2) + svmClassifier.kernel(x2, x2);
     }
 
     /**
@@ -211,6 +217,7 @@ public class KernelKmeansClusterer {
 
     /**
      * Find the sample that is nearest to the center of a given cluster.
+     *
      * @param clusterIdx The cluster index.
      * @return The sample index.
      */
@@ -237,6 +244,7 @@ public class KernelKmeansClusterer {
     /**
      * For a cluster with n samples {xi, i=1,...,n}, this function computes the summation of K(xi,xj), i,j=1,...,n.
      * This summation will be used in the calculation of distance between a given sample and a given cluster.
+     *
      * @param memberSampleIndices The list of indices of samples in a given cluster.
      * @return The summation.
      */
@@ -255,9 +263,10 @@ public class KernelKmeansClusterer {
 
     /**
      * Compute the distance between a given sample and a given cluster.
-     * @param sampleIdx The index of the given sample.
+     *
+     * @param sampleIdx           The index of the given sample.
      * @param memberSampleIndices The list of indices of samples in the given cluster.
-     * @param sum2 The summation computed by computeSum2 function.
+     * @param sum2                The summation computed by computeSum2 function.
      * @return The distance.
      */
     private double computeDistanceToClusterCenter(
@@ -267,16 +276,17 @@ public class KernelKmeansClusterer {
         final double[] x = samples.get(sampleIdx).getFeatureValues();
 
         double sum1 = 0.0;
-        for (Integer idx:memberSampleIndices) {
+        for (Integer idx : memberSampleIndices) {
             final double[] xi = samples.get(idx).getFeatureValues();
-            sum1 += svmClassifier.kernel(x,xi);
+            sum1 += svmClassifier.kernel(x, xi);
         }
 
-        return svmClassifier.kernel(x,x) - 2.0*sum1/numSamples + sum2/(numSamples*numSamples);
+        return svmClassifier.kernel(x, x) - 2.0 * sum1 / numSamples + sum2 / (numSamples * numSamples);
     }
 
     /**
      * Get representatives of the clusters using density criterion.
+     *
      * @return patchIDs Array of IDs of the selected patches.
      */
     public int[] getRepresentatives() {
@@ -300,6 +310,7 @@ public class KernelKmeansClusterer {
 
     /**
      * Find the representative sample in a given cluster based on density criterion.
+     *
      * @param cluster The given cluster.
      * @return The representative sample index.
      */
@@ -309,7 +320,7 @@ public class KernelKmeansClusterer {
         // samples in the cluster. Therefore, the lower the average distance, the higher the density.
         double leastAverageDistance = Double.MAX_VALUE;
         int sampleIdx = 0;
-        for (Integer idx:cluster.memberSampleIndices) {
+        for (Integer idx : cluster.memberSampleIndices) {
             final double averageDistance = computeAverageDistance(idx, cluster.memberSampleIndices);
             if (averageDistance < leastAverageDistance) {
                 leastAverageDistance = averageDistance;
@@ -322,7 +333,8 @@ public class KernelKmeansClusterer {
 
     /**
      * Compute the average distance of a given sample to all other samples in its cluster.
-     * @param sampleIdx The index of the given sample.
+     *
+     * @param sampleIdx           The index of the given sample.
      * @param memberSampleIndices The list of indices of samples in the cluster.
      * @return The average distance.
      */
@@ -332,16 +344,18 @@ public class KernelKmeansClusterer {
         final double[] x = samples.get(sampleIdx).getFeatureValues();
 
         double sum1 = 0.0, sum2 = 0.0;
-        for (Integer idx:memberSampleIndices) {
+        for (Integer idx : memberSampleIndices) {
             final double[] xi = samples.get(idx).getFeatureValues();
-            sum1 += svmClassifier.kernel(x,xi);
-            sum2 += svmClassifier.kernel(xi,xi);
+            sum1 += svmClassifier.kernel(x, xi);
+            sum2 += svmClassifier.kernel(xi, xi);
         }
 
-        return svmClassifier.kernel(x,x) - 2.0*sum1/numSamples + sum2/numSamples;
+        return svmClassifier.kernel(x, x) - 2.0 * sum1 / numSamples + sum2 / numSamples;
     }
 
-
+    /**
+     * An individual cluster.
+     */
     public static class Cluster {
         public List<Integer> memberSampleIndices = new ArrayList<>();
         public int centerSampleIdx;

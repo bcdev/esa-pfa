@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A local implementation
+ * An implementation of a {@link Classifier} that work on the local filesystem.
  */
 public class LocalClassifier implements Classifier {
 

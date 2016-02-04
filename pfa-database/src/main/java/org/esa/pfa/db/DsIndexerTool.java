@@ -32,11 +32,16 @@ import java.util.Properties;
 
 /**
  * The PFA Dataset Indexer Tool.
+ * <p>
+ * It creates a Lucene index for {@link org.esa.pfa.fe.op.Feature Features}.
  *
  * @author Norman
  */
 public class DsIndexerTool {
 
+    /**
+     * The storage type. Either expaned or as a zip.
+     */
     public enum FexType {FEX, FEZ}
 
     public static final String DEFAULT_INDEX_NAME = "lucene-index";
