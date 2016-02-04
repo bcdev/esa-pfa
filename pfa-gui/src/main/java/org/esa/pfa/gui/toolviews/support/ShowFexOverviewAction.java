@@ -1,5 +1,6 @@
 package org.esa.pfa.gui.toolviews.support;
 
+import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.rcp.util.Dialogs;
 
 import javax.swing.AbstractAction;
@@ -21,11 +22,17 @@ class ShowFexOverviewAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        try {
-            Desktop.getDesktop().browse(fexOverviewUri);
-        } catch (Throwable t) {
-            Dialogs.showError("Failed to open URL:\n" + fexOverviewUri + ":\n" + t.getMessage());
+        boolean desktopSupported = Desktop.isDesktopSupported();
+        boolean browseSupported = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
+        if (desktopSupported && browseSupported) {
+            try {
+                Desktop.getDesktop().browse(fexOverviewUri);
+            } catch (Throwable t) {
+                Dialogs.showError(String.format("Failed to open URL:\n%s:\n%s", fexOverviewUri, t.getMessage()));
+            }
+        } else {
+            SystemUtils.copyToClipboard(fexOverviewUri.toString());
+            Dialogs.showInformation("The URL has been copied to your Clipboard\n");
         }
     }
-
 }
