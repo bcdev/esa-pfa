@@ -76,38 +76,48 @@
                     <mainClass>org.esa.pfa.ws.ServerMain</mainClass>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/ws.xml</descriptor>
-                    </descriptors>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.esa.pfa.ws.ServerMain</mainClass>
-                        </manifest>
-                        <!-- required entries in manifest for TA staging -->
-                        <manifestEntries>
-                            <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
-                            <Specification-Version>1.0-mr</Specification-Version>
-                            <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
-                            <Implementation-Title>com.sun.media.imageio</Implementation-Title>
-                            <Implementation-Version>1.0_01</Implementation-Version>
-                            <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
-                            <Extension-Name>com.sun.media.imageio</Extension-Name>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>pfa-ws-server</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attached</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>ws-server</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/ws.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifest>
+                                    <mainClass>org.esa.pfa.ws.ServerMain</mainClass>
+                                </manifest>
+                                <!-- required entries in manifest for TA staging -->
+                                <manifestEntries>
+                                    <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
+                                    <Specification-Version>1.0-mr</Specification-Version>
+                                    <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                    <Implementation-Title>com.sun.media.imageio</Implementation-Title>
+                                    <Implementation-Version>1.0_01</Implementation-Version>
+                                    <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
+                                    <Extension-Name>com.sun.media.imageio</Extension-Name>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>ws-server</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attached</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
