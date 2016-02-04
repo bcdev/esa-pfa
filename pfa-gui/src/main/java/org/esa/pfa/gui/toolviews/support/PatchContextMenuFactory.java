@@ -96,12 +96,13 @@ public class PatchContextMenuFactory {
     }
 
 
-    public Action createShowPatchInParentProductAction(final Patch patch) {
+    public static Action createShowPatchInParentProductAction(final Patch patch) {
         if (patch.getParentProductName() == null) {
             return null;
         }
 
-        PFAApplicationDescriptor applicationDescriptor = getSession().getApplicationDescriptor();
+        CBIRSession session = CBIRSession.getInstance();
+        PFAApplicationDescriptor applicationDescriptor = session.getApplicationDescriptor();
         if (applicationDescriptor == null) {
             // session not init?
             return null;
