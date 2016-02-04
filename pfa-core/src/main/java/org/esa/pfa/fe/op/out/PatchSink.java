@@ -6,6 +6,8 @@ import org.esa.pfa.fe.op.Patch;
 import java.io.IOException;
 
 /**
+ * Writes the given {@link Patch} and it's {@link Feature}s to a specific representation.
+ *
  * @author Norman Fomferra
  */
 public interface PatchSink {

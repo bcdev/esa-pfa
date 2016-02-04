@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * The default implementation for a factory for PatchWriters.
+ *
  * @author Norman Fomferra
  */
 public class DefaultPatchWriterFactory extends PatchWriterFactory {

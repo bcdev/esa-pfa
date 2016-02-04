@@ -5,7 +5,7 @@ import com.thoughtworks.xstream.XStream;
 import java.io.*;
 
 /**
- * Created by Norman on 31.01.14.
+ * Describes a set of {@link Feature}, that make up a specific dataset.
  */
 public class DatasetDescriptor {
 

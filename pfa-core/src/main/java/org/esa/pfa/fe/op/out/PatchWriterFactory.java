@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A factory for PatchWriters.
+ * A factory for {@link PatchWriter PatchWriters}.
+ *
  * @author Norman Fomferra
  */
 public abstract class PatchWriterFactory {

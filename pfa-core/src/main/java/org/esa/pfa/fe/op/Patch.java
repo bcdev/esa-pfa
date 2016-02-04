@@ -20,6 +20,9 @@ import java.util.List;
  */
 public final class Patch {
 
+    /**
+     * The different 'classifications' of a {@link Patch}.
+     */
     public enum Label {
         NONE(-1), RELEVANT(1), IRRELEVANT(0);
 
@@ -166,6 +169,9 @@ public final class Patch {
         listenerList.remove(listener);
     }
 
+    /**
+     * This listener is notified when that state of patch changes,
+     */
     public interface PatchListener {
         void notifyStateChanged(final Patch patch);
     }
