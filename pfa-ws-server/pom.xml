@@ -82,6 +82,9 @@
     <profiles>
         <profile>
             <id>ws-server</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>

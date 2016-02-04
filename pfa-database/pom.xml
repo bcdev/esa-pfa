@@ -93,6 +93,9 @@
     <profiles>
         <profile>
             <id>db-indexer</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
