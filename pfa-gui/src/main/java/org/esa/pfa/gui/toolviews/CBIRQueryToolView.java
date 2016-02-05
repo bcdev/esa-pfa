@@ -78,7 +78,7 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("CBIR Query");
+        setDisplayName("PFA Query");
         add(createControl(), BorderLayout.CENTER);
     }
 

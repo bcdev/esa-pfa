@@ -80,7 +80,7 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("CBIR Labeling");
+        setDisplayName("PFA Labeling");
         add(createControl(), BorderLayout.CENTER);
     }
 

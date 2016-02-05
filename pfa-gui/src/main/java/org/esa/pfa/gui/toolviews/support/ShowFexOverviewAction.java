@@ -22,17 +22,6 @@ class ShowFexOverviewAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        boolean desktopSupported = Desktop.isDesktopSupported();
-        boolean browseSupported = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
-        if (desktopSupported && browseSupported) {
-            try {
-                Desktop.getDesktop().browse(fexOverviewUri);
-            } catch (Throwable t) {
-                Dialogs.showError(String.format("Failed to open URL:\n%s:\n%s", fexOverviewUri, t.getMessage()));
-            }
-        } else {
-            SystemUtils.copyToClipboard(fexOverviewUri.toString());
-            Dialogs.showInformation("The URL has been copied to your Clipboard\n");
-        }
+        BrowserUtils.openInBrowser(fexOverviewUri);
     }
 }

@@ -5,7 +5,7 @@
 
     <groupId>org.esa.pfa</groupId>
     <artifactId>pfa</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
 
     <name>ESA PFA</name>
@@ -18,12 +18,12 @@
         <brandingToken>esa-pfa</brandingToken>
         <jersey.version>2.17</jersey.version>
 
-        <pfa.version>2.0.0-SNAPSHOT</pfa.version>
+        <pfa.version>2.0.0</pfa.version>
         <snap.version>2.0.2</snap.version>
         <s1tbx.version>2.0.0</s1tbx.version>
         <s3tbx.version>2.0.0</s3tbx.version>
 
-        <pfa.nbmSpecVersion>2.0.3</pfa.nbmSpecVersion>
+        <pfa.nbmSpecVersion>2.0.4</pfa.nbmSpecVersion>
     </properties>
 
     <modules>
@@ -299,8 +299,21 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.3</version>
                 <configuration>
+                    <doctitle>${project.name} 2.0.0 API</doctitle>
                     <additionalparam>-Xdoclint:none</additionalparam>
-                    <subpackages>org.esa.pfa.fe:org.esa.pfa.activelearning:org.esa.pfa.classifier:org.esa.pfa.db</subpackages>
+                    <subpackages>
+                        org.esa.pfa.fe:org.esa.pfa.activelearning:org.esa.pfa.classifier:org.esa.pfa.db
+                    </subpackages>
+                    <author>false</author>
+                    <detectJavaApiLink>true</detectJavaApiLink>
+                    <detectLinks>true</detectLinks>
+                    <verbose>false</verbose>
+                    <quiet>true</quiet><!-- show only warnings and errors -->
+                    <links>
+                        <link>http://step.esa.int/docs/v2.0/apidoc/engine/</link>
+                        <link>http://step.esa.int/docs/v2.0/apidoc/desktop/</link>
+                        <link>http://lucene.apache.org/core/4_7_0/core/</link>
+                    </links>
                 </configuration>
             </plugin>
         </plugins>
