@@ -91,7 +91,7 @@ public class DBSearchToolView extends ToolTopComponent implements ActionListener
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("DB Search");
+        setDisplayName("PFA Search");
         add(createControl(), BorderLayout.CENTER);
     }
 

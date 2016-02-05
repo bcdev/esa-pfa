@@ -38,7 +38,7 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
     private String[] bandNames;
 
     public final static String USE_CONTROL_CENTRE_INSTRUCTION = "<html>"
-            + "Use the CBIR Control Centre "+
+            + "Use the PFA Control Centre "+
             "<img src=\""+ OptionsControlPanel.class.getClassLoader().getResource("images/icons/pfa-control-24.png")+ "\">"+
             " to connect to a database.</html>";
     public final static String USE_ADD_QUERY_INSTRUCTION = "<html>"

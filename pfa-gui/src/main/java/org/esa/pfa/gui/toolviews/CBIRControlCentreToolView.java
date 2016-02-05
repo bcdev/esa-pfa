@@ -95,7 +95,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("CBIR Control");
+        setDisplayName("PFA Control");
         add(createControl(), BorderLayout.CENTER);
     }
 

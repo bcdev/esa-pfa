@@ -71,7 +71,7 @@ public class CBIROrderingToolView extends ToolTopComponent {
     public CBIROrderingToolView() {
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("CBIR Ordering");
+        setDisplayName("PFA Ordering");
         add(createControl(), BorderLayout.CENTER);
     }
 

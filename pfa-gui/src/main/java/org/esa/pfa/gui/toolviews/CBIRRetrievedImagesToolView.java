@@ -86,7 +86,7 @@ public class CBIRRetrievedImagesToolView extends ToolTopComponent implements Act
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
-        setDisplayName("CBIR Retrieved Images");
+        setDisplayName("PFA Retrieved Images");
         add(createControl(), BorderLayout.CENTER);
     }
 
