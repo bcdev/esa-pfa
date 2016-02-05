@@ -48,11 +48,11 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
     public OptionsControlPanel(final CBIRSession session) {
         super(new BorderLayout());
         this.session = session;
-        this.session.addListener(this);
 
         createControl();
         showSetAllButtons(false);
         updateControls();
+        this.session.addListener(this);
     }
 
     private void createControl() {
@@ -88,20 +88,23 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
         patchControlPanel.add(setAllPanel);
 
         cycleButton = new JButton(cycle);
+        cycleButton.setToolTipText("Cycle through the quicklooks");
         cycleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String currentName = (String) quickLookCombo1.getSelectedItem();
-                for (int i = 0; i < bandNames.length; ++i) {
-                    if (currentName.equals(bandNames[i])) {
-                        String newName;
-                        if (i + 1 < bandNames.length) {
-                            newName = bandNames[i + 1];
-                        } else {
-                            newName = bandNames[0];
+                if(currentName != null) {
+                    for (int i = 0; i < bandNames.length; ++i) {
+                        if (currentName.equals(bandNames[i])) {
+                            String newName;
+                            if (i + 1 < bandNames.length) {
+                                newName = bandNames[i + 1];
+                            } else {
+                                newName = bandNames[0];
+                            }
+                            quickLookCombo1.setSelectedItem(newName);
+                            break;
                         }
-                        quickLookCombo1.setSelectedItem(newName);
-                        break;
                     }
                 }
             }
@@ -112,6 +115,7 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
         quickLookCombo1 = new JComboBox<>();
         final ListCellRenderer<String> qlRenderer = new QlRenderer();
         quickLookCombo1.setRenderer(qlRenderer);
+        quickLookCombo1.setToolTipText("Quicklook 1");
         quickLookCombo1.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -128,6 +132,7 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
         final JPanel ql2Panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         quickLookCombo2 = new JComboBox<>();
         quickLookCombo2.setRenderer(qlRenderer);
+        quickLookCombo1.setToolTipText("Quicklook 2");
         quickLookCombo2.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -150,6 +155,7 @@ public class OptionsControlPanel extends JPanel implements CBIRSession.Listener{
 
         final ImageIcon[] items = { iconSingle, iconDual };
         imageModeCombo = new JComboBox<>(items);
+        imageModeCombo.setToolTipText("Switch between single view or dual view");
         imageModeCombo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
