@@ -12,11 +12,9 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.rcp.util.Dialogs;
 
-import javax.swing.AbstractAction;
-import java.awt.Desktop;
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -67,10 +65,10 @@ class OrderParentProductAction extends AbstractAction {
             SystemUtils.LOG.info("Getting product " + resolvedUrlString);
             try {
                 URI uri = new URI(resolvedUrlString);
-                Desktop.getDesktop().browse(uri);
+                BrowserUtils.openInBrowser(uri);
                 // Obviously this action succeeded
                 return;
-            } catch (URISyntaxException | IOException e) {
+            } catch (URISyntaxException e) {
                 Dialogs.showError(e.getMessage());
             }
         }

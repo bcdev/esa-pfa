@@ -19,6 +19,7 @@ import org.esa.pfa.classifier.Classifier;
 import org.esa.pfa.fe.op.AttributeType;
 import org.esa.pfa.fe.op.FeatureType;
 import org.esa.pfa.gui.search.CBIRSession;
+import org.esa.pfa.gui.toolviews.support.BrowserUtils;
 import org.esa.pfa.gui.toolviews.support.OptionsControlPanel;
 import org.esa.snap.rcp.SnapApp;
 import org.esa.snap.rcp.util.ProgressHandleMonitor;
@@ -39,7 +40,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -126,8 +126,8 @@ public class DBSearchToolView extends ToolTopComponent implements ActionListener
             @Override
             public void mouseClicked(MouseEvent event) {
                 try {
-                    Desktop.getDesktop().browse(new URI(querySyntaxURL));
-                } catch (URISyntaxException | IOException e) {
+                    BrowserUtils.openInBrowser(new URI(querySyntaxURL));
+                } catch (URISyntaxException e) {
                     SnapApp.getDefault().handleError("Unable to follow link", e);
                 }
             }
