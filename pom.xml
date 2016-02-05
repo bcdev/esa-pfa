@@ -299,8 +299,21 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.3</version>
                 <configuration>
+                    <doctitle>${project.name} 2.0.0 API</doctitle>
                     <additionalparam>-Xdoclint:none</additionalparam>
-                    <subpackages>org.esa.pfa.fe:org.esa.pfa.activelearning:org.esa.pfa.classifier:org.esa.pfa.db</subpackages>
+                    <subpackages>
+                        org.esa.pfa.fe:org.esa.pfa.activelearning:org.esa.pfa.classifier:org.esa.pfa.db
+                    </subpackages>
+                    <author>false</author>
+                    <detectJavaApiLink>true</detectJavaApiLink>
+                    <detectLinks>true</detectLinks>
+                    <verbose>false</verbose>
+                    <quiet>true</quiet><!-- show only warnings and errors -->
+                    <links>
+                        <link>http://step.esa.int/docs/v2.0/apidoc/engine/</link>
+                        <link>http://step.esa.int/docs/v2.0/apidoc/desktop/</link>
+                        <link>http://lucene.apache.org/core/4_7_0/core/</link>
+                    </links>
                 </configuration>
             </plugin>
         </plugins>
