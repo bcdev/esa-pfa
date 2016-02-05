@@ -74,12 +74,12 @@ public class CBIRQueryToolView extends ToolTopComponent implements ActionListene
 
     public CBIRQueryToolView() {
         session = CBIRSession.getInstance();
-        session.addListener(this);
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
         setDisplayName("PFA Query");
         add(createControl(), BorderLayout.CENTER);
+        session.addListener(this);
     }
 
     public JComponent createControl() {

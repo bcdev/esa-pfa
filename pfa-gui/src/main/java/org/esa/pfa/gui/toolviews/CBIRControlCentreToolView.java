@@ -91,12 +91,12 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
 
     public CBIRControlCentreToolView() {
         session = CBIRSession.getInstance();
-        session.addListener(this);
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
         setDisplayName("PFA Control");
         add(createControl(), BorderLayout.CENTER);
+        session.addListener(this);
     }
 
     public JComponent createControl() {

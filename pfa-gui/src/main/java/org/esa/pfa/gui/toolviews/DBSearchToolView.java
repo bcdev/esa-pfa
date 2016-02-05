@@ -87,12 +87,12 @@ public class DBSearchToolView extends ToolTopComponent implements ActionListener
 
     public DBSearchToolView() {
         session = CBIRSession.getInstance();
-        session.addListener(this);
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
         setDisplayName("PFA Search");
         add(createControl(), BorderLayout.CENTER);
+        session.addListener(this);
     }
 
     public JComponent createControl() {

@@ -76,12 +76,12 @@ public class CBIRLabelingToolView extends ToolTopComponent implements Patch.Patc
 
     public CBIRLabelingToolView() {
         session = CBIRSession.getInstance();
-        session.addListener(this);
 
         setLayout(new BorderLayout(4, 4));
         setBorder(new EmptyBorder(4, 4, 4, 4));
         setDisplayName("PFA Labeling");
         add(createControl(), BorderLayout.CENTER);
+        session.addListener(this);
     }
 
     public JComponent createControl() {
