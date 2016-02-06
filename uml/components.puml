@@ -1,0 +1,17 @@
+@startuml
+
+package "PFA Frontend" {
+[GUI] -[Classifier]
+[Classifier]
+local - [Local Classifier]
+[Classifier] --> local
+[Local Classifier] - [Feature Database 1]
+}
+
+package "PFA Webservice" {
+remote - [Remote Classifier]
+[Classifier] --> remote
+[Remote Classifier] - [Feature Database 2]
+}
+
+@enduml

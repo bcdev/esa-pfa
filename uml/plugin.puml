@@ -1,0 +1,34 @@
+@startuml
+
+abstract class snap.gpf.Operator
+abstract class FeatureWriter
+class ApplicationRegistry
+class acme.MyFeatureWriter
+
+interface ApplicationDescriptor
+class acme.MyApplicationDescriptor
+
+snap.gpf.Operator <|-- FeatureWriter
+FeatureWriter <|-- acme.MyFeatureWriter
+
+ApplicationDescriptor <|- acme.MyApplicationDescriptor
+ApplicationRegistry --> ApplicationDescriptor
+ApplicationDescriptor --> acme.MyFeatureWriter
+abstract class snap.gpf.Operator {
+inialize()
+computeTile(band, tile)
+}
+abstract class FeatureWriter {
+getFeatureTypes()
+processPatch(patch, patchSink)
+}
+abstract class ApplicationDescriptor {
+getName()
+getPatchDimension()
+getFeatureTypes()
+getDefaultFeatureSet()
+getProductNameResolver()
+}
+
+
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+class Patch {
+    String parentProductName
+    int patchX
+    int patchY
+    Product patchProduct
+    List<Feature> featureList
+    Map<String, BufferedImage> imageMap
+    List<PatchListener> listenerList
+    Label label
+}
+
+class AttributeType {
+    String name
+    String description
+    Class<?> valueType
+}
+
+class Feature {
+    FeatureType featureType
+    Object value
+    Object[] attributeValues
+}
+
+class FeatureType {
+    AttributeType[] attributeTypes
+}
+
+class DatasetDescriptor {
+    String name
+    String version
+    String description
+    FeatureType[] featureTypes
+}
+
+enum Label {
+    NONE
+    RELEVANT
+    IRRELEVANT
+}
+
+Feature --> FeatureType
+FeatureType --> AttributeType
+
+AttributeType <|- FeatureType
+
+DatasetDescriptor *-> FeatureType
+
+Patch --> Label
+Patch --> Feature
+
+@enduml
