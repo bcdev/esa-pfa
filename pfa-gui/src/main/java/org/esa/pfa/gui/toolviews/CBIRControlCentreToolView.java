@@ -108,6 +108,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 OptionsDisplayer.getDefault().open("ESA_PFA/Database");
             }
         });
+        configButton.setToolTipText("Connect to a local or remote database");
 
         final JPanel applicationPanel = new JPanel(new BorderLayout(4, 4));
         applicationPanel.add(applicationLabel, BorderLayout.WEST);
@@ -189,6 +190,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         gbc.weightx = 0.8;
         NumberFormat numberFormatter = new DecimalFormat("#,###,###");
         numTrainingImages = new JFormattedTextField(numberFormatter);
+        numTrainingImages.setToolTipText("The number of images to label per iteration");
         numTrainingImages.setColumns(3);
         numTrainingImages.setHorizontalAlignment(JTextField.RIGHT);
         numTrainingImages.addActionListener(new ActionListener() {
@@ -211,6 +213,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(new JLabel("# of retrieved images:"), gbc);
         gbc.gridx = 1;
         numRetrievedImages = new JFormattedTextField(numberFormatter);
+        numRetrievedImages.setToolTipText("The number of images to fetch from the database in the retrieval");
         numRetrievedImages.setColumns(3);
         numRetrievedImages.setHorizontalAlignment(JTextField.RIGHT);
         numRetrievedImages.addActionListener(new ActionListener() {
@@ -232,6 +235,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(new JLabel("# of retrieved images max:"), gbc);
         gbc.gridx = 1;
         numRetrievedImagesMax = new JFormattedTextField(numberFormatter);
+        numRetrievedImagesMax.setToolTipText("The maximum number of images to retrieve from the database if the number of retrieved relevant images cannot be found");
         numRetrievedImagesMax.setColumns(3);
         numRetrievedImagesMax.setHorizontalAlignment(JTextField.RIGHT);
         numRetrievedImagesMax.addActionListener(new ActionListener() {
@@ -253,6 +257,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
         panel.add(new JLabel("# of random images:"), gbc);
         gbc.gridx = 1;
         numRandomImages = new JFormattedTextField(numberFormatter);
+        numRandomImages.setToolTipText("The number of initial images for the classifier to use");
         numRandomImages.setColumns(3);
         numRandomImages.setHorizontalAlignment(JTextField.RIGHT);
         numRandomImages.addActionListener(new ActionListener() {
@@ -323,6 +328,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
+        updateBtn.setToolTipText("Apply changes");
         gbc.gridy++;
         gbc.gridx = 1;
         panel.add(updateBtn, gbc);
@@ -366,6 +372,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
+        newBtn.setToolTipText("Create a new classifier");
         deleteBtn = new JButton(new AbstractAction("Delete") {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -375,6 +382,7 @@ public class CBIRControlCentreToolView extends ToolTopComponent implements CBIRS
                 }
             }
         });
+        deleteBtn.setToolTipText("Delete the currently selected classifier");
 
         panel.add(newBtn);
         panel.add(deleteBtn);
